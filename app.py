@@ -104,7 +104,7 @@ def kakao():
         print(f"📩 [수신] uid={uid[:16]} | msg={msg!r}")
 
         # '결과'라고 쳤을 때의 로직
-        if msg in ['결과', '확인', '보여줘']:
+        if msg in ['결과', '확인', '보여줘', '상세분석']:
             if uid in results:
                 return kakao_reply(results.pop(uid))
             return kakao_reply("⏳ 아직 AI가 열심히 분석 중이에요!\n조금만 더 기다렸다가 '결과'를 입력해주세요.")
