@@ -1,6 +1,7 @@
 import os, threading, re
 from flask import Flask, request, jsonify, abort
 from mind_pillar import PrecisionManse, MalgeumAI
+from mind_pillar_line import MalgeumLineAI
 
 try:
     from korean_lunar_calendar import KoreanLunarCalendar
@@ -107,12 +108,14 @@ def parse_date_msg(msg):
 
     return y, m, d, (cal_type == '음력'), None
 
-def make_prescription(uid, y, m, d, label, mode='short', push_fn=None):
+def make_prescription(uid, y, m, d, label, mode='short', push_fn=None, ai_class=None):
     """AI 분석 실행 (별도 스레드). push_fn 있으면 완료 시 자동 전송 (LINE용)."""
+    if ai_class is None:
+        ai_class = MalgeumAI
     try:
-        print(f"🚀 [AI시작] uid={uid[:16]} {y}/{m}/{d} ({label}) mode={mode}")
+        print(f"🚀 [AI시작] uid={uid[:16]} {y}/{m}/{d} ({label}) mode={mode} ai={ai_class.__name__}")
         saju = PrecisionManse.calculate(y, m, d)
-        ai   = MalgeumAI()
+        ai   = ai_class()
         text = ai.get_prescription(saju, mode=mode)
 
         if mode == 'short':
@@ -248,25 +251,25 @@ if LINE_AVAILABLE:
         r_token  = event.reply_token
         print(f"📩 [LINE] uid={uid[:16]} | msg={msg!r}")
 
-        # ── 결과 확인 ──
-        if msg in ['결과', '확인', '보여줘']:
+        # ── 結果確認 ──
+        if msg in ['結果', '結果を見る', '결과']:
             if uid in results:
                 line_reply(r_token, results.pop(uid))
             else:
-                line_reply(r_token, "⏳ 아직 분석 중이에요!\n잠시 후 다시 보내주세요.")
+                line_reply(r_token, "⏳ まだ分析中です！\nしばらくしてからもう一度送ってください。")
             return
 
-        # ── 상세분석 ──
-        if msg == '상세분석':
+        # ── 詳細分析 ──
+        if msg in ['詳細分析', '상세분석']:
             if uid not in saju_cache:
-                line_reply(r_token, "먼저 생년월일을 입력해주세요.\n예) 19930616 양력")
+                line_reply(r_token, "まず生年月日を入力してください。\n例）19930616 陽暦")
                 return
             y, m, d, label = saju_cache[uid]
             results.pop(uid, None)
-            line_reply(r_token, "🔍 상세분석 중입니다...\n결과가 도착하면 자동으로 전송됩니다!")
+            line_reply(r_token, "🔍 詳細分析中です...\n結果が届いたら自動でお送りします！")
             threading.Thread(
                 target=make_prescription,
-                args=(uid, y, m, d, label, 'detailed', line_push),
+                args=(uid, y, m, d, label, 'detailed', line_push, MalgeumLineAI),
                 daemon=True
             ).start()
             return
@@ -277,40 +280,45 @@ if LINE_AVAILABLE:
         if err == 'no_type':
             if re.fullmatch(r'\d{8}', msg.replace(' ', '')):
                 line_reply(r_token,
-                    "📅 음력인가요, 양력인가요?\n\n"
-                    f"예) {msg.replace(' ','')} 양력\n"
-                    f"예) {msg.replace(' ','')} 음력")
+                    "📅 旧暦（陰暦）ですか？新暦（陽暦）ですか？\n\n"
+                    f"後ろに付けて再入力してください！\n\n"
+                    f"例）{msg.replace(' ','')} 陽暦\n"
+                    f"例）{msg.replace(' ','')} 陰暦")
             else:
-                line_reply(r_token, WELCOME_MSG)
+                line_reply(r_token,
+                    "🌤️ 今日の流れを分析します\n\n"
+                    "生年月日8桁 + 陽暦/陰暦を入力してください\n\n"
+                    "例）陽暦：19930616 陽暦\n"
+                    "例）陰暦：19930426 陰暦")
             return
 
         if err == 'bad_format':
-            line_reply(r_token, "❌ 형식이 맞지 않아요.\n예) 19930616 양력")
+            line_reply(r_token, "❌ 形式が違います。\n例）19930616 陽暦\n例）19930426 陰暦")
             return
         if err == 'bad_date':
-            line_reply(r_token, "❌ 올바른 생년월일이 아닙니다.\n1920년~2010년 사이로 입력해주세요.")
+            line_reply(r_token, "❌ 正しい生年月日ではありません。\n1920年〜2010年の間で入力してください。")
             return
 
-        label = '양력'
+        label = '陽暦'
         if is_lunar:
             converted = lunar_to_solar(y, m, d)
             if converted is None:
-                line_reply(r_token, "❌ 음력 변환 실패.\n양력으로 다시 입력해주세요.")
+                line_reply(r_token, "❌ 旧暦の変換に失敗しました。\n新暦（陽暦）で再入力してください。")
                 return
             orig_y = y
             y, m, d = converted
-            label = '음력→양력 변환'
-            print(f"🔄 음력 {orig_y}/{m}/{d} → 양력 {y}/{m}/{d}")
+            label = '陰暦→陽暦変換'
+            print(f"🔄 陰暦 {orig_y}/{m}/{d} → 陽暦 {y}/{m}/{d}")
 
         saju_cache[uid] = (y, m, d, label)
         line_reply(r_token,
-            f"⏳ {y}년생 분석 시작! ({label})\n\n"
-            f"🌤️ 당신의 운, 흐름, 타이밍을\n정밀하게 계산하고 있습니다.\n\n"
-            f"결과가 도착하면 자동으로 전송됩니다! 🍃"
+            f"⏳ {y}年生まれの分析を開始します！\n\n"
+            f"🌤️ あなたの運気、流れ、タイミングを\n精密に計算しています。\n\n"
+            f"結果が届いたら自動でお送りします！🍃"
         )
         threading.Thread(
             target=make_prescription,
-            args=(uid, y, m, d, label, 'short', line_push),
+            args=(uid, y, m, d, label, 'short', line_push, MalgeumLineAI),
             daemon=True
         ).start()
 
