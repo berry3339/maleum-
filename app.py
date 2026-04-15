@@ -246,12 +246,23 @@ def line_webhook():
 if LINE_AVAILABLE:
     @line_handler.add(MessageEvent, message=TextMessageContent)
     def handle_line_message(event):
-        msg      = event.message.text.strip()
-        uid      = event.source.user_id
-        r_token  = event.reply_token
+        msg     = event.message.text.strip()
+        uid     = event.source.user_id
+        r_token = event.reply_token
         print(f"📩 [LINE] uid={uid[:16]} | msg={msg!r}")
 
-        # ── 結果確認 ──
+        # ── スタート案内 ──
+        if msg in ['start', 'はじめ', 'スタート', 'こんにちは']:
+            line_reply(r_token,
+                "🌤️ はじめまして！\n"
+                "今日の運気・流れ・タイミングを\n"
+                "四柱推命で精密に分析します。\n\n"
+                "生年月日を8桁の数字で送ってください。\n\n"
+                "例）19930616"
+            )
+            return
+
+        # ── 結果確認（フォールバック用）──
         if msg in ['結果', '結果を見る', '결과']:
             if uid in results:
                 line_reply(r_token, results.pop(uid))
@@ -262,7 +273,7 @@ if LINE_AVAILABLE:
         # ── 詳細分析 ──
         if msg in ['詳細分析', '상세분석']:
             if uid not in saju_cache:
-                line_reply(r_token, "まず生年月日を入力してください。\n例）19930616 陽暦")
+                line_reply(r_token, "まず生年月日を入力してください。\n例）19930616")
                 return
             y, m, d, label = saju_cache[uid]
             results.pop(uid, None)
@@ -274,53 +285,36 @@ if LINE_AVAILABLE:
             ).start()
             return
 
-        # ── 날짜 파싱 ──
-        y, m, d, is_lunar, err = parse_date_msg(msg)
-
-        if err == 'no_type':
-            if re.fullmatch(r'\d{8}', msg.replace(' ', '')):
+        # ── 生年月日パース（8桁数字のみ）──
+        digits = msg.replace(' ', '')
+        if re.fullmatch(r'\d{8}', digits):
+            y, m, d = int(digits[:4]), int(digits[4:6]), int(digits[6:8])
+            if not (1920 <= y <= 2010 and 1 <= m <= 12 and 1 <= d <= 31):
                 line_reply(r_token,
-                    "📅 旧暦（陰暦）ですか？新暦（陽暦）ですか？\n\n"
-                    f"後ろに付けて再入力してください！\n\n"
-                    f"例）{msg.replace(' ','')} 陽暦\n"
-                    f"例）{msg.replace(' ','')} 陰暦")
-            else:
-                line_reply(r_token,
-                    "🌤️ 今日の流れを分析します\n\n"
-                    "生年月日8桁 + 陽暦/陰暦を入力してください\n\n"
-                    "例）陽暦：19930616 陽暦\n"
-                    "例）陰暦：19930426 陰暦")
-            return
-
-        if err == 'bad_format':
-            line_reply(r_token, "❌ 形式が違います。\n例）19930616 陽暦\n例）19930426 陰暦")
-            return
-        if err == 'bad_date':
-            line_reply(r_token, "❌ 正しい生年月日ではありません。\n1920年〜2010年の間で入力してください。")
-            return
-
-        label = '陽暦'
-        if is_lunar:
-            converted = lunar_to_solar(y, m, d)
-            if converted is None:
-                line_reply(r_token, "❌ 旧暦の変換に失敗しました。\n新暦（陽暦）で再入力してください。")
+                    "❌ 正しい生年月日ではありません。\n"
+                    "1920年〜2010年の間で入力してください。\n\n"
+                    "例）19930616"
+                )
                 return
-            orig_y = y
-            y, m, d = converted
-            label = '陰暦→陽暦変換'
-            print(f"🔄 陰暦 {orig_y}/{m}/{d} → 陽暦 {y}/{m}/{d}")
+            saju_cache[uid] = (y, m, d, '陽暦')
+            line_reply(r_token,
+                f"⏳ {y}年生まれの分析を開始します！\n\n"
+                f"🌤️ あなたの運気、流れ、タイミングを\n精密に計算しています。\n\n"
+                f"結果が届いたら自動でお送りします！🍃"
+            )
+            threading.Thread(
+                target=make_prescription,
+                args=(uid, y, m, d, '陽暦', 'short', line_push, MalgeumLineAI),
+                daemon=True
+            ).start()
+            return
 
-        saju_cache[uid] = (y, m, d, label)
+        # ── その他のメッセージ ──
         line_reply(r_token,
-            f"⏳ {y}年生まれの分析を開始します！\n\n"
-            f"🌤️ あなたの運気、流れ、タイミングを\n精密に計算しています。\n\n"
-            f"結果が届いたら自動でお送りします！🍃"
+            "🌤️ 今日の運気を分析します\n\n"
+            "生年月日を8桁の数字で送ってください。\n\n"
+            "例）19930616"
         )
-        threading.Thread(
-            target=make_prescription,
-            args=(uid, y, m, d, label, 'short', line_push, MalgeumLineAI),
-            daemon=True
-        ).start()
 
 if __name__ == '__main__':
     print("🚀 맑음 서버 시작!")
