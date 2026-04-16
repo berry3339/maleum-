@@ -170,5 +170,5 @@ def process_line(user_id, message):
 # ============================================================================
 if __name__ == '__main__':
     print("\n🚀 맑음 서버 시작!")
-    port = int(os.getenv('PORT', 5001))  # Railway는 PORT 환경변수 사용
+    port = int(os.getenv('PORT', 5000))  # Railway는 PORT 환경변수 사용
     app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
