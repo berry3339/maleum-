@@ -286,6 +286,7 @@ if LINE_AVAILABLE:
             return
 
         # ── 生年月日パース（8桁数字のみ）──
+        msg = msg.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
         digits = msg.replace(' ', '')
         if re.fullmatch(r'\d{8}', digits):
             y, m, d = int(digits[:4]), int(digits[4:6]), int(digits[6:8])
