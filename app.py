@@ -7,6 +7,8 @@ from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI
 app = Flask(__name__)
 user_sessions = {}
 
+LINE_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
+
 # ============================================================================
 # 카카오톡 챗봇
 # ============================================================================
@@ -65,74 +67,108 @@ def process_kakao(user_id, message):
 # ============================================================================
 # LINE 챗봇
 # ============================================================================
+def line_reply_api(reply_token, text):
+    """LINE reply API 호출"""
+    import requests as req
+    try:
+        resp = req.post(
+            'https://api.line.me/v2/bot/message/reply',
+            headers={
+                'Authorization': f"Bearer {LINE_ACCESS_TOKEN}",
+                'Content-Type': 'application/json'
+            },
+            json={'replyToken': reply_token, 'messages': [{'type': 'text', 'text': text}]},
+            timeout=10
+        )
+        print(f"📤 [LINE reply] status={resp.status_code}")
+    except Exception as e:
+        print(f"❌ [LINE reply 실패] {e}")
+
+def handle_line_event(user_id, message, reply_token):
+    """AI 처리 + LINE 답장 — background thread에서 실행"""
+    try:
+        text = process_line(user_id, message)
+        line_reply_api(reply_token, text)
+    except Exception as e:
+        print(f"❌ [LINE 처리오류] {e}")
+        try:
+            line_reply_api(reply_token, "❌ エラーが発生しました。もう一度お試しください。")
+        except:
+            pass
+
 @app.route('/line', methods=['POST'])
 def line():
     try:
-        import requests
         data = request.get_json()
         for event in data.get('events', []):
             if event['type'] == 'message' and event['message']['type'] == 'text':
-                user_id = event['source']['userId']
-                message = event['message']['text'].strip()
+                user_id    = event['source']['userId']
+                message    = event['message']['text'].strip()
                 reply_token = event['replyToken']
-                response_text = process_line(user_id, message)
-                requests.post(
-                    'https://api.line.me/v2/bot/message/reply',
-                    headers={
-                        'Authorization': f"Bearer {os.getenv('LINE_CHANNEL_ACCESS_TOKEN')}",
-                        'Content-Type': 'application/json'
-                    },
-                    json={'replyToken': reply_token, 'messages': [{'type': 'text', 'text': response_text}]}
-                )
-        return jsonify({'status': 'ok'})
+                print(f"📩 [LINE] uid={user_id[:16]} | msg={message!r}")
+                threading.Thread(
+                    target=handle_line_event,
+                    args=(user_id, message, reply_token),
+                    daemon=True
+                ).start()
+        return jsonify({'status': 'ok'})  # LINE에 즉시 200 반환
     except Exception as e:
-        print(f"LINE 오류: {e}")
-        return jsonify({'status': 'error'})
+        print(f"❌ [LINE 웹훅오류] {e}")
+        return jsonify({'status': 'ok'})  # 오류여도 LINE에는 200 반환
 
 def process_line(user_id, message):
     key = f'line_{user_id}'
+
+    # 시작 인사
     if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕']:
         user_sessions[key] = {'step': 'date'}
-        return "🌟 맑음へようこそ！\n\n生年月日を8桁の数字で送ってください。\n例）19930616"
+        return (
+            "🌤️ はじめまして！\n"
+            "今日の運気・流れ・タイミングを\n"
+            "四柱推命で精密に分析します。\n\n"
+            "生年月日を8桁の数字で送ってください。\n\n"
+            "例）19930616"
+        )
+
     session = user_sessions.get(key, {})
     step = session.get('step')
+
     if step == 'date':
+        # 전각숫자 → 반각 변환
         normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
         digits = ''.join(filter(str.isdigit, normalized))
         if len(digits) == 8:
             try:
-                year = int(digits[0:4])
+                year  = int(digits[0:4])
                 month = int(digits[4:6])
-                day = int(digits[6:8])
+                day   = int(digits[6:8])
                 if not (1920 <= year <= 2010):
                     return "❌ 正しい生年月日を入力してください。\n例）19930616"
                 if not (1 <= month <= 12):
                     return "❌ 正しい生年月日を入力してください。\n例）19930616"
                 if not (1 <= day <= 31):
                     return "❌ 正しい生年月日を入力してください。\n例）19930616"
-                user_sessions[key] = {'step': 'waiting', 'year': year, 'month': month, 'day': day}
-                def make_prescription():
-                    try:
-                        saju = LineManse.calculate(year, month, day)
-                        ai = MalgeumLineAI()
-                        result = ai.get_prescription(saju, mode='short')
-                        user_sessions[key] = {}
-                    except Exception as e:
-                        print(f"처방전 오류: {e}")
-                threading.Thread(target=make_prescription, daemon=True).start()
-                saju = LineManse.calculate(year, month, day)
-                ai = MalgeumLineAI()
+                saju   = LineManse.calculate(year, month, day)
+                ai     = MalgeumLineAI()
                 result = ai.get_prescription(saju, mode='short')
                 user_sessions[key] = {}
                 return result
             except Exception as e:
                 return f"❌ エラーが発生しました: {e}"
         return "❌ 8桁の数字で入力してください。\n例）19930616"
-    return "こんにちは！「start」と入力してください。🌿"
+
+    # 세션 없는 상태에서 다른 메시지
+    return (
+        "🌤️ 今日の運気を分析します\n\n"
+        "「start」と送ってから\n"
+        "生年月日を8桁で入力してください。\n\n"
+        "例）19930616"
+    )
 
 # ============================================================================
 # 서버 실행
 # ============================================================================
 if __name__ == '__main__':
     print("\n🚀 맑음 서버 시작!")
-    app.run(host='0.0.0.0', port=5001, debug=False, threaded=True)
+    port = int(os.getenv('PORT', 5001))  # Railway는 PORT 환경변수 사용
+    app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
