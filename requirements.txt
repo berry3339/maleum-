@@ -4,3 +4,4 @@ korean-lunar-calendar
 lunar-python
 line-bot-sdk
 requests
+gunicorn
