@@ -149,4 +149,5 @@ def process_line(user_id, message):
 # ============================================================================
 if __name__ == '__main__':
     print("\n🚀 맑음 서버 시작!")
-    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
