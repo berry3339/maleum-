@@ -1,7 +1,7 @@
 import os
 import threading
 from flask import Flask, request, jsonify
-from mind_pillar import PrecisionManse, MindPillarAI
+from mind_pillar import PrecisionManse, MalgeumAI
 from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI
 
 app = Flask(__name__)
@@ -54,7 +54,7 @@ def process_kakao(user_id, message):
             year = user_sessions[f'kakao_{user_id}']['year']
             month = user_sessions[f'kakao_{user_id}']['month']
             saju = PrecisionManse.calculate(year, month, day)
-            ai = MindPillarAI()
+            ai = ()
             prescription = ai.get_prescription(saju)
             user_sessions[f'kakao_{user_id}'] = {}
             return f"🌟 Mind-Pillar 처방전\n{'='*30}\n{prescription}\n\n다시 받으려면 '시작'을 입력하세요."
