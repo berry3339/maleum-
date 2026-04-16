@@ -104,7 +104,7 @@ class PrecisionManse:
 # ============================================================================
 # 2단계: 하이엔드 멘탈 케어 AI (일주 중심 분석)
 # ============================================================================
-class MalgeumAI:
+class MindPillarAI:
     def __init__(self):
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
         if not self.api_key:
@@ -194,7 +194,7 @@ def run():
 
     print("\n💭 일주 중심으로 처방전 작성 중...\n")
     try:
-        ai = MalgeumAI()
+        ai = MindPillarAI()
         prescription = ai.get_prescription(saju)
         print("="*65)
         print(" 🌟 맑음 처방전 도착")
