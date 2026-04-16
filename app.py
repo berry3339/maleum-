@@ -98,7 +98,7 @@ def process_line(user_id, message):
     step = session.get('step')
     if step == 'date':
         normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
-digits = ''.join(filter(str.isdigit, normalized))
+        digits = ''.join(filter(str.isdigit, normalized))
         if len(digits) == 8:
             try:
                 year = int(digits[0:4])
