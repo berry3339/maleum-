@@ -1,11 +1,61 @@
 import os
+import json
 import threading
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
 from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+import pytz
 
 app = Flask(__name__)
 user_sessions = {}
+
+USERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'users.json')
+
+def load_users():
+    try:
+        with open(USERS_FILE, 'r') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_user(user_id, year, month, day):
+    users = load_users()
+    users[user_id] = {'year': year, 'month': month, 'day': day}
+    with open(USERS_FILE, 'w') as f:
+        json.dump(users, f, ensure_ascii=False, indent=2)
+
+def send_daily_messages():
+    """매일 오전 7시(JST) 등록된 모든 유저에게 오늘의 처방전 push"""
+    import requests as req
+    users = load_users()
+    if not users:
+        return
+    print(f"⏰ [暁の処方箋] {len(users)}명에게 발송 시작")
+    for uid, data in users.items():
+        try:
+            saju = LineManse.calculate(data['year'], data['month'], data['day'])
+            ai   = MalgeumLineAI()
+            text = "🌅 暁の処方箋\n\n" + ai.get_prescription(saju, mode='short')
+            req.post(
+                'https://api.line.me/v2/bot/message/push',
+                headers={
+                    'Authorization': f"Bearer {os.getenv('LINE_CHANNEL_ACCESS_TOKEN')}",
+                    'Content-Type': 'application/json'
+                },
+                json={'to': uid, 'messages': [{'type': 'text', 'text': text}]},
+                timeout=30
+            )
+            print(f"✅ [暁push] {uid[:16]}")
+        except Exception as e:
+            print(f"❌ [暁push오류] {uid[:16]}: {e}")
+
+# 매일 오전 7시(JST) 스케줄러 시작
+jst = pytz.timezone('Asia/Tokyo')
+scheduler = BackgroundScheduler(timezone=jst)
+scheduler.add_job(send_daily_messages, CronTrigger(hour=7, minute=0, timezone=jst))
+scheduler.start()
 
 # ============================================================================
 # 헬스체크
@@ -163,6 +213,8 @@ def process_line(user_id, message):
                 result = ai.get_prescription(saju, mode='short')
                 # 세션에 year/month/day 유지 (深層解読 재호출용)
                 user_sessions[key] = {'step': 'done', 'year': year, 'month': month, 'day': day}
+                # users.json에 등록 (暁の処方箋 자동 알림용)
+                save_user(user_id, year, month, day)
                 return result
             except Exception as e:
                 return f"❌ エラーが発生しました: {e}"
