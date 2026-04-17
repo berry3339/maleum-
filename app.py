@@ -123,11 +123,27 @@ def line():
 
 def process_line(user_id, message):
     key = f'line_{user_id}'
+
+    # 시작
     if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕']:
         user_sessions[key] = {'step': 'date'}
         return "🌟 맑음へようこそ！\n\n生年月日を8桁の数字で送ってください。\n例）19930616"
+
+    # 深層解読
+    if message == '深層解読':
+        session = user_sessions.get(key, {})
+        if 'year' not in session:
+            return "まず生年月日を入力してください。\n例）19930616"
+        try:
+            saju   = LineManse.calculate(session['year'], session['month'], session['day'])
+            ai     = MalgeumLineAI()
+            return ai.get_prescription(saju, mode='long')
+        except Exception as e:
+            return f"❌ エラーが発生しました: {e}"
+
     session = user_sessions.get(key, {})
     step = session.get('step')
+
     if step == 'date':
         normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
         digits = ''.join(filter(str.isdigit, normalized))
@@ -145,11 +161,13 @@ def process_line(user_id, message):
                 saju   = LineManse.calculate(year, month, day)
                 ai     = MalgeumLineAI()
                 result = ai.get_prescription(saju, mode='short')
-                user_sessions[key] = {}
+                # 세션에 year/month/day 유지 (深層解読 재호출용)
+                user_sessions[key] = {'step': 'done', 'year': year, 'month': month, 'day': day}
                 return result
             except Exception as e:
                 return f"❌ エラーが発生しました: {e}"
         return "❌ 8桁の数字で入力してください。\n例）19930616"
+
     return "こんにちは！「start」と入力してください。🌿"
 
 # ============================================================================
