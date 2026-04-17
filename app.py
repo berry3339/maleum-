@@ -124,7 +124,7 @@ def process_kakao(user_id, message):
 # LINE 챗봇
 # ============================================================================
 def line_reply_api(reply_token, text):
-    """LINE reply API 호출 — background thread에서 사용"""
+    """LINE reply API 호출"""
     import requests as req
     try:
         resp = req.post(
@@ -140,8 +140,53 @@ def line_reply_api(reply_token, text):
     except Exception as e:
         print(f"❌ [LINE reply 실패] {e}")
 
+def line_push_api(user_id, text):
+    """LINE push API 호출"""
+    import requests as req
+    try:
+        resp = req.post(
+            'https://api.line.me/v2/bot/message/push',
+            headers={
+                'Authorization': f"Bearer {os.getenv('LINE_CHANNEL_ACCESS_TOKEN')}",
+                'Content-Type': 'application/json'
+            },
+            json={'to': user_id, 'messages': [{'type': 'text', 'text': text}]},
+            timeout=30
+        )
+        print(f"📤 [LINE push] status={resp.status_code}")
+    except Exception as e:
+        print(f"❌ [LINE push 실패] {e}")
+
 def handle_line_event(user_id, message, reply_token):
     """AI 처리 + LINE 답장 — background thread에서 실행"""
+
+    # 深層解読: 즉시 reply → background thread → 완료 후 push
+    if message == '深層解読':
+        key = f'line_{user_id}'
+        session = user_sessions.get(key, {})
+        if 'year' not in session:
+            line_reply_api(reply_token, "まず生年月日を入力してください。\n例）19930616")
+            return
+        # 즉시 시작 메시지 reply
+        line_reply_api(reply_token,
+            "🌀 深層解読を開始します。\n\n"
+            "四柱の深層を紐解くのに少々お時間をいただきます。\n"
+            "そのまま少しだけお待ちください…"
+        )
+        # AI 처리 후 push
+        def deep_analysis():
+            try:
+                saju   = LineManse.calculate(session['year'], session['month'], session['day'])
+                ai     = MalgeumLineAI()
+                result = ai.get_prescription(saju, mode='long')
+                line_push_api(user_id, result)
+            except Exception as e:
+                print(f"❌ [深層解読오류] {e}")
+                line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
+        threading.Thread(target=deep_analysis, daemon=True).start()
+        return
+
+    # 일반 메시지: process_line → reply
     try:
         text = process_line(user_id, message)
         line_reply_api(reply_token, text)
@@ -178,18 +223,6 @@ def process_line(user_id, message):
     if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕']:
         user_sessions[key] = {'step': 'date'}
         return "🌟 맑음へようこそ！\n\n生年月日を8桁の数字で送ってください。\n例）19930616"
-
-    # 深層解読
-    if message == '深層解読':
-        session = user_sessions.get(key, {})
-        if 'year' not in session:
-            return "まず生年月日を入力してください。\n例）19930616"
-        try:
-            saju   = LineManse.calculate(session['year'], session['month'], session['day'])
-            ai     = MalgeumLineAI()
-            return ai.get_prescription(saju, mode='long')
-        except Exception as e:
-            return f"❌ エラーが発生しました: {e}"
 
     session = user_sessions.get(key, {})
     step = session.get('step')
