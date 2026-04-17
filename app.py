@@ -171,7 +171,7 @@ def handle_line_event(user_id, message, reply_token):
         line_reply_api(reply_token,
             "🌀 深層解読を開始します。\n\n"
             "四柱の深層を紐解くのに少々お時間をいただきます。\n"
-            "そのまま少しだけお待ちください…"
+            "今しばらくお待ちくださいませ。"
         )
         # AI 처리 후 push
         def deep_analysis():
