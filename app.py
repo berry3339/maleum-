@@ -157,36 +157,19 @@ def line_push_api(user_id, text):
     except Exception as e:
         print(f"❌ [LINE push 실패] {e}")
 
+def deep_analysis(user_id, year, month, day):
+    """深層解読 AI 처리 → push API — background thread에서 실행"""
+    try:
+        saju   = LineManse.calculate(year, month, day)
+        ai     = MalgeumLineAI()
+        result = ai.get_prescription(saju, mode='long')
+        line_push_api(user_id, result)
+    except Exception as e:
+        print(f"❌ [深層解読오류] {e}")
+        line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
+
 def handle_line_event(user_id, message, reply_token):
-    """AI 처리 + LINE 답장 — background thread에서 실행"""
-
-    # 深層解読: 즉시 reply → background thread → 완료 후 push
-    if message == '深層解読':
-        key = f'line_{user_id}'
-        session = user_sessions.get(key, {})
-        if 'year' not in session:
-            line_reply_api(reply_token, "まず生年月日を入力してください。\n例）19930616")
-            return
-        # 즉시 시작 메시지 reply
-        line_reply_api(reply_token,
-            "🌀 深層解読を開始します。\n\n"
-            "四柱の深層を紐解くのに少々お時間をいただきます。\n"
-            "今しばらくお待ちくださいませ。"
-        )
-        # AI 처리 후 push
-        def deep_analysis():
-            try:
-                saju   = LineManse.calculate(session['year'], session['month'], session['day'])
-                ai     = MalgeumLineAI()
-                result = ai.get_prescription(saju, mode='long')
-                line_push_api(user_id, result)
-            except Exception as e:
-                print(f"❌ [深層解読오류] {e}")
-                line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
-        threading.Thread(target=deep_analysis, daemon=True).start()
-        return
-
-    # 일반 메시지: process_line → reply
+    """일반 메시지: process_line → reply — background thread에서 실행"""
     try:
         text = process_line(user_id, message)
         line_reply_api(reply_token, text)
@@ -207,6 +190,27 @@ def line():
                 message     = event['message']['text'].strip()
                 reply_token = event['replyToken']
                 print(f"📩 [LINE] uid={user_id[:16]} | msg={message!r}")
+
+                # 深層解読: 라우트에서 즉시 처리
+                if message == '深層解読':
+                    key = f'line_{user_id}'
+                    session = user_sessions.get(key, {})
+                    if 'year' in session:
+                        line_reply_api(reply_token,
+                            "🌀 深層解読を開始します。\n\n"
+                            "四柱の深層を紐解くのに少々お時間をいただきます。\n"
+                            "今しばらくお待ちくださいませ。"
+                        )
+                        threading.Thread(
+                            target=deep_analysis,
+                            args=(user_id, session['year'], session['month'], session['day']),
+                            daemon=True
+                        ).start()
+                    else:
+                        line_reply_api(reply_token, "まず生年月日を入力してください。\n例）19930616")
+                    continue
+
+                # 일반 메시지: background thread
                 threading.Thread(
                     target=handle_line_event,
                     args=(user_id, message, reply_token),
