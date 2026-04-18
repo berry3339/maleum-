@@ -226,12 +226,12 @@ def line():
                 print(f"📩 [LINE] uid={user_id[:16]} | msg={message!r}")
 
                 # 深層解読: 라우트에서 즉시 처리
-                if message == '深層解読':
+                if message == '魂の処方箋':
                     key = f'line_{user_id}'
                     session = user_sessions.get(key, {})
                     if 'year' in session:
                         line_reply_api(reply_token,
-                            "🌀 深層解読を開始します。\n\n"
+                            "🌀 魂の処方箋を準備します。\n\n"
                             "四柱の深層を紐解くのに少々お時間をいただきます。\n"
                             "今しばらくお待ちくださいませ。"
                         )
@@ -258,7 +258,7 @@ def process_line(user_id, message):
     key = f'line_{user_id}'
 
     # 시작
-    if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕']:
+    if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く']:
         user_sessions[key] = {'step': 'date'}
         return "🌟 맑음へようこそ！\n\n生年月日を8桁の数字で送ってください。\n例）19930616"
 
@@ -291,7 +291,7 @@ def process_line(user_id, message):
                 return f"❌ エラーが発生しました: {e}"
         return "❌ 8桁の数字で入力してください。\n例）19930616"
 
-    return "こんにちは！「start」と入力してください。🌿"
+    return "こんにちは！「扉を開く」と入力してください。🌿"
 
 # ============================================================================
 # 서버 실행
