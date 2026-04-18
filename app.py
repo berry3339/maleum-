@@ -163,7 +163,19 @@ def deep_analysis(user_id, year, month, day):
         saju   = LineManse.calculate(year, month, day)
         ai     = MalgeumLineAI()
         result = ai.get_prescription(saju, mode='long')
-        line_push_api(user_id, result)
+
+        # 4.【覚醒への処方箋】 직전에서 자르고 결제 멘트 추가
+        cut_marker = '4.【覚醒への処方箋】'
+        if cut_marker in result:
+            result = result[:result.index(cut_marker)].rstrip()
+
+        payment_msg = (
+            "\n\nあなたが今感じている\u300cもやもや\u300dには、実は名前があります。\n"
+            "その名前を知ると、動き方が変わります。\n\n"
+            "気づいた人だけが使えます。\n"
+            "🔒 魂の処方箋を受け取る → https://www.paypal.com/ncp/payment/G7K49PXY32R2C"
+        )
+        line_push_api(user_id, result + payment_msg)
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
