@@ -164,10 +164,32 @@ def deep_analysis(user_id, year, month, day):
         ai     = MalgeumLineAI()
         result = ai.get_prescription(saju, mode='long')
 
-        # 4.【覚醒への処方箋】 직전에서 자르고 결제 멘트 추가
-        cut_marker = '4.【覚醒への処方箋】'
-        if cut_marker in result:
-            result = result[:result.index(cut_marker)].rstrip()
+        # 4번 섹션 직전에서 절단 (AI가 쓰는 다양한 표記に対応)
+        cut_markers = [
+            '4.【覚醒への処方箋】',
+            '4．【覚醒への処方箋】',
+            '4.【魂の処方箋】',
+            '4．【魂の処方箋】',
+            '【魂の処方箋】',
+            '【覚醒への処方箋】',
+        ]
+        # 위 마커 우선 탐색
+        cut_pos = None
+        for marker in cut_markers:
+            idx = result.find(marker)
+            if idx != -1:
+                if cut_pos is None or idx < cut_pos:
+                    cut_pos = idx
+
+        # 마커 없으면 줄 단위로 '4.'로 시작하는 줄 탐색
+        if cut_pos is None:
+            for i, line in enumerate(result.splitlines(keepends=True)):
+                if line.lstrip().startswith('4.') or line.lstrip().startswith('4．'):
+                    cut_pos = result.index(line)
+                    break
+
+        if cut_pos is not None:
+            result = result[:cut_pos].rstrip()
 
         payment_msg = (
             "\n\nあなたが今感じている\u300cもやもや\u300dには、実は名前があります。\n"
