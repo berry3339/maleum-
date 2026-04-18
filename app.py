@@ -195,7 +195,7 @@ def deep_analysis(user_id, year, month, day):
             "\n\nあなたが今感じている\u300cもやもや\u300dには、実は名前があります。\n"
             "その名前を知ると、動き方が変わります。\n\n"
             "気づいた人だけが使えます。\n"
-            "🔒 魂の処方箋を受け取る → https://www.paypal.com/ncp/payment/G7K49PXY32R2C"
+            "🔒 魂の処方箋を受け取る\n→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C"
         )
         line_push_api(user_id, result + payment_msg)
     except Exception as e:
@@ -260,7 +260,7 @@ def process_line(user_id, message):
     # 시작
     if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く']:
         user_sessions[key] = {'step': 'date'}
-        return "🌟 맑음へようこそ！\n\n生年月日を8桁の数字で送ってください。\n例）19930616"
+        return "🌟 맑음(マルム)へようこそ！\n\n生年月日を8桁の数字で送ってください。\n例）19930616"
 
     session = user_sessions.get(key, {})
     step = session.get('step')
@@ -297,6 +297,6 @@ def process_line(user_id, message):
 # 서버 실행
 # ============================================================================
 if __name__ == '__main__':
-    print("\n🚀 맑음 서버 시작!")
+    print("\n🚀 맑음(マルム) 서버 시작!")
     port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
