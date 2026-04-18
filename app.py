@@ -11,7 +11,7 @@ import pytz
 app = Flask(__name__)
 user_sessions = {}
 
-USERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'users.json')
+USERS_FILE = '/data/users.json'
 
 def load_users():
     try:
