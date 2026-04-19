@@ -228,14 +228,13 @@ def line():
                 print(f"📩 [LINE] uid={user_id[:16]} | msg={message!r}")
 
                 # 深層解読: 라우트에서 즉시 처리
-                if message == '魂の処方箋':
+                if message in ('魂の処方箋', '処方箋を開く'):
                     key = f'line_{user_id}'
                     session = user_sessions.get(key, {})
                     if 'year' in session:
                         line_reply_api(reply_token,
-                            "🌀 魂の処方箋を準備します。\n\n"
-                            "四柱の深層を紐解くのに少々お時間をいただきます。\n"
-                            "今しばらくお待ちくださいませ。"
+                            "🌀 魂の処方箋を準備します。\n"
+                            "少々お待ちくださいませ。"
                         )
                         threading.Thread(
                             target=deep_analysis,
@@ -243,7 +242,7 @@ def line():
                             daemon=True
                         ).start()
                     else:
-                        line_reply_api(reply_token, "まず生年月日を入力してください。\n例）19930616")
+                        line_reply_api(reply_token, "まず生年月日を入力してください🌿")
                     continue
 
                 # 일반 메시지: background thread
