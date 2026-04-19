@@ -158,12 +158,12 @@ def line_push_api(user_id, text):
     except Exception as e:
         print(f"❌ [LINE push 실패] {e}")
 
-def deep_analysis(user_id, year, month, day, mode='preview'):
+def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'):
     """深層解読 AI 처리 → push API — background thread에서 실행"""
     try:
         saju   = LineManse.calculate(year, month, day)
         ai     = MalgeumLineAI()
-        result = ai.get_prescription(saju, mode=mode)
+        result = ai.get_prescription(saju, mode=mode, birth_time=birth_time)
 
         if mode == 'preview':
             payment_msg = (
@@ -219,7 +219,7 @@ def line():
                         )
                         threading.Thread(
                             target=deep_analysis,
-                            args=(user_id, session['year'], session['month'], session['day'], 'preview'),
+                            args=(user_id, session['year'], session['month'], session['day'], 'preview', session.get('birth_time', '不明')),
                             daemon=True
                         ).start()
                     else:
@@ -245,7 +245,7 @@ def process_line(user_id, message):
         if 'year' in session:
             threading.Thread(
                 target=deep_analysis,
-                args=(user_id, session['year'], session['month'], session['day'], 'prescription'),
+                args=(user_id, session['year'], session['month'], session['day'], 'prescription', session.get('birth_time', '不明')),
                 daemon=True
             ).start()
             return ("🌀 決済を確認しました。\n"
