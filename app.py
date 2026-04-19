@@ -167,11 +167,16 @@ def deep_analysis(user_id, year, month, day, mode='preview'):
 
         if mode == 'preview':
             payment_msg = (
-                "\n\nあなたが今感じている\u300cもやもや\u300dには、実は名前があります。\n"
-                "その名前を知ると、動き方が変わります。\n\n"
-                "気づいた人だけが使えます。\n"
-                "🔒 魂の処方箋を受け取る\n→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n"
-                "✅ ご決済後は「処方箋を開く」と入力してください。"
+                "\n\n今、あなたの中にある迷いは——\n"
+                "偶然ではありません。\n\n"
+                "命式はすでに、その答えを持っています。\n"
+                "あなたに必要なのは、\n"
+                "あなただけの「処方箋」を受け取ること。\n\n"
+                "──────────────\n"
+                "🔒 魂の処方箋を受け取る\n"
+                "→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n\n"
+                "✅ ご決済後は「処方箋を開く」とご入力ください。\n"
+                "最初に戻りたい方は「マルム」とご入力ください。🌿"
             )
             line_push_api(user_id, result + payment_msg)
         else:  # prescription
@@ -260,7 +265,8 @@ def process_line(user_id, message):
                 "🔒 1対1 LINE鑑定（30分 ¥5,000）\n"
                 "→ https://www.paypal.com/ncp/payment/4FXDK6WHXU45W\n\n"
                 "ご希望の日時を教えてください。\n"
-                "例）4月25日 20時")
+                "例）4月25日 20時\n"
+                "最初に戻りたい方は「マルム」とご入力ください。🌿")
 
     # 시작
     if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く']:
@@ -323,8 +329,10 @@ def process_line(user_id, message):
             return (f"ご予約を承りました。✨\n"
                     f"日時：{message}\n"
                     "当日の時間に合わせてご連絡いたします。🌿\n"
-                    "最初に戻りたい方は「マルム」と入力してください。🌿")
-        return "ご希望の日時を教えてください。\n例）4月25日 20時"
+                    "最初に戻りたい方は「マルム」とご入力ください。🌿")
+        return ("ご希望の日時を入力してください。\n"
+                "例）4月25日 20時\n"
+                "最初に戻りたい方は「マルム」とご入力ください。🌿")
 
     return "こんにちは！「扉を開く」と入力してください。🌿"
 
