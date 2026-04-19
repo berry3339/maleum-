@@ -257,6 +257,12 @@ def line():
 def process_line(user_id, message):
     key = f'line_{user_id}'
 
+    # 鑑定予約
+    if message == '鑑定予約':
+        return ("ご予約はこちらから承ります。\n"
+                "🔒 1対1 LINE鑑定(1時間 ¥3,000)\n"
+                "→ https://www.paypal.com/ncp/payment/4FXDK6WHXU45W")
+
     # 시작
     if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く']:
         user_sessions[key] = {'step': 'date'}
@@ -279,17 +285,37 @@ def process_line(user_id, message):
                     return "❌ 正しい生年月日を入力してください。\n例）19930616"
                 if not (1 <= day <= 31):
                     return "❌ 正しい生年月日を入力してください。\n例）19930616"
-                saju   = LineManse.calculate(year, month, day)
-                ai     = MalgeumLineAI()
-                result = ai.get_prescription(saju, mode='short')
-                # 세션에 year/month/day 유지 (深層解読 재호출용)
-                user_sessions[key] = {'step': 'done', 'year': year, 'month': month, 'day': day}
-                # users.json에 등록 (暁の処方箋 자동 알림용)
-                save_user(user_id, year, month, day)
-                return result
+                user_sessions[key] = {'step': 'time', 'year': year, 'month': month, 'day': day}
+                return ("時間がわからなくても大丈夫です。🌿\n"
+                        "生まれた時間を教えてください。\n"
+                        "例）0730\n"
+                        "わからない方は「不明」と送ってください。")
             except Exception as e:
                 return f"❌ エラーが発生しました: {e}"
         return "❌ 8桁の数字で入力してください。\n例）19930616"
+
+    if step == 'time':
+        year  = session['year']
+        month = session['month']
+        day   = session['day']
+        normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
+        if message.strip() == '不明':
+            birth_time = '不明'
+        else:
+            digits = ''.join(filter(str.isdigit, normalized))
+            if len(digits) in (3, 4):
+                birth_time = digits.zfill(4)
+            else:
+                return "❌ 時間は4桁（例：0730）か\n「不明」で送ってください。"
+        try:
+            saju   = LineManse.calculate(year, month, day)
+            ai     = MalgeumLineAI()
+            result = ai.get_prescription(saju, mode='short')
+            user_sessions[key] = {'step': 'done', 'year': year, 'month': month, 'day': day, 'birth_time': birth_time}
+            save_user(user_id, year, month, day)
+            return result + "\n\n🌙 1対1でじっくり相談したい方は\n「鑑定予約」と入力してください。"
+        except Exception as e:
+            return f"❌ エラーが発生しました: {e}"
 
     return "こんにちは！「扉を開く」と入力してください。🌿"
 
