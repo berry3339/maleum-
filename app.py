@@ -257,8 +257,8 @@ def process_line(user_id, message):
         user_sessions[key] = {}
         return "こんにちは！「扉を開く」と入力してください。🌿"
 
-    # 鑑定予約
-    if message == '鑑定予約':
+    # 鑑定予約 (따옴표/특수문자 포함 입력도 인식)
+    if re.search(r'鑑定予約', message):
         session = user_sessions.get(key, {})
         user_sessions[key] = {**session, 'step': 'booking'}
         return ("ご予約はこちらから承ります。\n"
