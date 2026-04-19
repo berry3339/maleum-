@@ -158,6 +158,20 @@ def line_push_api(user_id, text):
     except Exception as e:
         print(f"❌ [LINE push 실패] {e}")
 
+def _filter_time_lines(text: str) -> str:
+    """현재 시간 기준으로 부적절한 시간대 표현이 포함된 줄 제거"""
+    now_hour = datetime.now().hour
+    if now_hour < 12:
+        return text
+
+    forbidden = ["朝のうちに", "午前中に", "朝起きたら", "今から午前", "朝一番に"]
+    if now_hour >= 18:
+        forbidden += ["午後から", "夕方に"]
+
+    lines = text.split('\n')
+    filtered = [line for line in lines if not any(w in line for w in forbidden)]
+    return '\n'.join(filtered)
+
 def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'):
     """深層解読 AI 처리 → push API — background thread에서 실행"""
     try:
@@ -180,6 +194,7 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             )
             line_push_api(user_id, result + payment_msg)
         else:  # prescription
+            result = _filter_time_lines(result)
             line_push_api(user_id, result)
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
