@@ -195,7 +195,8 @@ def deep_analysis(user_id, year, month, day):
             "\n\nあなたが今感じている\u300cもやもや\u300dには、実は名前があります。\n"
             "その名前を知ると、動き方が変わります。\n\n"
             "気づいた人だけが使えます。\n"
-            "🔒 魂の処方箋を受け取る\n→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C"
+            "🔒 魂の処方箋を受け取る\n→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n"
+            "さらに深く話したい方は「鑑定予約」と入力してください。🌙"
         )
         line_push_api(user_id, result + payment_msg)
     except Exception as e:
@@ -313,7 +314,7 @@ def process_line(user_id, message):
             result = ai.get_prescription(saju, mode='short')
             user_sessions[key] = {'step': 'done', 'year': year, 'month': month, 'day': day, 'birth_time': birth_time}
             save_user(user_id, year, month, day)
-            return result + "\n🌙 1対1でじっくり相談したい方は「鑑定予約」と入力してください。"
+            return result
         except Exception as e:
             return f"❌ エラーが発生しました: {e}"
 
