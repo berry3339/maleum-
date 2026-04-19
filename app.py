@@ -158,50 +158,24 @@ def line_push_api(user_id, text):
     except Exception as e:
         print(f"❌ [LINE push 실패] {e}")
 
-def deep_analysis(user_id, year, month, day):
+def deep_analysis(user_id, year, month, day, mode='preview'):
     """深層解読 AI 처리 → push API — background thread에서 실행"""
     try:
         saju   = LineManse.calculate(year, month, day)
         ai     = MalgeumLineAI()
-        result = ai.get_prescription(saju, mode='long')
+        result = ai.get_prescription(saju, mode=mode)
 
-        # 4번 섹션 직전에서 절단 (AI가 쓰는 다양한 표記に対応)
-        cut_markers = [
-            '4.【覚醒への処方箋】',
-            '4．【覚醒への処方箋】',
-            '4.【魂の処方箋】',
-            '4．【魂の処方箋】',
-            '【魂の処方箋】',
-            '【覚醒への処方箋】',
-        ]
-        # 위 마커 우선 탐색
-        cut_pos = None
-        for marker in cut_markers:
-            idx = result.find(marker)
-            if idx != -1:
-                if cut_pos is None or idx < cut_pos:
-                    cut_pos = idx
-
-        # 마커 없으면 줄 단위로 '4.'로 시작하는 줄 탐색
-        if cut_pos is None:
-            for i, line in enumerate(result.splitlines(keepends=True)):
-                if line.lstrip().startswith('4.') or line.lstrip().startswith('4．'):
-                    cut_pos = result.index(line)
-                    break
-
-        if cut_pos is not None:
-            result = result[:cut_pos].rstrip()
-
-        result = result + "\n\nこの処方箋のさらに奥を知りたい方は\n「鑑定予約」と入力してください。🌙"
-
-        payment_msg = (
-            "\n\nあなたが今感じている\u300cもやもや\u300dには、実は名前があります。\n"
-            "その名前を知ると、動き方が変わります。\n\n"
-            "気づいた人だけが使えます。\n"
-            "🔒 魂の処方箋を受け取る\n→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n"
-            "✅ ご決済後は「処方箋を開く」と入力してください。"
-        )
-        line_push_api(user_id, result + payment_msg)
+        if mode == 'preview':
+            payment_msg = (
+                "\n\nあなたが今感じている\u300cもやもや\u300dには、実は名前があります。\n"
+                "その名前を知ると、動き方が変わります。\n\n"
+                "気づいた人だけが使えます。\n"
+                "🔒 魂の処方箋を受け取る\n→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n"
+                "✅ ご決済後は「処方箋を開く」と入力してください。"
+            )
+            line_push_api(user_id, result + payment_msg)
+        else:  # prescription
+            line_push_api(user_id, result)
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -240,7 +214,7 @@ def line():
                         )
                         threading.Thread(
                             target=deep_analysis,
-                            args=(user_id, session['year'], session['month'], session['day']),
+                            args=(user_id, session['year'], session['month'], session['day'], 'preview'),
                             daemon=True
                         ).start()
                     else:
@@ -266,7 +240,7 @@ def process_line(user_id, message):
         if 'year' in session:
             threading.Thread(
                 target=deep_analysis,
-                args=(user_id, session['year'], session['month'], session['day']),
+                args=(user_id, session['year'], session['month'], session['day'], 'prescription'),
                 daemon=True
             ).start()
             return ("🌀 魂の処方箋を準備します。\n"
