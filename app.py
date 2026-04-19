@@ -313,7 +313,7 @@ def process_line(user_id, message):
             result = ai.get_prescription(saju, mode='short')
             user_sessions[key] = {'step': 'done', 'year': year, 'month': month, 'day': day, 'birth_time': birth_time}
             save_user(user_id, year, month, day)
-            return result + "\n\n🌙 1対1でじっくり相談したい方は\n「鑑定予約」と入力してください。"
+            return result + "\n🌙 1対1でじっくり相談したい方は「鑑定予約」と入力してください。"
         except Exception as e:
             return f"❌ エラーが発生しました: {e}"
 
