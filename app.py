@@ -248,8 +248,8 @@ def process_line(user_id, message):
                 args=(user_id, session['year'], session['month'], session['day'], 'prescription'),
                 daemon=True
             ).start()
-            return ("🌀 魂の処方箋を準備します。\n"
-                    "少々お待ちくださいませ。")
+            return ("🌀 決済を確認しました。\n"
+                    "あなただけの処方箋の封を切ります...")
         return "まず生年月日を入力してください🌿"
 
     # マルム → 처음으로 리셋
