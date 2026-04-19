@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import threading
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
@@ -260,9 +261,13 @@ def process_line(user_id, message):
 
     # 鑑定予約
     if message == '鑑定予約':
+        session = user_sessions.get(key, {})
+        user_sessions[key] = {**session, 'step': 'booking'}
         return ("ご予約はこちらから承ります。\n"
-                "🔒 1対1 LINE鑑定(1時間 ¥3,000)\n"
-                "→ https://www.paypal.com/ncp/payment/4FXDK6WHXU45W")
+                "🔒 1対1 LINE鑑定（30分 ¥5,000）\n"
+                "→ https://www.paypal.com/ncp/payment/4FXDK6WHXU45W\n\n"
+                "ご希望の日時を教えてください。\n"
+                "例）4月25日 20時")
 
     # 시작
     if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く']:
@@ -317,6 +322,15 @@ def process_line(user_id, message):
             return result
         except Exception as e:
             return f"❌ エラーが発生しました: {e}"
+
+    if step == 'booking':
+        if re.search(r'\d+[月日時分]|[月日時]\d+', message):
+            session['step'] = 'done'
+            user_sessions[key] = session
+            return (f"ご予約を承りました。✨\n"
+                    f"日時：{message}\n"
+                    "当日の時間に合わせてご連絡いたします。🌿")
+        return "ご希望の日時を教えてください。\n例）4月25日 20時"
 
     return "こんにちは！「扉を開く」と入力してください。🌿"
 
