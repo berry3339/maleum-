@@ -228,7 +228,7 @@ def line():
                 print(f"📩 [LINE] uid={user_id[:16]} | msg={message!r}")
 
                 # 深層解読: 라우트에서 즉시 처리
-                if message in ('魂の処方箋', '処方箋を開く'):
+                if message == '魂の処方箋':
                     key = f'line_{user_id}'
                     session = user_sessions.get(key, {})
                     if 'year' in session:
@@ -257,6 +257,24 @@ def line():
 
 def process_line(user_id, message):
     key = f'line_{user_id}'
+
+    # 処方箋を開く
+    if message == '処方箋を開く':
+        session = user_sessions.get(key, {})
+        if 'year' in session:
+            threading.Thread(
+                target=deep_analysis,
+                args=(user_id, session['year'], session['month'], session['day']),
+                daemon=True
+            ).start()
+            return ("🌀 魂の処方箋を準備します。\n"
+                    "少々お待ちくださいませ。")
+        return "まず生年月日を入力してください🌿"
+
+    # マルム → 처음으로 리셋
+    if message == 'マルム':
+        user_sessions[key] = {}
+        return "こんにちは！「扉を開く」と入力してください。🌿"
 
     # 鑑定予約
     if message == '鑑定予約':
@@ -328,7 +346,8 @@ def process_line(user_id, message):
             user_sessions[key] = session
             return (f"ご予約を承りました。✨\n"
                     f"日時：{message}\n"
-                    "当日の時間に合わせてご連絡いたします。🌿")
+                    "当日の時間に合わせてご連絡いたします。🌿\n"
+                    "最初に戻りたい方は「マルム」と入力してください。🌿")
         return "ご希望の日時を教えてください。\n例）4月25日 20時"
 
     return "こんにちは！「扉を開く」と入力してください。🌿"
