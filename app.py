@@ -197,6 +197,7 @@ def deep_analysis(user_id, year, month, day):
             "その名前を知ると、動き方が変わります。\n\n"
             "気づいた人だけが使えます。\n"
             "🔒 魂の処方箋を受け取る\n→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n"
+            "✅ ご決済後は「処方箋を開く」と入力してください。\n"
             "さらに深く話したい方は「鑑定予約」と入力してください。🌙"
         )
         line_push_api(user_id, result + payment_msg)
