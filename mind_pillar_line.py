@@ -168,6 +168,15 @@ class MalgeumLineAI:
             ohaeng_emoji  = PrecisionManse.OHAENG_EMOJI.get(saju['ohaeng'], "✨")
             day_yomi      = PrecisionManse.pillar_yomi(saju['day_pillar'])
             current_time  = datetime.now().strftime("%H:%M")
+            current_hour  = datetime.now().hour
+            if current_hour < 12:
+                preview_time_rule = (
+                    "\n\n【時間帯ルール — 午前】\n"
+                    "「夜が明けてから」「朝のうちに」「朝早く」「午前中に」という表現は絶対禁止。\n"
+                    "今日の午後・夕方頃を基準にした表現のみ使用すること。"
+                )
+            else:
+                preview_time_rule = ""
             birth_note    = (
                 "時柱（生まれた時間の柱）は不明のため、年柱・月柱・日柱の3柱のみで分析すること。時柱への言及は一切禁止。"
                 if birth_time == '不明'
@@ -194,7 +203,7 @@ class MalgeumLineAI:
 
 冒頭: 【あなたの本質：日柱】ブロック（フォーマット厳守）
 1. 【今日のエネルギーの流れ】
-2. 【今日の課題】（恋愛・今あなたが最もエネルギーを注いでいること・人間関係のうち最も強いもの）""" + category_system_rule
+2. 【今日の課題】（恋愛・今あなたが最もエネルギーを注いでいること・人間関係のうち最も強いもの）""" + preview_time_rule + category_system_rule
 
             user_message = f"""{category_user_note}今日の日付: {today}
 現在時刻: {current_time}（この時刻以前の時間帯への言及は禁止）
