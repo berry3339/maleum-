@@ -13,6 +13,13 @@ import pytz
 app = Flask(__name__)
 user_sessions = {}
 
+CATEGORY_LABELS = {
+    '1': '🌸 恋愛とご縁',
+    '2': '💼 仕事と使命',
+    '3': '💰 金運と豊かさ',
+    '4': '🌿 心身の健やかさ',
+}
+
 USERS_FILE = '/data/users.json'
 
 def load_users():
@@ -173,12 +180,12 @@ def _filter_time_lines(text: str) -> str:
     filtered = [line for line in lines if not any(w in line for w in forbidden)]
     return '\n'.join(filtered)
 
-def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'):
+def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明', category=None):
     """深層解読 AI 처리 → push API — background thread에서 실행"""
     try:
         saju   = LineManse.calculate(year, month, day)
         ai     = MalgeumLineAI()
-        result = ai.get_prescription(saju, mode=mode, birth_time=birth_time)
+        result = ai.get_prescription(saju, mode=mode, birth_time=birth_time, category=category)
 
         if mode == 'preview':
             payment_msg = (
@@ -235,7 +242,7 @@ def line():
                         )
                         threading.Thread(
                             target=deep_analysis,
-                            args=(user_id, session['year'], session['month'], session['day'], 'preview', session.get('birth_time', '不明')),
+                            args=(user_id, session['year'], session['month'], session['day'], 'preview', session.get('birth_time', '不明'), session.get('category')),
                             daemon=True
                         ).start()
                     else:
@@ -261,7 +268,7 @@ def process_line(user_id, message):
         if 'year' in session:
             threading.Thread(
                 target=deep_analysis,
-                args=(user_id, session['year'], session['month'], session['day'], 'prescription', session.get('birth_time', '不明')),
+                args=(user_id, session['year'], session['month'], session['day'], 'prescription', session.get('birth_time', '不明'), session.get('category')),
                 daemon=True
             ).start()
             return ("🌀 決済を確認しました。\n"
@@ -328,15 +335,30 @@ def process_line(user_id, message):
                 birth_time = digits.zfill(4)
             else:
                 return "❌ 時間は4桁（例：0730）か\n「不明」で送ってください。"
-        try:
-            saju   = LineManse.calculate(year, month, day)
-            ai     = MalgeumLineAI()
-            result = ai.get_prescription(saju, mode='short')
-            user_sessions[key] = {'step': 'done', 'year': year, 'month': month, 'day': day, 'birth_time': birth_time}
-            save_user(user_id, year, month, day)
-            return result
-        except Exception as e:
-            return f"❌ エラーが発生しました: {e}"
+        user_sessions[key] = {'step': 'WAITING_CATEGORY', 'year': year, 'month': month, 'day': day, 'birth_time': birth_time}
+        save_user(user_id, year, month, day)
+        return ("命式を確認いたしました。🌿\n"
+                "今日、最も導きを求めているテーマを\n"
+                "番号でお知らせください。\n\n"
+                "1. 🌸 恋愛とご縁\n"
+                "2. 💼 仕事と使命\n"
+                "3. 💰 金運と豊かさ\n"
+                "4. 🌿 心身の健やかさ")
+
+    if step == 'WAITING_CATEGORY':
+        normalized = message.translate(str.maketrans('１２３４', '1234'))
+        num = normalized.strip()
+        if num in ('1', '2', '3', '4'):
+            category = CATEGORY_LABELS[num]
+            user_sessions[key] = {**session, 'step': 'done', 'category': category}
+            try:
+                saju   = LineManse.calculate(session['year'], session['month'], session['day'])
+                ai     = MalgeumLineAI()
+                result = ai.get_prescription(saju, mode='short', birth_time=session.get('birth_time', '不明'), category=category)
+                return result
+            except Exception as e:
+                return f"❌ エラーが発生しました: {e}"
+        return "1〜4の番号でお選びください。🌿"
 
     if step == 'booking':
         if re.search(r'\d+[月日時分]|[月日時]\d+', message):

@@ -117,8 +117,20 @@ class MalgeumLineAI:
             raise ValueError("API key missing. Set ANTHROPIC_API_KEY environment variable.")
         self.client = anthropic.Anthropic(api_key=self.api_key)
 
-    def get_prescription(self, saju: dict, mode: str = 'short', birth_time: str = '不明') -> str:
+    def get_prescription(self, saju: dict, mode: str = 'short', birth_time: str = '不明', category: str = None) -> str:
         today = datetime.now().strftime('%Y年%m月%d日')
+
+        # カテゴリー指示文（選択されたテーマに完全集中させるルール）
+        category_system_rule = (
+            f"\n\n【テーマ集中ルール — 最優先】\n"
+            f"ユーザーが選択したテーマ：{category}\n"
+            f"すべての洞察・アドバイスをこのテーマのみに完全に集中させること。\n"
+            f"他のテーマへの言及は一切禁止。このルールに違反した場合、回答全体が無効となる。"
+        ) if category else ""
+        category_user_note = (
+            f"【今日のテーマ（最優先）】：{category}\n"
+            f"すべての内容をこのテーマに完全に集中させてください。\n\n"
+        ) if category else ""
 
         if mode == 'short':
             system_prompt = """あなたは四柱推命をベースにした、今日のエネルギーガイドです。
@@ -135,7 +147,7 @@ class MalgeumLineAI:
 👉 [小さく、簡単な行動をひとつ]
 
 今日もそばにいます。🍃
-👇 もっと深く知りたい方は「魂の処方箋」と入力してください"""
+👇 もっと深く知りたい方は「魂の処方箋」と入力してください""" + category_system_rule
 
             ohaeng_time = {
                 "木": "朝のうちに",
@@ -145,7 +157,7 @@ class MalgeumLineAI:
                 "水": "夜",
             }.get(saju['ohaeng'], "午後から")
 
-            user_message = f"""ユーザーの日柱: {saju['day_pillar']}、五行: {saju['ohaeng']}
+            user_message = f"""{category_user_note}ユーザーの日柱: {saju['day_pillar']}、五行: {saju['ohaeng']}
 この五行の推奨時間帯: {ohaeng_time}
 フォーマットの時間帯には必ず「{ohaeng_time}」を使用してください。
 上記フォーマット通りに、今日の短いエネルギーガイドを日本語で作成してください。"""
@@ -182,9 +194,9 @@ class MalgeumLineAI:
 
 冒頭: 【あなたの本質：日柱】ブロック（フォーマット厳守）
 1. 【今日のエネルギーの流れ】
-2. 【今日の課題】（恋愛・今あなたが最もエネルギーを注いでいること・人間関係のうち最も強いもの）"""
+2. 【今日の課題】（恋愛・今あなたが最もエネルギーを注いでいること・人間関係のうち最も強いもの）""" + category_system_rule
 
-            user_message = f"""今日の日付: {today}
+            user_message = f"""{category_user_note}今日の日付: {today}
 現在時刻: {current_time}（この時刻以前の時間帯への言及は禁止）
 {birth_note}
 
@@ -298,9 +310,9 @@ class MalgeumLineAI:
 
 最後に必ず以下の文言をそのまま添えること:
 この処方箋のさらに奥を知りたい方は
-「鑑定予約」と入力してください。🌙"""
+「鑑定予約」と入力してください。🌙""" + category_system_rule
 
-            user_message = f"""{time_instruction}
+            user_message = f"""{category_user_note}{time_instruction}
 
 今日の日付: {today}
 {birth_note}
