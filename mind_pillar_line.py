@@ -212,10 +212,36 @@ class MalgeumLineAI:
                 if birth_time == '不明'
                 else f"生まれた時間: {birth_time}（時柱は計算対象外。時柱への言及は禁止）"
             )
+            # 今日の五行を計算
+            today_dt = datetime.now()
+            today_saju_data = PrecisionManse.calculate(today_dt.year, today_dt.month, today_dt.day)
+            today_ohaeng = today_saju_data['ohaeng']
+            today_ohaeng_emoji = PrecisionManse.OHAENG_EMOJI.get(today_ohaeng, "✨")
+
+            # 相生相剋の関係を判定
+            _GENERATE = {"木":"火","火":"土","土":"金","金":"水","水":"木"}
+            _RESTRICT  = {"木":"土","土":"水","水":"火","火":"金","金":"木"}
+            u = saju['ohaeng']
+            t = today_ohaeng
+            if u == t:
+                today_relation = f"比和（{u}と{t}）→ 同じ気同士。エネルギーが増幅される日"
+            elif _GENERATE.get(u) == t:
+                today_relation = f"相生・{u}生{t} → あなたが今日の気を生み出す。与える日だが消耗に注意"
+            elif _GENERATE.get(t) == u:
+                today_relation = f"相生・{t}生{u} → 今日の気があなたを後押し。最高の追い風"
+            elif _RESTRICT.get(u) == t:
+                today_relation = f"相剋・{u}剋{t} → あなたのエネルギーが優位。ただし摩擦も生まれやすい"
+            else:
+                today_relation = f"相剋・{t}剋{u} → 今日の気があなたを抑える。慎重さと受け流しが鍵"
+
             pillar_header = (
                 f"【あなたの本質：日柱】\n"
                 f"{ohaeng_emoji} {saju['day_pillar']}（{day_yomi}）／ {saju['ohaeng']}のエネルギー\n"
-                f"（以下を3〜5行で書くこと：①このエネルギーを自然物で詩的に描写 ②今日の季節・時期の五行との相生相剋を命理学的に説明（例：火生土→今日の土の気と出会い、このような影響がある） ③今日この人にどう作用するか。無料版の内容は一切繰り返さないこと）"
+                f"（以下を4〜6行で書くこと：\n"
+                f"① 「5つの気（木・火・土・金・水）のうち、あなたは{u}の使命を持って生まれた」という書き出しで5つの気の原理に自然に触れながら、あなたの{u}を詩的に描写すること\n"
+                f"② 今日の五行との相生相剋：今日は{today_ohaeng_emoji}{today_ohaeng}の気。関係→【{today_relation}】。この命理学的意味を1〜2文で具体的に説明すること\n"
+                f"③ この関係が今日この人にどう作用するかを1文で締めること\n"
+                f"無料版の内容は一切繰り返さないこと）"
             )
 
             system_prompt = f"""【最優先ルール】
