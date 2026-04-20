@@ -56,6 +56,18 @@
 
 ---
 
+## ✅ 코드 수정 시 필수 체크리스트
+
+1. 새로운 함수나 변수 추가 시 필요한 import 문 반드시 먼저 확인하고 추가.
+2. datetime 사용 시 → from datetime import datetime 확인
+3. 수정 후 해당 파일의 import 섹션을 반드시 검토.
+4. 문법 에러가 날 가능성이 있는 코드는 수정 후 반드시 `python3 -c "import ast; ast.parse(open('파일명').read())"` 로 문법 체크.
+5. 같은 실수 반복 금지. 이전에 고친 내용을 또 깨뜨리지 말 것.
+6. **코드 수정 후 반드시 python3 -c로 문법 검증 실행. 검증 실패 시 수정 완료 보고 금지.**
+7. **파일을 수정한 후 반드시 git add → git commit → git push 까지 실행. commit 없이 수정 완료 보고 금지.**
+
+---
+
 ## 🔴 절대 실수 금지 규칙
 
 1. LINE 메시지에 마크다운(**볼드**, *이탤릭*) 절대 사용 금지. 섹션 구분은 【】만 사용.
@@ -75,7 +87,7 @@
 > 실수가 생길 때마다 여기에 추가하세요.
 > 형식: [날짜] 실수 내용 / 원인 / 해결책
 
-- (아직 기록 없음 — 실수 발생 시 여기에 추가)
+- [2026-04-20] `name 'datetime' is not defined` 에러 3회 반복 / 원인: app.py에 `from datetime import datetime` 추가 후 git commit & push를 하지 않음 → Railway는 구버전 실행 / 해결책: 반드시 수정 후 git push까지 실행. 로컬 확인만으로 완료 보고 금지.
 
 ---
 
