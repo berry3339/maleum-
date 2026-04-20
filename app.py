@@ -280,6 +280,16 @@ def process_line(user_id, message):
         user_sessions[key] = {}
         return "こんにちは！「扉を開く」と入力してください。🌿"
 
+    # 魂の共鳴 → 어떤 세션 상태에서도 상대방 생년월일 입력 대기
+    if message == '魂の共鳴':
+        session = user_sessions.get(key, {})
+        user_sessions[key] = {**session, 'step': 'WAITING_PARTNER'}
+        return ("秘密の扉を叩きましたね。🌙\n"
+                "あなたの心に宿るあの人の\n"
+                "生年月日を8桁で、静かに入力してください。\n"
+                "例）19970901\n"
+                "※お名前は不要です。")
+
     # 鑑定予約 (따옴표/특수문자 포함 입력도 인식)
     if re.search(r'鑑定予約', message):
         session = user_sessions.get(key, {})
@@ -359,6 +369,22 @@ def process_line(user_id, message):
             except Exception as e:
                 return f"❌ エラーが発生しました: {e}"
         return "1〜4の番号でお選びください。🌿"
+
+    if step == 'WAITING_PARTNER':
+        normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
+        digits = ''.join(filter(str.isdigit, normalized))
+        if len(digits) == 8:
+            try:
+                p_year  = int(digits[0:4])
+                p_month = int(digits[4:6])
+                p_day   = int(digits[6:8])
+                if not (1920 <= p_year <= 2010) or not (1 <= p_month <= 12) or not (1 <= p_day <= 31):
+                    return "❌ 正しい生年月日を入力してください。\n例）19970901"
+                user_sessions[key] = {**session, 'partner_birth': {'year': p_year, 'month': p_month, 'day': p_day}}
+                return "少々お待ちくださいませ。🌙"
+            except Exception:
+                return "❌ 8桁の数字で入力してください。\n例）19970901"
+        return "❌ 8桁の数字で入力してください。\n例）19970901"
 
     if step == 'booking':
         if re.search(r'\d+[月日時分]|[月日時]\d+', message):
