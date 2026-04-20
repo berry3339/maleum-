@@ -348,3 +348,111 @@ class MalgeumLineAI:
             system=system_prompt
         )
         return response.content[0].text
+
+    def get_compatibility(self, saju1: dict, saju2: dict, mode: str = 'preview') -> str:
+        today = datetime.now().strftime('%Y年%m月%d日')
+
+        # 二人の五行関係を判定
+        _GENERATE = {"木":"火","火":"土","土":"金","金":"水","水":"木"}
+        _RESTRICT  = {"木":"土","土":"水","水":"火","火":"金","金":"木"}
+        o1 = saju1['ohaeng']
+        o2 = saju2['ohaeng']
+        e1 = PrecisionManse.OHAENG_EMOJI.get(o1, "✨")
+        e2 = PrecisionManse.OHAENG_EMOJI.get(o2, "✨")
+
+        if o1 == o2:
+            relation = f"比和（{o1}と{o2}）— 同じ気が響き合う"
+        elif _GENERATE.get(o1) == o2:
+            relation = f"相生・{o1}生{o2} — あなたの気が相手を育てる"
+        elif _GENERATE.get(o2) == o1:
+            relation = f"相生・{o2}生{o1} — 相手の気があなたを育てる"
+        elif _RESTRICT.get(o1) == o2:
+            relation = f"相剋・{o1}剋{o2} — あなたの気が相手を制する"
+        else:
+            relation = f"相剋・{o2}剋{o1} — 相手の気があなたを制する"
+
+        if mode == 'preview':
+            system_prompt = """あなたは数十年のキャリアを持つ命理学の恋愛鑑定師です。
+蝋燭の灯りの下、静かに二人の命式を読み解くように書いてください。
+**太字**、*斜体*、##見出し、- リストなどマークダウン記法は絶対に使わないこと。プレーンテキストのみ。【】による区切りのみ使用すること。
+
+必ず以下の構成のみで書くこと:
+
+【二人の気の関係】
+1行: 五行の関係を詩的に表現すること
+
+【魂の共鳴】
+2〜3行: 感性的な궁합 설명。深く、詩的に。
+必ず最後の文は「……」で終わらせ、その先は絶対に書かないこと（意図的な余白）"""
+
+            user_message = f"""今日の日付: {today}
+
+一人目:
+- 日柱: {saju1['day_pillar']}
+- 五行: {e1}{o1}（{saju1['ohaeng_desc']}）
+- 年齢: {saju1['age']}歳
+
+二人目:
+- 日柱: {saju2['day_pillar']}
+- 五行: {e2}{o2}（{saju2['ohaeng_desc']}）
+- 年齢: {saju2['age']}歳
+
+二人の五行関係: {relation}
+
+上記の構成でプレビューを書いてください。"""
+
+            max_tokens = 400
+
+        else:  # full
+            system_prompt = """あなたは数十年のキャリアを持つ命理学の恋愛鑑定師です。
+蝋燭の灯りの下、静かに二人の命式を読み解くように書いてください。
+**太字**、*斜体*、##見出し、- リストなどマークダウン記法は絶対に使わないこと。プレーンテキストのみ。【】による区切りのみ使用すること。
+
+必ず以下の構成で書くこと:
+
+【二人の気の関係】
+2〜3行: 五行の関係を詩的かつ命理学的に説明すること
+
+【魂の共鳴】
+4〜5行: 二人の感性的な絆を深く詩的に描写すること
+
+【二人の課題と恵み】
+3〜4行: この関係が持つ光と影を正直に伝えること
+
+【今この瞬間、あなたへ】
+2〜3行: 相手との関係で今最も大切にすべきことを伝えること
+
+最後に必ず以下のカードをそのまま出力すること（XX%のみ命理学的に算出して埋めること）:
+┏━━━━━━━━━━━━━━━━━━━┓
+   💘 魂の共鳴度：XX%
+┗━━━━━━━━━━━━━━━━━━━┓
+「(二人の五行関係を詩的に一行で)」
+🔮 マルム｜魂の処方箋"""
+
+            user_message = f"""今日の日付: {today}
+
+一人目:
+- 日柱: {saju1['day_pillar']}
+- 五行: {e1}{o1}（{saju1['ohaeng_desc']}）
+- 年齢: {saju1['age']}歳
+- 現在の大運: {saju1['cycle']}
+
+二人目:
+- 日柱: {saju2['day_pillar']}
+- 五行: {e2}{o2}（{saju2['ohaeng_desc']}）
+- 年齢: {saju2['age']}歳
+- 現在の大運: {saju2['cycle']}
+
+二人の五行関係: {relation}
+
+上記の構成で全궁합 분석を書いてください。"""
+
+            max_tokens = 800
+
+        response = self.client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": user_message}],
+            system=system_prompt
+        )
+        return response.content[0].text

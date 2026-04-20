@@ -208,6 +208,28 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
 
+def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='preview'):
+    """궁합 분석 → push API — background thread에서 실행"""
+    try:
+        saju1  = LineManse.calculate(year, month, day)
+        saju2  = LineManse.calculate(p_year, p_month, p_day)
+        ai     = MalgeumLineAI()
+        result = ai.get_compatibility(saju1, saju2, mode=mode)
+        if mode == 'preview':
+            payment_msg = (
+                "\n\n──────────────\n"
+                "🔒 運命の処方箋を受け取る\n"
+                "→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n\n"
+                "✅ ご決済後は「共鳴を開く」とご入力ください。\n"
+                "最初に戻りたい方は「マルム」とご入力ください。🌿"
+            )
+            line_push_api(user_id, result + payment_msg)
+        else:
+            line_push_api(user_id, result)
+    except Exception as e:
+        print(f"❌ [궁합분석오류] {e}")
+        line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
+
 def handle_line_event(user_id, message, reply_token):
     """일반 메시지: process_line → reply — background thread에서 실행"""
     try:
@@ -274,6 +296,20 @@ def process_line(user_id, message):
             return ("🌀 決済を確認しました。\n"
                     "あなただけの処方箋の封を切ります...")
         return "まず生年月日を入力してください🌿"
+
+    # 共鳴を開く (유료 전체 궁합)
+    if message == '共鳴を開く':
+        session = user_sessions.get(key, {})
+        partner = session.get('partner_birth')
+        if 'year' in session and partner:
+            threading.Thread(
+                target=compatibility_analysis,
+                args=(user_id, session['year'], session['month'], session['day'],
+                      partner['year'], partner['month'], partner['day'], 'full'),
+                daemon=True
+            ).start()
+            return "🌀 決済を確認しました。\n運命の処方箋の封を切ります..."
+        return "まず「魂の共鳴」から始めてください🌿"
 
     # マルム → 처음으로 리셋
     if message == 'マルム':
@@ -381,6 +417,13 @@ def process_line(user_id, message):
                 if not (1920 <= p_year <= 2010) or not (1 <= p_month <= 12) or not (1 <= p_day <= 31):
                     return "❌ 正しい生年月日を入力してください。\n例）19970901"
                 user_sessions[key] = {**session, 'partner_birth': {'year': p_year, 'month': p_month, 'day': p_day}}
+                if 'year' in session:
+                    threading.Thread(
+                        target=compatibility_analysis,
+                        args=(user_id, session['year'], session['month'], session['day'],
+                              p_year, p_month, p_day, 'preview'),
+                        daemon=True
+                    ).start()
                 return "少々お待ちくださいませ。🌙"
             except Exception:
                 return "❌ 8桁の数字で入力してください。\n例）19970901"
