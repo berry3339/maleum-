@@ -416,14 +416,18 @@ def process_line(user_id, message):
                 p_day   = int(digits[6:8])
                 if not (1920 <= p_year <= 2010) or not (1 <= p_month <= 12) or not (1 <= p_day <= 31):
                     return "❌ 正しい生年月日を入力してください。\n例）19970901"
+                if 'year' not in session:
+                    user_sessions[key] = {}
+                    return ("まず「扉を開く」と入力して、\n"
+                            "生年月日を教えてください。🌿\n"
+                            "その後、魂の共鳴をお楽しみいただけます。")
                 user_sessions[key] = {**session, 'partner_birth': {'year': p_year, 'month': p_month, 'day': p_day}}
-                if 'year' in session:
-                    threading.Thread(
-                        target=compatibility_analysis,
-                        args=(user_id, session['year'], session['month'], session['day'],
-                              p_year, p_month, p_day, 'preview'),
-                        daemon=True
-                    ).start()
+                threading.Thread(
+                    target=compatibility_analysis,
+                    args=(user_id, session['year'], session['month'], session['day'],
+                          p_year, p_month, p_day, 'preview'),
+                    daemon=True
+                ).start()
                 return "少々お待ちくださいませ。🌙"
             except Exception:
                 return "❌ 8桁の数字で入力してください。\n例）19970901"
