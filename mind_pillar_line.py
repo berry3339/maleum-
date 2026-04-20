@@ -425,7 +425,7 @@ class MalgeumLineAI:
 最後に必ず以下のカードをそのまま出力すること（XX%のみ命理学的に算出して埋めること）:
 ┏━━━━━━━━━━━━━━━━━━━┓
    💘 魂の共鳴度：XX%
-┗━━━━━━━━━━━━━━━━━━━┓
+┗━━━━━━━━━━━━━━━━━━━┛
 「(二人の五行関係を詩的に一行で)」
 🔮 マルム｜魂の処方箋"""
 
@@ -447,7 +447,7 @@ class MalgeumLineAI:
 
 上記の構成で全궁합 분석を書いてください。"""
 
-            max_tokens = 800
+            max_tokens = 1200
 
         response = self.client.messages.create(
             model="claude-sonnet-4-5",

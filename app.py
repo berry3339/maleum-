@@ -297,8 +297,8 @@ def process_line(user_id, message):
                     "あなただけの処方箋の封を切ります...")
         return "まず生年月日を入力してください🌿"
 
-    # 共鳴を開く (유료 전체 궁합)
-    if message == '共鳴を開く':
+    # 共鳴を開く (유료 전체 궁합, 포함되면 작동)
+    if '共鳴を開く' in message:
         session = user_sessions.get(key, {})
         partner = session.get('partner_birth')
         if 'year' in session and partner:
@@ -316,15 +316,19 @@ def process_line(user_id, message):
         user_sessions[key] = {}
         return "こんにちは！「扉を開く」と入力してください。🌿"
 
-    # 魂の共鳴 → 어떤 세션 상태에서도 상대방 생년월일 입력 대기
-    if message == '魂の共鳴':
+    # 魂の共鳴 → 글로벌 트리거 (포함되면 작동)
+    if '魂の共鳴' in message:
         session = user_sessions.get(key, {})
+        if 'year' not in session:
+            user_sessions[key] = {**session, 'step': 'WAITING_COMPAT_SELF'}
+            return ("秘密の扉を叩きましたね。🌙\n"
+                    "まず、あなた自身の生年月日を\n"
+                    "8桁で入力してください。\n"
+                    "例）19930616")
         user_sessions[key] = {**session, 'step': 'WAITING_PARTNER'}
-        return ("秘密の扉を叩きましたね。🌙\n"
-                "あなたの心に宿るあの人の\n"
-                "生年月日を8桁で、静かに入力してください。\n"
-                "例）19970901\n"
-                "※お名前は不要です。")
+        return ("次に、あの人の生年月日を\n"
+                "8桁で静かに入力してください。🌙\n"
+                "例）19970901")
 
     # 鑑定予約 (따옴표/특수문자 포함 입력도 인식)
     if re.search(r'鑑定予約', message):
@@ -405,6 +409,24 @@ def process_line(user_id, message):
             except Exception as e:
                 return f"❌ エラーが発生しました: {e}"
         return "1〜4の番号でお選びください。🌿"
+
+    if step == 'WAITING_COMPAT_SELF':
+        normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
+        digits = ''.join(filter(str.isdigit, normalized))
+        if len(digits) == 8:
+            try:
+                year  = int(digits[0:4])
+                month = int(digits[4:6])
+                day   = int(digits[6:8])
+                if not (1920 <= year <= 2010) or not (1 <= month <= 12) or not (1 <= day <= 31):
+                    return "❌ 正しい生年月日を入力してください。\n例）19930616"
+                user_sessions[key] = {**session, 'step': 'WAITING_PARTNER', 'year': year, 'month': month, 'day': day}
+                return ("次に、あの人の生年月日を\n"
+                        "8桁で静かに入力してください。🌙\n"
+                        "例）19970901")
+            except Exception:
+                return "❌ 8桁の数字で入力してください。\n例）19930616"
+        return "❌ 8桁の数字で入力してください。\n例）19930616"
 
     if step == 'WAITING_PARTNER':
         normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
