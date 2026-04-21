@@ -2,18 +2,30 @@ import os
 from datetime import datetime
 import pytz
 
-def get_current_time():
+def get_time_info():
     tz = pytz.timezone('Asia/Tokyo')
     now = datetime.now(tz)
-    return now.strftime("%H:%M"), now.hour
+    current_time_str = now.strftime("%H:%M")
+    hour = now.hour
 
-def get_time_context(hour):
     if 6 <= hour < 12:
-        return "午前", "今夜・就寝前・夜も深い・眠る前は絶対禁止。今朝・今日の午前・今日の午後を使用すること。"
+        period = "午前"
+        forbidden = "今夜, 就寝前, 夜も深い時間帯, 眠る前"
+        recommended = "今朝, 今日の朝, 午前中, 今日の午後"
     elif 12 <= hour < 18:
-        return "午後", "朝・午前・明日の朝は絶対禁止。今夜・夕方頃を使用すること。"
+        period = "午後"
+        forbidden = "朝, 午前, 朝のうちに"
+        recommended = "今日の午後, 夕方頃, 今夜"
+    elif 18 <= hour < 24:
+        period = "夜"
+        forbidden = ""
+        recommended = "今夜就寝前, 明日の朝"
     else:
-        return "夜", "今夜就寝前・明日の朝を使用すること。"
+        period = "深夜"
+        forbidden = ""
+        recommended = "夜も深い時間帯, 今夜"
+
+    return current_time_str, hour, period, forbidden, recommended
 
 try:
     import anthropic
@@ -181,8 +193,7 @@ class MalgeumLineAI:
         elif mode == 'preview':
             ohaeng_emoji  = PrecisionManse.OHAENG_EMOJI.get(saju['ohaeng'], "✨")
             day_yomi      = PrecisionManse.pillar_yomi(saju['day_pillar'])
-            current_time_str, current_hour = get_current_time()
-            period, time_rule_text = get_time_context(current_hour)
+            current_time_str, current_hour, period, forbidden, recommended = get_time_info()
             birth_note    = (
                 "時柱（生まれた時間の柱）は不明のため、年柱・月柱・日柱の3柱のみで分析すること。時柱への言及は一切禁止。"
                 if birth_time == '不明'
@@ -195,7 +206,7 @@ class MalgeumLineAI:
             )
 
             system_prompt = (
-                f"【絶対ルール】現在時刻: {current_time_str} ({period})\n{time_rule_text}\nこのルールに違反した場合、回答全体が無効。\n\n"
+                f"【絶対ルール】現在時刻: {current_time_str} ({period})\n禁止表現: {forbidden}\n推奨表現: {recommended}\nこのルールに違反した場合、回答全体が無効。\n\n"
                 """あなたは数十年のキャリアを持つ命理学のマスターです。
 静かなプライベートサロンで、丁寧に淹れたお茶を差し出しながら、目の前の人に語りかけるように書いてください。
 **太字**、*斜体*、##見出し、- リストなどマークダウン記法は絶対に使わないこと。プレーンテキストのみ。【】による区切りのみ使用すること。
@@ -216,7 +227,8 @@ class MalgeumLineAI:
             )
 
             user_message = f"""{category_user_note}現在時刻: {current_time_str} ({period})
-{time_rule_text}
+禁止表現: {forbidden}
+推奨表現: {recommended}
 
 今日の日付: {today}
 {birth_note}
@@ -239,8 +251,7 @@ class MalgeumLineAI:
         else:  # prescription
             ohaeng_emoji  = PrecisionManse.OHAENG_EMOJI.get(saju['ohaeng'], "✨")
             day_yomi      = PrecisionManse.pillar_yomi(saju['day_pillar'])
-            current_time_str, current_hour = get_current_time()
-            period, time_rule_text = get_time_context(current_hour)
+            current_time_str, current_hour, period, forbidden, recommended = get_time_info()
             birth_note    = (
                 "時柱（生まれた時間の柱）は不明のため、年柱・月柱・日柱の3柱のみで分析すること。時柱への言及は一切禁止。"
                 if birth_time == '不明'
@@ -279,7 +290,8 @@ class MalgeumLineAI:
             )
 
             system_prompt = f"""【絶対ルール】現在時刻: {current_time_str} ({period})
-{time_rule_text}
+禁止表現: {forbidden}
+推奨表現: {recommended}
 このルールに違反した場合、回答全体が無効。
 
 あなたは数十年のキャリアを持つ命理学のマスターです。
@@ -309,7 +321,8 @@ class MalgeumLineAI:
 「鑑定予約」と入力してください。🌙""" + category_system_rule
 
             user_message = f"""{category_user_note}現在時刻: {current_time_str} ({period})
-{time_rule_text}
+禁止表現: {forbidden}
+推奨表現: {recommended}
 
 今日の日付: {today}
 {birth_note}
