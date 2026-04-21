@@ -368,7 +368,7 @@ def process_line(user_id, message):
     # 시작
     if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く']:
         user_sessions[key] = {'step': 'date'}
-        return "🌟 맑음(マルム)へようこそ！\n\n生年月日を8桁の数字で送ってください。\n例）19930616"
+        return "マルムへようこそ🌿\n\n生年月日を8桁の数字で送ってください。\n例）19930616"
 
     session = user_sessions.get(key, {})
     step = session.get('step')
@@ -516,6 +516,6 @@ def process_line(user_id, message):
 # 서버 실행
 # ============================================================================
 if __name__ == '__main__':
-    print("\n🚀 맑음(マルム) 서버 시작!")
+    print("\n🚀 マルム 서버 시작!")
     port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
