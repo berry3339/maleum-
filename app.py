@@ -228,8 +228,8 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
         if mode == 'preview':
             payment_msg = (
                 "\n\n──────────────\n"
-                "🔒 運命の処方箋を受け取る\n"
-                "→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n\n"
+                "🔒 運命の処方箋を受け取る (¥590)\n"
+                "→ https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E\n\n"
                 "✅ ご決済後は「共鳴を開く」とご入力ください。\n"
                 "最初に戻りたい方は「マルム」とご入力ください。🌿"
             )
