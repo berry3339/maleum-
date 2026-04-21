@@ -1,6 +1,8 @@
 import os
 import json
 import re
+import random
+import string
 import threading
 from datetime import datetime
 from flask import Flask, request, jsonify
@@ -19,6 +21,9 @@ CATEGORY_LABELS = {
     '3': '💰 金運と豊かさ',
     '4': '🌿 心身の健やかさ',
 }
+
+def generate_payment_code():
+    return 'MARU-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 USERS_FILE = '/data/users.json'
 
@@ -188,6 +193,10 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
         result = ai.get_prescription(saju, mode=mode, birth_time=birth_time, category=category)
 
         if mode == 'preview':
+            payment_code = generate_payment_code()
+            key = f'line_{user_id}'
+            session = user_sessions.get(key, {})
+            user_sessions[key] = {**session, 'payment_code': payment_code}
             payment_msg = (
                 "\n\n今、あなたの中にある迷いは——\n"
                 "偶然ではありません。\n\n"
@@ -197,7 +206,8 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                 "──────────────\n"
                 "🔒 魂の処方箋を受け取る\n"
                 "→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n\n"
-                "✅ ご決済後は「処方箋を開く」とご入力ください。\n"
+                f"✅ ご決済後は下記のコードを入力してください。\n"
+                f"🔑 {payment_code}\n"
                 "最初に戻りたい方は「マルム」とご入力ください。🌿"
             )
             line_push_api(user_id, result + payment_msg)
@@ -288,13 +298,8 @@ def process_line(user_id, message):
     if message == '処方箋を開く':
         session = user_sessions.get(key, {})
         if 'year' in session:
-            threading.Thread(
-                target=deep_analysis,
-                args=(user_id, session['year'], session['month'], session['day'], 'prescription', session.get('birth_time', '不明'), session.get('category')),
-                daemon=True
-            ).start()
-            return ("🌀 決済を確認しました。\n"
-                    "あなただけの処方箋の封を切ります...")
+            user_sessions[key] = {**session, 'step': 'WAITING_PAYMENT_CODE'}
+            return "🔑 決済コードを入力してください。"
         return "まず生年月日を入力してください🌿"
 
     # 共鳴を開く (유료 전체 궁합, 포함되면 작동)
@@ -409,6 +414,21 @@ def process_line(user_id, message):
             except Exception as e:
                 return f"❌ エラーが発生しました: {e}"
         return "1〜4の番号でお選びください。🌿"
+
+    if step == 'WAITING_PAYMENT_CODE':
+        stored_code = session.get('payment_code', '')
+        if message.strip() == stored_code:
+            new_session = {k: v for k, v in session.items() if k != 'payment_code'}
+            new_session['step'] = 'done'
+            user_sessions[key] = new_session
+            threading.Thread(
+                target=deep_analysis,
+                args=(user_id, session['year'], session['month'], session['day'], 'prescription', session.get('birth_time', '不明'), session.get('category')),
+                daemon=True
+            ).start()
+            return ("🌀 決済を確認しました。\n"
+                    "あなただけの処方箋の封を切ります...")
+        return "コードが正しくありません。もう一度お試しください。🌿"
 
     if step == 'WAITING_COMPAT_SELF':
         normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
