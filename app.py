@@ -294,6 +294,25 @@ def line():
 def process_line(user_id, message):
     key = f'line_{user_id}'
 
+    # MARU- コード グローバル認識 (セッション状態に関係なく即実行)
+    if message.strip().startswith('MARU-'):
+        session = user_sessions.get(key, {})
+        stored_code = session.get('payment_code', '')
+        if stored_code and message.strip() == stored_code:
+            if 'year' in session:
+                new_session = {k: v for k, v in session.items() if k != 'payment_code'}
+                new_session['step'] = 'done'
+                user_sessions[key] = new_session
+                threading.Thread(
+                    target=deep_analysis,
+                    args=(user_id, session['year'], session['month'], session['day'], 'prescription', session.get('birth_time', '不明'), session.get('category')),
+                    daemon=True
+                ).start()
+                return ("🌀 決済を確認しました。\n"
+                        "あなただけの処方箋の封を切ります...")
+            return "まず生年月日を入力してください🌿"
+        return "コードが正しくありません。もう一度お試しください。🌿"
+
     # 処方箋を開く
     if message == '処方箋を開く':
         session = user_sessions.get(key, {})
