@@ -1,5 +1,19 @@
 import os
 from datetime import datetime
+import pytz
+
+def get_current_time():
+    tz = pytz.timezone('Asia/Tokyo')
+    now = datetime.now(tz)
+    return now.strftime("%H:%M"), now.hour
+
+def get_time_context(hour):
+    if 6 <= hour < 12:
+        return "午前", "今夜・就寝前・夜も深い・眠る前は絶対禁止。今朝・今日の午前・今日の午後を使用すること。"
+    elif 12 <= hour < 18:
+        return "午後", "朝・午前・明日の朝は絶対禁止。今夜・夕方頃を使用すること。"
+    else:
+        return "夜", "今夜就寝前・明日の朝を使用すること。"
 
 try:
     import anthropic
@@ -167,16 +181,8 @@ class MalgeumLineAI:
         elif mode == 'preview':
             ohaeng_emoji  = PrecisionManse.OHAENG_EMOJI.get(saju['ohaeng'], "✨")
             day_yomi      = PrecisionManse.pillar_yomi(saju['day_pillar'])
-            current_time  = datetime.now().strftime("%H:%M")
-            current_hour  = datetime.now().hour
-            if current_hour < 12:
-                preview_time_rule = (
-                    "\n\n【時間帯ルール — 午前】\n"
-                    "「夜が明けてから」「朝のうちに」「朝早く」「午前中に」という表現は絶対禁止。\n"
-                    "今日の午後・夕方頃を基準にした表現のみ使用すること。"
-                )
-            else:
-                preview_time_rule = ""
+            current_time_str, current_hour = get_current_time()
+            period, time_rule_text = get_time_context(current_hour)
             birth_note    = (
                 "時柱（生まれた時間の柱）は不明のため、年柱・月柱・日柱の3柱のみで分析すること。時柱への言及は一切禁止。"
                 if birth_time == '不明'
@@ -188,7 +194,9 @@ class MalgeumLineAI:
                 f"（このエネルギーを自然物に例えた詩的な説明を2〜3行で書くこと）"
             )
 
-            system_prompt = """あなたは数十年のキャリアを持つ命理学のマスターです。
+            system_prompt = (
+                f"【絶対ルール】現在時刻: {current_time_str} ({period})\n{time_rule_text}\nこのルールに違反した場合、回答全体が無効。\n\n"
+                """あなたは数十年のキャリアを持つ命理学のマスターです。
 静かなプライベートサロンで、丁寧に淹れたお茶を差し出しながら、目の前の人に語りかけるように書いてください。
 **太字**、*斜体*、##見出し、- リストなどマークダウン記法は絶対に使わないこと。プレーンテキストのみ。【】による区切りのみ使用すること。
 
@@ -203,10 +211,14 @@ class MalgeumLineAI:
 
 冒頭: 【あなたの本質：日柱】ブロック（フォーマット厳守）
 1. 【今日のエネルギーの流れ】
-2. 【今日の課題】（恋愛・今あなたが最もエネルギーを注いでいること・人間関係のうち最も強いもの）""" + preview_time_rule + category_system_rule
+2. 【今日の課題】（恋愛・今あなたが最もエネルギーを注いでいること・人間関係のうち最も強いもの）"""
+                + category_system_rule
+            )
 
-            user_message = f"""{category_user_note}今日の日付: {today}
-現在時刻: {current_time}（この時刻以前の時間帯への言及は禁止）
+            user_message = f"""{category_user_note}現在時刻: {current_time_str} ({period})
+{time_rule_text}
+
+今日の日付: {today}
 {birth_note}
 
 ユーザーの四柱命式（この値のみ使用すること）:
@@ -227,7 +239,8 @@ class MalgeumLineAI:
         else:  # prescription
             ohaeng_emoji  = PrecisionManse.OHAENG_EMOJI.get(saju['ohaeng'], "✨")
             day_yomi      = PrecisionManse.pillar_yomi(saju['day_pillar'])
-            current_time  = datetime.now().strftime("%H:%M")
+            current_time_str, current_hour = get_current_time()
+            period, time_rule_text = get_time_context(current_hour)
             birth_note    = (
                 "時柱（生まれた時間の柱）は不明のため、年柱・月柱・日柱の3柱のみで分析すること。時柱への言及は一切禁止。"
                 if birth_time == '不明'
@@ -255,36 +268,6 @@ class MalgeumLineAI:
             else:
                 today_relation = f"相剋・{t}剋{u} → 今日の気があなたを抑える。慎重さと受け流しが鍵"
 
-            # 時間帯別ルールを分岐
-            current_hour = today_dt.hour
-            if current_hour < 12:
-                time_rule = (
-                    f"【最優先ルール — 時間帯：午前（現在{current_time}）】\n"
-                    "処方箋の時間軸：今日の午後・夕方頃を基準に行動を提案すること。\n"
-                    "【絶対禁止】今夜・就寝前・明日の朝 という表現は絶対禁止。\n"
-                    "今日の午後から夕方の間に実行できる行動のみを提示すること。\n"
-                    "このルールに違反した場合、回答全体が無効となる。"
-                )
-                time_instruction = f"現在{current_time}（午前）。今日の午後・夕方頃の行動のみ提案してください。今夜・就寝前・明日の朝の言及は絶対禁止。"
-            elif current_hour < 18:
-                time_rule = (
-                    f"【最優先ルール — 時間帯：午後（現在{current_time}）】\n"
-                    "処方箋の時間軸：今夜・夕方を基準に行動を提案すること。\n"
-                    "【絶対禁止】朝・午前・明日の朝 という表現は絶対禁止。\n"
-                    "夕方から今夜までに実行できる行動のみを提示すること。\n"
-                    "このルールに違反した場合、回答全体が無効となる。"
-                )
-                time_instruction = f"現在{current_time}（午後）。今夜・夕方の行動のみ提案してください。朝・午前・明日の朝の言及は絶対禁止。"
-            else:
-                time_rule = (
-                    f"【最優先ルール — 時間帯：夜（現在{current_time}）】\n"
-                    "処方箋の時間軸：就寝前・明日の朝を基準に行動を提案すること。\n"
-                    "【絶対禁止】午前・午後 という表現は絶対禁止。\n"
-                    "今夜就寝前か、明日の朝に実行できる行動のみを提示すること。\n"
-                    "このルールに違反した場合、回答全体が無効となる。"
-                )
-                time_instruction = f"現在{current_time}（夜）。就寝前か明日の朝の行動のみ提案してください。午前・午後の言及は絶対禁止。"
-
             pillar_header = (
                 f"【あなたの本質：日柱】\n"
                 f"{ohaeng_emoji} {saju['day_pillar']}（{day_yomi}）／ {saju['ohaeng']}のエネルギー\n"
@@ -295,7 +278,9 @@ class MalgeumLineAI:
                 f"無料版の内容は一切繰り返さないこと）"
             )
 
-            system_prompt = f"""{time_rule}
+            system_prompt = f"""【絶対ルール】現在時刻: {current_time_str} ({period})
+{time_rule_text}
+このルールに違反した場合、回答全体が無効。
 
 あなたは数十年のキャリアを持つ命理学のマスターです。
 静かなプライベートサロンで、丁寧に淹れたお茶を一杯差し出しながら、目の前の人に語りかけるように書いてください。
@@ -323,7 +308,8 @@ class MalgeumLineAI:
 この処方箋のさらに奥を知りたい方は
 「鑑定予約」と入力してください。🌙""" + category_system_rule
 
-            user_message = f"""{category_user_note}{time_instruction}
+            user_message = f"""{category_user_note}現在時刻: {current_time_str} ({period})
+{time_rule_text}
 
 今日の日付: {today}
 {birth_note}
