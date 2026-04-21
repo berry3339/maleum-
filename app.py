@@ -278,7 +278,7 @@ def line():
                             daemon=True
                         ).start()
                     else:
-                        line_reply_api(reply_token, "まず生年月日を入力してください🌿")
+                        line_reply_api(reply_token, "まず「扉を開く」と入力してください。🌿")
                     continue
 
                 # 일반 메시지: background thread
