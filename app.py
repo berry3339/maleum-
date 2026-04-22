@@ -46,12 +46,12 @@ def send_daily_messages():
     users = load_users()
     if not users:
         return
-    print(f"⏰ [暁の処方箋] {len(users)}명에게 발송 시작")
+    print(f"⏰ [朝のメッセージ] {len(users)}명에게 발송 시작")
     for uid, data in users.items():
         try:
             saju = LineManse.calculate(data['year'], data['month'], data['day'])
             ai   = MalgeumLineAI()
-            text = "🌅 暁の処方箋\n\n" + ai.get_prescription(saju, mode='short')
+            text = "🌅 朝のメッセージ\n\n" + ai.get_prescription(saju, mode='short')
             req.post(
                 'https://api.line.me/v2/bot/message/push',
                 headers={
@@ -198,17 +198,27 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             session = user_sessions.get(key, {})
             user_sessions[key] = {**session, 'payment_code': payment_code}
             payment_msg = (
-                "\n\n今、あなたの中にある迷いは——\n"
-                "偶然ではありません。\n\n"
-                "命式はすでに、その答えを持っています。\n"
-                "あなたに必要なのは、\n"
-                "あなただけの「処方箋」を受け取ること。\n\n"
-                "──────────────\n"
-                "🔒 魂の処方箋を受け取る\n"
+                "\n\n🌿 ここまでが「入口」です。\n\n"
+                "【詳細レポート(¥1,000)でお届けするもの】\n\n"
+                "✓ 今日の最優先行動\n"
+                "　(なぜそれが必要かの根拠付き)\n"
+                "✓ 今週のテーマ\n"
+                "　(どう過ごすとエネルギーが整うか)\n"
+                "✓ あなたの本質\n"
+                "　(強みと優しく向き合うヒント)\n"
+                "✓ 明日から試せる3つの小さな行動\n\n"
+                "━━━━━━━━━━━━━\n"
+                "【ChatGPTとの違い】\n"
+                "ChatGPTは一般論をお話しします。\n"
+                "マルムは、あなたの生年月日・時間から\n"
+                "伝統的な四柱推命で分析し、\n"
+                "「あなたの命式だから、これが効く」\n"
+                "という根拠のあるアドバイスをお届けします。\n"
+                "━━━━━━━━━━━━━\n\n"
+                "🔒 詳細レポートを受け取る(¥1,000)\n"
                 "→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n\n"
-                f"✅ ご決済後は下記のコードを入力してください。\n"
-                f"🔑 {payment_code}\n"
-                "最初に戻りたい方は「マルム」とご入力ください。🌿"
+                "決済後はこちらのコードをご入力ください\n"
+                f"🔑 {payment_code}"
             )
             line_push_api(user_id, result + payment_msg)
         else:  # prescription
@@ -264,12 +274,12 @@ def line():
                 print(f"📩 [LINE] uid={user_id[:16]} | msg={message!r}")
 
                 # 深層解読: 라우트에서 즉시 처리
-                if message == '魂の処方箋':
+                if message in ('魂の処方箋', '詳細レポート'):
                     key = f'line_{user_id}'
                     session = user_sessions.get(key, {})
                     if 'year' in session:
                         line_reply_api(reply_token,
-                            "🌀 魂の処方箋を準備します。\n"
+                            "🌀 詳細レポートを準備します。\n"
                             "少々お待ちくださいませ。"
                         )
                         threading.Thread(
@@ -278,7 +288,7 @@ def line():
                             daemon=True
                         ).start()
                     else:
-                        line_reply_api(reply_token, "まず「扉を開く」と入力してください。🌿")
+                        line_reply_api(reply_token, "まず「四柱推命で見てみる」と入力してください。🌿")
                     continue
 
                 # 일반 메시지: background thread
@@ -313,16 +323,16 @@ def process_line(user_id, message):
             return "まず生年月日を入力してください🌿"
         return "コードが正しくありません。もう一度お試しください。🌿"
 
-    # 処方箋を開く
-    if message == '処方箋を開く':
+    # 処方箋を開く / レポートを開く
+    if message in ('処方箋を開く', 'レポートを開く'):
         session = user_sessions.get(key, {})
         if 'year' in session:
             user_sessions[key] = {**session, 'step': 'WAITING_PAYMENT_CODE'}
             return "🔑 決済コードを入力してください。"
         return "まず生年月日を入力してください🌿"
 
-    # 共鳴を開く (유료 전체 궁합, 포함되면 작동)
-    if '共鳴を開く' in message:
+    # 共鳴を開く / 相性を見る (유료 전체 궁합, 포함되면 작동)
+    if '共鳴を開く' in message or '相性を見る' in message:
         session = user_sessions.get(key, {})
         partner = session.get('partner_birth')
         if 'year' in session and partner:
@@ -332,20 +342,38 @@ def process_line(user_id, message):
                       partner['year'], partner['month'], partner['day'], 'full'),
                 daemon=True
             ).start()
-            return "🌀 決済を確認しました。\n運命の処方箋の封を切ります..."
-        return "まず「魂の共鳴」から始めてください🌿"
+            return "🌀 決済を確認しました。\n相性レポートの封を切ります..."
+        return "まず「推し相性」から始めてください🌿"
 
     # マルム → 처음으로 리셋
     if message == 'マルム':
         user_sessions[key] = {}
-        return "こんにちは！「扉を開く」と入力してください。🌿"
+        return ("マルムへようこそ🌿\n\n"
+                "ここは、あなたの毎日に\n"
+                "「小さな納得」をお届けする場所です。\n\n"
+                "━━━━━━━━━━━━━\n"
+                "【マルムとは？】\n"
+                "日本でよく使われる三柱運勢と違い、\n"
+                "生まれた「時間(時柱)」まで見る\n"
+                "韓国の正統四柱推命で分析します。\n"
+                "━━━━━━━━━━━━━\n\n"
+                "【できること】\n"
+                "・今日の運勢(無料)\n"
+                "・推しとの相性診断(¥590)\n"
+                "・詳細レポート(¥1,000)\n\n"
+                "【ChatGPTとの違い】\n"
+                "一般的なアドバイスではなく、\n"
+                "あなたの生年月日・時間に基づいた\n"
+                "「あなただけの根拠ある処方」をお届けします。\n\n"
+                "まずは「四柱推命で見てみる」と\n"
+                "入力してみませんか？🌸")
 
-    # 魂の共鳴 → 글로벌 트리거 (포함되면 작동)
-    if '魂の共鳴' in message:
+    # 魂の共鳴 / 推し相性 → 글로벌 트리거 (포함되면 작동)
+    if '魂の共鳴' in message or '推し相性' in message:
         session = user_sessions.get(key, {})
         if 'year' not in session:
             user_sessions[key] = {**session, 'step': 'WAITING_COMPAT_SELF'}
-            return ("秘密の扉を叩きましたね。🌙\n"
+            return ("推し相性をチェックします。🌙\n"
                     "まず、あなた自身の生年月日を\n"
                     "8桁で入力してください。\n"
                     "例）19930616")
@@ -366,7 +394,7 @@ def process_line(user_id, message):
                 "最初に戻りたい方は「マルム」とご入力ください。🌿")
 
     # 시작
-    if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く']:
+    if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く', '四柱推命で見てみる']:
         user_sessions[key] = {'step': 'date'}
         return "マルムへようこそ🌿\n\n生年月日を8桁の数字で送ってください。\n例）19930616"
 
@@ -479,9 +507,9 @@ def process_line(user_id, message):
                     return "❌ 正しい生年月日を入力してください。\n例）19970901"
                 if 'year' not in session:
                     user_sessions[key] = {}
-                    return ("まず「扉を開く」と入力して、\n"
+                    return ("まず「四柱推命で見てみる」と入力して、\n"
                             "生年月日を教えてください。🌿\n"
-                            "その後、魂の共鳴をお楽しみいただけます。")
+                            "その後、推し相性をお楽しみいただけます。")
                 user_sessions[key] = {**session, 'partner_birth': {'year': p_year, 'month': p_month, 'day': p_day}}
                 threading.Thread(
                     target=compatibility_analysis,
@@ -507,10 +535,28 @@ def process_line(user_id, message):
                 "最初に戻りたい方は「マルム」とご入力ください。🌿")
 
     if step == 'done':
-        return ("ご決済後は「処方箋を開く」とご入力ください。✅\n"
+        return ("ご決済後は「レポートを開く」とご入力ください。✅\n"
                 "最初に戻りたい方は「マルム」とご入力ください。🌿")
 
-    return "こんにちは！「扉を開く」と入力してください。🌿"
+    return ("マルムへようこそ🌿\n\n"
+            "ここは、あなたの毎日に\n"
+            "「小さな納得」をお届けする場所です。\n\n"
+            "━━━━━━━━━━━━━\n"
+            "【マルムとは？】\n"
+            "日本でよく使われる三柱運勢と違い、\n"
+            "生まれた「時間(時柱)」まで見る\n"
+            "韓国の正統四柱推命で分析します。\n"
+            "━━━━━━━━━━━━━\n\n"
+            "【できること】\n"
+            "・今日の運勢(無料)\n"
+            "・推しとの相性診断(¥590)\n"
+            "・詳細レポート(¥1,000)\n\n"
+            "【ChatGPTとの違い】\n"
+            "一般的なアドバイスではなく、\n"
+            "あなたの生年月日・時間に基づいた\n"
+            "「あなただけの根拠ある処方」をお届けします。\n\n"
+            "まずは「四柱推命で見てみる」と\n"
+            "入力してみませんか？🌸")
 
 # ============================================================================
 # 서버 실행
