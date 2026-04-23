@@ -31,6 +31,129 @@ def get_time_info():
 
     return current_time_str, hour, period, forbidden, recommended, instruction
 
+
+def build_flex_fortune(score, rationale, categories, lucky_color, lucky_direction):
+    """LINE Flex Message バブル — 無料運勢スコアカード（ネイビー＋ゴールド）"""
+
+    def progress_bar(value):
+        pct  = f"{min(100, max(0, value))}%"
+        rest = f"{min(100, max(0, 100 - value))}%"
+        return {
+            "type": "box", "layout": "horizontal", "height": "6px", "margin": "xs",
+            "contents": [
+                {"type": "box", "layout": "vertical", "backgroundColor": "#c9a84c",
+                 "width": pct, "contents": []},
+                {"type": "box", "layout": "vertical", "backgroundColor": "#ddd9d0",
+                 "width": rest, "contents": []}
+            ]
+        }
+
+    def cat_row(name, value):
+        return {
+            "type": "box", "layout": "vertical", "margin": "md",
+            "contents": [
+                {
+                    "type": "box", "layout": "horizontal",
+                    "contents": [
+                        {"type": "text", "text": name, "size": "xs",
+                         "color": "#3d3d3d", "flex": 2},
+                        {"type": "text", "text": str(value), "size": "xs",
+                         "color": "#c9a84c", "weight": "bold", "align": "end", "flex": 1}
+                    ]
+                },
+                progress_bar(value)
+            ]
+        }
+
+    cat_rows = [cat_row(name, val) for name, val in categories.items()]
+
+    return {
+        "type": "bubble", "size": "mega",
+        "header": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
+            "contents": [
+                {"type": "text", "text": "マルム", "color": "#c9a84c",
+                 "size": "sm", "weight": "bold", "align": "center"},
+                {"type": "text", "text": "四柱推命エネルギーガイド", "color": "#8890b0",
+                 "size": "xxs", "align": "center", "margin": "xs"}
+            ]
+        },
+        "hero": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#1a1f3a",
+            "paddingTop": "20px", "paddingBottom": "24px",
+            "paddingStart": "20px", "paddingEnd": "20px",
+            "contents": [
+                {
+                    "type": "box", "layout": "baseline",
+                    "justifyContent": "center",
+                    "contents": [
+                        {"type": "text", "text": str(score), "color": "#c9a84c",
+                         "size": "5xl", "weight": "bold"},
+                        {"type": "text", "text": "点", "color": "#c9a84c",
+                         "size": "xl", "margin": "sm"}
+                    ]
+                },
+                {
+                    "type": "text", "text": rationale, "color": "#c8c4b8",
+                    "size": "xs", "align": "center", "margin": "md", "wrap": True
+                }
+            ]
+        },
+        "body": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#f9f7f2", "paddingAll": "20px",
+            "contents": cat_rows + [
+                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
+                {
+                    "type": "box", "layout": "horizontal", "margin": "lg",
+                    "contents": [
+                        {
+                            "type": "box", "layout": "vertical", "flex": 1,
+                            "contents": [
+                                {"type": "text", "text": "ラッキーカラー",
+                                 "size": "xxs", "color": "#8888aa"},
+                                {"type": "text", "text": lucky_color, "size": "sm",
+                                 "weight": "bold", "color": "#1a1f3a", "margin": "xs"}
+                            ]
+                        },
+                        {
+                            "type": "box", "layout": "vertical", "flex": 1,
+                            "contents": [
+                                {"type": "text", "text": "ラッキー方位",
+                                 "size": "xxs", "color": "#8888aa"},
+                                {"type": "text", "text": lucky_direction, "size": "sm",
+                                 "weight": "bold", "color": "#1a1f3a", "margin": "xs"}
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "footer": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
+            "contents": [
+                {
+                    "type": "button",
+                    "action": {
+                        "type": "message",
+                        "label": "詳細レポートを見る  ¥1,000",
+                        "text": "詳細レポート"
+                    },
+                    "style": "primary", "color": "#c9a84c", "height": "sm"
+                },
+                {
+                    "type": "text", "text": "より深い洞察をお届けします",
+                    "size": "xxs", "color": "#8890b0",
+                    "align": "center", "margin": "sm"
+                }
+            ]
+        }
+    }
+
+
 try:
     import anthropic
 except ImportError:
@@ -165,36 +288,71 @@ class MalgeumLineAI:
         result_prefix = ""
 
         if mode == 'short':
-            system_prompt = """あなたは四柱推命をベースにした、今日のエネルギーガイドです。
-マークダウン記法（**太字**、*斜体*、##見出し、- リストなど）は絶対に使わないでください。プレーンテキストのみで答えてください。
-「15時」「17時」など24時間表記や具体的な時刻は絶対に使わないでください。時間帯は「朝のうちに」「午後から」「夕方頃」「夜」などの表現のみ使用してください。
-必ず以下のフォーマットを正確に守り、[]の部分だけを埋めて答えてください。それ以外の言葉は絶対に追加しないでください。
+            # Flex Message スコアカード（決定的スコア計算、AIコールなし）
+            try:
+                _GEN = {"木":"火","火":"土","土":"金","金":"水","水":"木"}
+                _RES = {"木":"土","土":"水","水":"火","火":"金","金":"木"}
+                u = saju['ohaeng']
+                today_dt = datetime.now()
+                today_s  = PrecisionManse.calculate(today_dt.year, today_dt.month, today_dt.day)
+                t = today_s['ohaeng']
 
-🌅 今日は[日柱の五行を一言]のエネルギーで、あなたの一日を先読みしました。
+                if u == t:
+                    base     = 78
+                    rationale = f"{u}のエネルギーが共鳴する今日"
+                elif _GEN.get(t) == u:
+                    base     = 90
+                    rationale = f"{t}の気があなたの{u}を輝かせる今日"
+                elif _GEN.get(u) == t:
+                    base     = 82
+                    rationale = f"あなたの{u}が{t}の気を育む今日"
+                elif _RES.get(u) == t:
+                    base     = 68
+                    rationale = f"あなたの{u}が{t}の気と向き合う今日"
+                else:
+                    base     = 55
+                    rationale = f"{t}の気の中、{u}のあなたが整える今日"
 
-今日は[エネルギー状態を一文で具体的に]。
-[朝のうちに/午後から/夕方頃/夜]動くと、より良い流れに乗れますよ。
+                dp        = saju.get('day_pillar', '')
+                variation = ord(dp[1]) % 7 - 3 if len(dp) >= 2 else 0
+                overall   = max(50, min(95, base + variation))
 
-今日、ひとつだけ覚えておいてください。
-👉 [小さく、簡単な行動をひとつ]
+                OHAENG_CAT = {
+                    "木": {"恋愛運": 78, "仕事運": 80, "金運": 65, "健康運": 75},
+                    "火": {"恋愛運": 82, "仕事運": 85, "金運": 60, "健康運": 78},
+                    "土": {"恋愛運": 75, "仕事運": 78, "金運": 80, "健康運": 82},
+                    "金": {"恋愛運": 65, "仕事運": 85, "金運": 82, "健康運": 78},
+                    "水": {"恋愛運": 80, "仕事運": 70, "金運": 78, "健康運": 72},
+                }
+                cat_base   = OHAENG_CAT.get(u, {"恋愛運": 75, "仕事運": 75, "金運": 75, "健康運": 75})
+                delta      = overall - 78
+                categories = {k: max(40, min(98, v + delta)) for k, v in cat_base.items()}
 
-今日もそばにいます。🍃
-👇 もっと深く知りたい方は「詳細レポート」と入力してください""" + category_system_rule
+                OHAENG_LUCKY = {
+                    "木": ("グリーン", "東"),
+                    "火": ("レッド",   "南"),
+                    "土": ("イエロー", "中央"),
+                    "金": ("ホワイト", "西"),
+                    "水": ("ネイビー", "北"),
+                }
+                lucky_color, lucky_dir = OHAENG_LUCKY.get(u, ("ゴールド", "南"))
 
-            ohaeng_time = {
-                "木": "朝のうちに",
-                "火": "午後から",
-                "土": "午後から",
-                "金": "夕方頃",
-                "水": "夜",
-            }.get(saju['ohaeng'], "午後から")
+                return build_flex_fortune(overall, rationale, categories, lucky_color, lucky_dir)
 
-            user_message = f"""{category_user_note}ユーザーの日柱: {saju['day_pillar']}、五行: {saju['ohaeng']}
-この五行の推奨時間帯: {ohaeng_time}
-フォーマットの時間帯には必ず「{ohaeng_time}」を使用してください。
-上記フォーマット通りに、今日の短いエネルギーガイドを日本語で作成してください。"""
+            except Exception as ex:
+                print(f"⚠️ [Flex短モード失敗 → テキスト代替] {ex}")
+                return (
+                    f"🌿 今日の運勢\n\n"
+                    f"今日のあなたは{saju['ohaeng']}のエネルギーです。\n"
+                    f"ひとつだけ覚えておいてください。\n\n"
+                    f"今日もそばにいます。🍃\n"
+                    f"「詳細レポート」で深く知ることができます。"
+                )
 
-            max_tokens = 300
+            # ↓ short モードは上で必ずreturnするため、ここには到達しない
+            max_tokens   = 300
+            system_prompt = ""
+            user_message  = ""
 
         elif mode == 'preview':
             ohaeng_emoji  = PrecisionManse.OHAENG_EMOJI.get(saju['ohaeng'], "✨")

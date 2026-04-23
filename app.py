@@ -49,16 +49,20 @@ def send_daily_messages():
     print(f"⏰ [朝のメッセージ] {len(users)}명에게 발송 시작")
     for uid, data in users.items():
         try:
-            saju = LineManse.calculate(data['year'], data['month'], data['day'])
-            ai   = MalgeumLineAI()
-            text = "🌅 朝のメッセージ\n\n" + ai.get_prescription(saju, mode='short')
+            saju          = LineManse.calculate(data['year'], data['month'], data['day'])
+            ai            = MalgeumLineAI()
+            result        = ai.get_prescription(saju, mode='short')
+            if isinstance(result, dict):
+                msg_payload = {"type": "flex", "altText": "🌅 朝のエネルギーガイドをお届けします", "contents": result}
+            else:
+                msg_payload = {"type": "text", "text": "🌅 朝のメッセージ\n\n" + result}
             req.post(
                 'https://api.line.me/v2/bot/message/push',
                 headers={
                     'Authorization': f"Bearer {os.getenv('LINE_CHANNEL_ACCESS_TOKEN')}",
                     'Content-Type': 'application/json'
                 },
-                json={'to': uid, 'messages': [{'type': 'text', 'text': text}]},
+                json={'to': uid, 'messages': [msg_payload]},
                 timeout=30
             )
             print(f"✅ [暁push] {uid[:16]}")
@@ -137,8 +141,14 @@ def process_kakao(user_id, message):
 # ============================================================================
 # LINE 챗봇
 # ============================================================================
-def line_reply_api(reply_token, text):
-    """LINE reply API 호출"""
+def _build_line_message(payload):
+    """str → textメッセージ, dict → Flex Messageに変換"""
+    if isinstance(payload, dict):
+        return {"type": "flex", "altText": "今日の運勢をお届けします🌿", "contents": payload}
+    return {"type": "text", "text": payload}
+
+def line_reply_api(reply_token, payload):
+    """LINE reply API 호출 (text str または Flex dict を受け付ける)"""
     import requests as req
     try:
         resp = req.post(
@@ -147,15 +157,15 @@ def line_reply_api(reply_token, text):
                 'Authorization': f"Bearer {os.getenv('LINE_CHANNEL_ACCESS_TOKEN')}",
                 'Content-Type': 'application/json'
             },
-            json={'replyToken': reply_token, 'messages': [{'type': 'text', 'text': text}]},
+            json={'replyToken': reply_token, 'messages': [_build_line_message(payload)]},
             timeout=10
         )
         print(f"📤 [LINE reply] status={resp.status_code}")
     except Exception as e:
         print(f"❌ [LINE reply 실패] {e}")
 
-def line_push_api(user_id, text):
-    """LINE push API 호출"""
+def line_push_api(user_id, payload):
+    """LINE push API 호출 (text str または Flex dict を受け付ける)"""
     import requests as req
     try:
         resp = req.post(
@@ -164,7 +174,7 @@ def line_push_api(user_id, text):
                 'Authorization': f"Bearer {os.getenv('LINE_CHANNEL_ACCESS_TOKEN')}",
                 'Content-Type': 'application/json'
             },
-            json={'to': user_id, 'messages': [{'type': 'text', 'text': text}]},
+            json={'to': user_id, 'messages': [_build_line_message(payload)]},
             timeout=30
         )
         print(f"📤 [LINE push] status={resp.status_code}")
