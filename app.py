@@ -153,16 +153,21 @@ def line_reply_api(reply_token, payload):
     """LINE reply API 호출 (text str または Flex dict を受け付ける)"""
     import requests as req
     try:
+        msg = _build_line_message(payload)
+        print(f"📤 [LINE reply] type={msg['type']}")
         resp = req.post(
             'https://api.line.me/v2/bot/message/reply',
             headers={
                 'Authorization': f"Bearer {os.getenv('LINE_CHANNEL_ACCESS_TOKEN')}",
                 'Content-Type': 'application/json'
             },
-            json={'replyToken': reply_token, 'messages': [_build_line_message(payload)]},
-            timeout=10
+            json={'replyToken': reply_token, 'messages': [msg]},
+            timeout=15
         )
-        print(f"📤 [LINE reply] status={resp.status_code}")
+        if resp.status_code != 200:
+            print(f"❌ [LINE reply] status={resp.status_code} body={resp.text[:200]}")
+        else:
+            print(f"✅ [LINE reply] status=200")
     except Exception as e:
         print(f"❌ [LINE reply 실패] {e}")
 

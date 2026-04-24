@@ -100,7 +100,7 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
 
     cat_rows = [cat_row(name, val) for name, val in categories.items()]
 
-    # ── カード1: スコア + プログレスバー ──────────────────────────
+    # ── カード1: スコア + プログレスバー (hero 廃止 → body 統合) ──
     card1 = {
         "type": "bubble", "size": "mega",
         "header": {
@@ -113,32 +113,38 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
                  "size": "xxs", "align": "center", "margin": "xs"}
             ]
         },
-        "hero": {
+        "body": {
             "type": "box", "layout": "vertical",
-            "backgroundColor": "#1a1f3a",
-            "paddingTop": "20px", "paddingBottom": "24px",
-            "paddingStart": "20px", "paddingEnd": "20px",
+            "paddingAll": "0px",
             "contents": [
                 {
-                    "type": "box", "layout": "baseline",
-                    "justifyContent": "center",
+                    "type": "box", "layout": "vertical",
+                    "backgroundColor": "#1a1f3a",
+                    "paddingTop": "20px", "paddingBottom": "24px",
+                    "paddingStart": "20px", "paddingEnd": "20px",
                     "contents": [
-                        {"type": "text", "text": str(score), "color": "#c9a84c",
-                         "size": "5xl", "weight": "bold"},
-                        {"type": "text", "text": "点", "color": "#c9a84c",
-                         "size": "xl", "margin": "sm"}
+                        {
+                            "type": "box", "layout": "baseline",
+                            "justifyContent": "center",
+                            "contents": [
+                                {"type": "text", "text": str(score), "color": "#c9a84c",
+                                 "size": "5xl", "weight": "bold"},
+                                {"type": "text", "text": "点", "color": "#c9a84c",
+                                 "size": "xl", "margin": "sm"}
+                            ]
+                        },
+                        {
+                            "type": "text", "text": rationale, "color": "#c8c4b8",
+                            "size": "xs", "align": "center", "margin": "md", "wrap": True
+                        }
                     ]
                 },
                 {
-                    "type": "text", "text": rationale, "color": "#c8c4b8",
-                    "size": "xs", "align": "center", "margin": "md", "wrap": True
+                    "type": "box", "layout": "vertical",
+                    "backgroundColor": "#f9f7f2", "paddingAll": "20px",
+                    "contents": cat_rows
                 }
             ]
-        },
-        "body": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#f9f7f2", "paddingAll": "20px",
-            "contents": cat_rows
         }
     }
 
@@ -719,6 +725,13 @@ UPミッション3つ・DOWNミッション3つを上記ルールに従い出力
 
 【辛口アドバイス】
 上記ルールに従い1つ出力すること。
+
+【ラッキーアイテム】
+命式に基づき以下の4つを必ず出力すること。省略・空欄は絶対禁止:
+📅 ラッキー曜日: 1つ
+⏰ ラッキータイム: 時間帯で（24時間表記禁止。「午後から」「夕方頃」等）
+🌿 ラッキーアイテム: 具体的なもの1つ
+💬 今日のキーワード: 漢字2文字または1単語
 
 出力の最後（「鑑定予約」の前）に必ず以下のセクションをそのまま追加すること:
 ━━━━━━━━━━━━━
