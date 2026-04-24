@@ -32,8 +32,12 @@ def get_time_info():
     return current_time_str, hour, period, forbidden, recommended, instruction
 
 
-def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, lucky_direction):
-    """LINE Flex Carousel — 3枚カード（スコア / ラッキー / CTA）"""
+def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, lucky_direction,
+                       up_mission, down_mission):
+    """LINE Flex Carousel — 4枚カード（スコア / ラッキー / ミッション / CTA）
+    up_mission / down_mission: tuple (action_str, score_str, reason_str)
+    例) ("🔼 朝に緑茶を飲む", "+5点", "木の気を補う")
+    """
 
     def progress_bar(value):
         pct  = f"{min(100, max(0, value))}%"
@@ -210,9 +214,74 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
         }
     }
 
+    # ── カード4: ミッション プレビュー ───────────────────────────
+    up_action, up_score, up_reason     = up_mission
+    down_action, down_score, down_reason = down_mission
+
+    card4 = {
+        "type": "bubble", "size": "mega",
+        "header": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
+            "contents": [
+                {"type": "text", "text": "今日のミッション", "color": "#c9a84c",
+                 "size": "sm", "weight": "bold", "align": "center"},
+                {"type": "text", "text": "プレビュー", "color": "#8890b0",
+                 "size": "xxs", "align": "center", "margin": "xs"}
+            ]
+        },
+        "body": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#f9f7f2", "paddingAll": "20px",
+            "contents": [
+                {
+                    "type": "box", "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "box", "layout": "horizontal",
+                            "contents": [
+                                {"type": "text", "text": up_action, "size": "xs",
+                                 "color": "#1a5c1a", "weight": "bold",
+                                 "flex": 3, "wrap": True},
+                                {"type": "text", "text": up_score, "size": "xs",
+                                 "color": "#1a5c1a", "weight": "bold",
+                                 "align": "end", "flex": 1}
+                            ]
+                        },
+                        {"type": "text", "text": up_reason, "size": "xxs",
+                         "color": "#8888aa", "margin": "xs"}
+                    ]
+                },
+                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
+                {
+                    "type": "box", "layout": "vertical", "margin": "lg",
+                    "contents": [
+                        {
+                            "type": "box", "layout": "horizontal",
+                            "contents": [
+                                {"type": "text", "text": down_action, "size": "xs",
+                                 "color": "#8b1a1a", "weight": "bold",
+                                 "flex": 3, "wrap": True},
+                                {"type": "text", "text": down_score, "size": "xs",
+                                 "color": "#8b1a1a", "weight": "bold",
+                                 "align": "end", "flex": 1}
+                            ]
+                        },
+                        {"type": "text", "text": down_reason, "size": "xxs",
+                         "color": "#8888aa", "margin": "xs"}
+                    ]
+                },
+                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
+                {"type": "text", "text": "全ミッションは詳細レポートで🔒",
+                 "size": "xxs", "color": "#8888aa",
+                 "align": "center", "margin": "lg"}
+            ]
+        }
+    }
+
     return {
         "type": "carousel",
-        "contents": [card1, card2, card3]
+        "contents": [card1, card2, card3, card4]
     }
 
 
@@ -400,7 +469,36 @@ class MalgeumLineAI:
                 }
                 lucky_color, lucky_num, lucky_dir = OHAENG_LUCKY.get(u, ("ゴールド", 6, "南"))
 
-                return build_flex_fortune(overall, rationale, categories, lucky_color, lucky_num, lucky_dir)
+                OHAENG_MISSIONS = {
+                    "木": (
+                        ("🔼 朝に緑茶か水を一杯飲む", "+5点", "木の気を補う"),
+                        ("🔽 怒りに任せた返信・投稿", "-7点", "木の気が暴走しやすい")
+                    ),
+                    "火": (
+                        ("🔼 笑顔で一言挨拶をする", "+6点", "火の気が活性化する"),
+                        ("🔽 夜遅いスマホ・SNS", "-7点", "火の気が乱れやすい")
+                    ),
+                    "土": (
+                        ("🔼 机や部屋を5分片付ける", "+5点", "土の気が安定する"),
+                        ("🔽 曖昧な返事・八方美人", "-6点", "土の気が散らばりやすい")
+                    ),
+                    "金": (
+                        ("🔼 静かな音楽か無音で過ごす", "+6点", "金の気が研ぎ澄まされる"),
+                        ("🔽 細かい指摘・完璧主義な批判", "-8点", "金の気が刃になりやすい")
+                    ),
+                    "水": (
+                        ("🔼 水を2杯飲んで深呼吸", "+5点", "水の気が循環する"),
+                        ("🔽 過去の後悔を繰り返し反芻", "-6点", "水の気が淀みやすい")
+                    ),
+                }
+                up_mission, down_mission = OHAENG_MISSIONS.get(
+                    u, (("🔼 深呼吸を3回する", "+5点", "気の流れを整える"),
+                        ("🔽 感情的な判断", "-6点", "気のバランスが崩れやすい"))
+                )
+
+                return build_flex_fortune(overall, rationale, categories,
+                                         lucky_color, lucky_num, lucky_dir,
+                                         up_mission, down_mission)
 
             except Exception as ex:
                 print(f"⚠️ [Flex短モード失敗 → テキスト代替] {ex}")
@@ -557,6 +655,24 @@ class MalgeumLineAI:
 ・命令形は絶対に使わないこと。必ず提案形で表現すること。「〜してください」→「〜してみませんか」、「やりましょう」→「試してみる価値があるかもしれません」、「必要です」→「おすすめです」。
 ・最後に必ず以下のいずれか1つ以上を含む温かい応援の言葉を添えること：「無理をしなくても大丈夫です」「今日のあなたに寄り添う一歩として」「できる範囲で十分です」
 
+【運気ミッションシステム — 必須出力】
+UPミッション3つを必ず出力すること（五行に基づく、今日やると運気が上がる行動）。
+書式: 🔼 [具体的な行動]（+X点）[五行の根拠1行]
+配点: 各+3〜+7点。合計を超えない。
+例) 🔼 午前中に緑茶を飲む（+5点）木の気を補う
+
+DOWNミッション3つを必ず出力すること（五行の弱点に基づく、今日避けるべき行動）。
+書式: 🔽 [具体的な行動]（-X点）[五行の根拠1行]
+配点: 各-4〜-10点。
+例) 🔽 夜22時以降のSNS（-7点）火の気が暴走しやすい
+
+【辛口アドバイス — 必ず1つ含めること】
+構成: 褒め言葉 → 鋭い指摘 → 減点警告の順。
+温かいが鋭く。ユーザーの五行の弱点に基づくこと。
+例) あなたの火は人を照らす力がありますが、
+今日は「与えすぎ」に注意。
+相手に尽くしすぎると-8点です。
+
 必ず以下の構成で答えること:
 
 冒頭: 【あなたの本質：日柱】ブロック（フォーマット厳守。無料版より深く。ユーザーの五行と今日の五行との相生相剋を命理学的に必ず含めること）
@@ -569,6 +685,12 @@ class MalgeumLineAI:
 
 【あなたの{u}の使命】
 ユーザーの日柱の本質に基づいた、長期的な視点からの本質的なアドバイスを3〜4文で書くこと。
+
+【運気ミッション】
+UPミッション3つ・DOWNミッション3つを上記ルールに従い出力すること。
+
+【辛口アドバイス】
+上記ルールに従い1つ出力すること。
 
 出力の最後（「鑑定予約」の前）に必ず以下のセクションをそのまま追加すること:
 ━━━━━━━━━━━━━
