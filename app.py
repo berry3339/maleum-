@@ -215,16 +215,20 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             session = user_sessions.get(key, {})
             user_sessions[key] = {**session, 'payment_code': payment_code}
             payment_msg = (
-                "\n\n🌿 ここまでが「入口」です。\n\n"
-                "【詳細レポートでお届けするもの】\n"
+                "\n\n【マルムとは？】\n"
+                "よくある「AI自動占い」ではありません。\n"
+                "2代続く四柱推命の家系と、\n"
+                "東洋哲学を専攻した専門知識を\n"
+                "独自のAI分析と融合。\n"
+                "あなたの命式だけに基づく\n"
+                "「本格的な処方箋」をお届けします。\n\n"
                 "✓ 今日の最優先行動（根拠付き）\n"
-                "✓ 今週のテーマ\n"
-                "✓ あなたの本質と使命\n"
-                "✓ 明日から試せる3つの行動\n"
+                "✓ 運気ミッション（+/-点数）\n"
+                "✓ 愛のある辛口アドバイス\n"
                 "✓ ラッキータイム＆アイテム\n\n"
                 "🔒 詳細レポートを見る ¥1,000\n"
                 "→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n\n"
-                "決済後はこちらのコードをご入力ください\n"
+                "決済後はコードをご入力ください\n"
                 f"🔑 {payment_code}"
             )
             line_push_api(user_id, result + payment_msg)
@@ -389,7 +393,11 @@ def process_line(user_id, message):
     # 시작
     if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く', '四柱推命で見てみる']:
         user_sessions[key] = {'step': 'date'}
-        return "マルムへようこそ🌿\n\n生年月日を8桁の数字で送ってください。\n例）19930616"
+        return ("ありがとうございます🌿\n"
+                "あなたの命式から、\n"
+                "今日の流れを読み解いてみましょう。\n\n"
+                "生年月日を8桁で送ってください。\n"
+                "例）19930616")
 
     session = user_sessions.get(key, {})
     step = session.get('step')
