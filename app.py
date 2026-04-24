@@ -8,7 +8,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
-from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message
+from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
@@ -230,8 +230,7 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             line_push_api(user_id, result + payment_msg)
         else:  # prescription
             result = _filter_time_lines(result)
-            for part in split_message(result):
-                line_push_api(user_id, part)
+            send_long_message(user_id, result, line_push_api)
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")

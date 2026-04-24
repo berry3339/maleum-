@@ -47,6 +47,22 @@ def split_message(text, limit=4500):
     return parts
 
 
+def send_long_message(user_id, text, push_fn, limit=4500):
+    """長いテキストを分割してLINE pushで順番に送る（最大5件）
+    push_fn: line_push_api(user_id, text) を受け取るコールバック
+    """
+    messages = []
+    while len(text) > limit:
+        split_point = text[:limit].rfind('\n')
+        if split_point == -1:
+            split_point = limit
+        messages.append(text[:split_point])
+        text = text[split_point:].lstrip('\n')
+    messages.append(text)
+    for msg in messages[:5]:
+        push_fn(user_id, msg)
+
+
 def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, lucky_direction,
                        up_mission, down_mission):
     """LINE Flex Carousel — 4枚カード（スコア / ラッキー / ミッション / CTA）
