@@ -32,7 +32,7 @@ def get_time_info():
     return current_time_str, hour, period, forbidden, recommended, instruction
 
 
-def build_flex_fortune(score, rationale, categories, lucky_color, lucky_direction):
+def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, lucky_direction):
     """LINE Flex Message バブル — 無料運勢スコアカード（ネイビー＋ゴールド）"""
 
     def progress_bar(value):
@@ -112,7 +112,7 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_directio
                         {
                             "type": "box", "layout": "vertical", "flex": 1,
                             "contents": [
-                                {"type": "text", "text": "ラッキーカラー",
+                                {"type": "text", "text": "🎨 カラー",
                                  "size": "xxs", "color": "#8888aa"},
                                 {"type": "text", "text": lucky_color, "size": "sm",
                                  "weight": "bold", "color": "#1a1f3a", "margin": "xs"}
@@ -121,7 +121,16 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_directio
                         {
                             "type": "box", "layout": "vertical", "flex": 1,
                             "contents": [
-                                {"type": "text", "text": "ラッキー方位",
+                                {"type": "text", "text": "🔢 ナンバー",
+                                 "size": "xxs", "color": "#8888aa"},
+                                {"type": "text", "text": str(lucky_number), "size": "sm",
+                                 "weight": "bold", "color": "#1a1f3a", "margin": "xs"}
+                            ]
+                        },
+                        {
+                            "type": "box", "layout": "vertical", "flex": 1,
+                            "contents": [
+                                {"type": "text", "text": "🧭 方位",
                                  "size": "xxs", "color": "#8888aa"},
                                 {"type": "text", "text": lucky_direction, "size": "sm",
                                  "weight": "bold", "color": "#1a1f3a", "margin": "xs"}
@@ -330,15 +339,15 @@ class MalgeumLineAI:
                 categories = {k: max(40, min(98, v + delta)) for k, v in cat_base.items()}
 
                 OHAENG_LUCKY = {
-                    "木": ("グリーン", "東"),
-                    "火": ("レッド",   "南"),
-                    "土": ("イエロー", "中央"),
-                    "金": ("ホワイト", "西"),
-                    "水": ("ネイビー", "北"),
+                    "木": ("グリーン", 3, "東"),
+                    "火": ("レッド",   7, "南"),
+                    "土": ("イエロー", 5, "中央"),
+                    "金": ("ホワイト", 8, "西"),
+                    "水": ("ネイビー", 1, "北"),
                 }
-                lucky_color, lucky_dir = OHAENG_LUCKY.get(u, ("ゴールド", "南"))
+                lucky_color, lucky_num, lucky_dir = OHAENG_LUCKY.get(u, ("ゴールド", 6, "南"))
 
-                return build_flex_fortune(overall, rationale, categories, lucky_color, lucky_dir)
+                return build_flex_fortune(overall, rationale, categories, lucky_color, lucky_num, lucky_dir)
 
             except Exception as ex:
                 print(f"⚠️ [Flex短モード失敗 → テキスト代替] {ex}")
