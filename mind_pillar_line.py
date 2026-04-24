@@ -33,7 +33,7 @@ def get_time_info():
 
 
 def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, lucky_direction):
-    """LINE Flex Message バブル — 無料運勢スコアカード（ネイビー＋ゴールド）"""
+    """LINE Flex Carousel — 3枚カード（スコア / ラッキー / CTA）"""
 
     def progress_bar(value):
         pct  = f"{min(100, max(0, value))}%"
@@ -67,7 +67,8 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
 
     cat_rows = [cat_row(name, val) for name, val in categories.items()]
 
-    return {
+    # ── カード1: スコア + プログレスバー ──────────────────────────
+    card1 = {
         "type": "bubble", "size": "mega",
         "header": {
             "type": "box", "layout": "vertical",
@@ -104,40 +105,87 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
         "body": {
             "type": "box", "layout": "vertical",
             "backgroundColor": "#f9f7f2", "paddingAll": "20px",
-            "contents": cat_rows + [
+            "contents": cat_rows
+        }
+    }
+
+    # ── カード2: ラッキー3要素 ────────────────────────────────────
+    card2 = {
+        "type": "bubble", "size": "mega",
+        "header": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
+            "contents": [
+                {"type": "text", "text": "今日のラッキー", "color": "#c9a84c",
+                 "size": "sm", "weight": "bold", "align": "center"}
+            ]
+        },
+        "body": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#f9f7f2", "paddingAll": "24px",
+            "contents": [
+                {
+                    "type": "box", "layout": "vertical",
+                    "contents": [
+                        {"type": "text", "text": "🎨 ラッキーカラー",
+                         "size": "xs", "color": "#8888aa"},
+                        {"type": "text", "text": lucky_color, "size": "xl",
+                         "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
+                    ]
+                },
                 {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
                 {
-                    "type": "box", "layout": "horizontal", "margin": "lg",
+                    "type": "box", "layout": "vertical", "margin": "lg",
                     "contents": [
-                        {
-                            "type": "box", "layout": "vertical", "flex": 1,
-                            "contents": [
-                                {"type": "text", "text": "🎨 カラー",
-                                 "size": "xxs", "color": "#8888aa"},
-                                {"type": "text", "text": lucky_color, "size": "sm",
-                                 "weight": "bold", "color": "#1a1f3a", "margin": "xs"}
-                            ]
-                        },
-                        {
-                            "type": "box", "layout": "vertical", "flex": 1,
-                            "contents": [
-                                {"type": "text", "text": "🔢 ナンバー",
-                                 "size": "xxs", "color": "#8888aa"},
-                                {"type": "text", "text": str(lucky_number), "size": "sm",
-                                 "weight": "bold", "color": "#1a1f3a", "margin": "xs"}
-                            ]
-                        },
-                        {
-                            "type": "box", "layout": "vertical", "flex": 1,
-                            "contents": [
-                                {"type": "text", "text": "🧭 方位",
-                                 "size": "xxs", "color": "#8888aa"},
-                                {"type": "text", "text": lucky_direction, "size": "sm",
-                                 "weight": "bold", "color": "#1a1f3a", "margin": "xs"}
-                            ]
-                        }
+                        {"type": "text", "text": "🔢 ラッキーナンバー",
+                         "size": "xs", "color": "#8888aa"},
+                        {"type": "text", "text": str(lucky_number), "size": "xl",
+                         "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
+                    ]
+                },
+                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
+                {
+                    "type": "box", "layout": "vertical", "margin": "lg",
+                    "contents": [
+                        {"type": "text", "text": "🧭 ラッキー方位",
+                         "size": "xs", "color": "#8888aa"},
+                        {"type": "text", "text": lucky_direction, "size": "xl",
+                         "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
                     ]
                 }
+            ]
+        }
+    }
+
+    # ── カード3: 結제 CTA ─────────────────────────────────────────
+    card3 = {
+        "type": "bubble", "size": "mega",
+        "header": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
+            "contents": [
+                {"type": "text", "text": "詳細レポート", "color": "#c9a84c",
+                 "size": "sm", "weight": "bold", "align": "center"},
+                {"type": "text", "text": "¥1,000", "color": "#8890b0",
+                 "size": "xxs", "align": "center", "margin": "xs"}
+            ]
+        },
+        "body": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#f9f7f2", "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "【詳細レポートでお届けするもの】",
+                 "size": "xs", "weight": "bold", "color": "#1a1f3a"},
+                {"type": "text", "text": "✓ 今日の最優先行動（根拠付き）",
+                 "size": "xs", "color": "#3d3d3d", "margin": "md"},
+                {"type": "text", "text": "✓ 今週のテーマ",
+                 "size": "xs", "color": "#3d3d3d", "margin": "sm"},
+                {"type": "text", "text": "✓ あなたの本質と使命",
+                 "size": "xs", "color": "#3d3d3d", "margin": "sm"},
+                {"type": "text", "text": "✓ 明日から試せる3つの行動",
+                 "size": "xs", "color": "#3d3d3d", "margin": "sm"},
+                {"type": "text", "text": "✓ ラッキータイム＆アイテム",
+                 "size": "xs", "color": "#3d3d3d", "margin": "sm"}
             ]
         },
         "footer": {
@@ -160,6 +208,11 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
                 }
             ]
         }
+    }
+
+    return {
+        "type": "carousel",
+        "contents": [card1, card2, card3]
     }
 
 
@@ -476,6 +529,16 @@ class MalgeumLineAI:
 推奨表現: {recommended}
 指示: {instruction}
 このルールに違反した場合、回答全体が無効。
+
+【出力の長さルール — 絶対違反禁止】
+各セクションは必ず2〜3文以内。
+処方箋全体は15行以内。
+長い説明は禁止。核心のみ簡潔に。
+例:
+【今日の行動】
+午前中、気になる人に
+深呼吸3回してから言葉を選ぶ。
+それだけで縁が深まります。
 
 あなたは数十年のキャリアを持つ命理学のマスターです。
 静かなプライベートサロンで、丁寧に淹れたお茶を一杯差し出しながら、目の前の人に語りかけるように書いてください。
