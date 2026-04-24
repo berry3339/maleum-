@@ -293,25 +293,26 @@ class MalgeumLineAI:
                 _GEN = {"木":"火","火":"土","土":"金","金":"水","水":"木"}
                 _RES = {"木":"土","土":"水","水":"火","火":"金","金":"木"}
                 u = saju['ohaeng']
-                today_dt = datetime.now()
+                today_dt     = datetime.now(ZoneInfo("Asia/Tokyo"))
+                today_jst_str = today_dt.strftime("%Y年%m月%d日")
                 today_s  = PrecisionManse.calculate(today_dt.year, today_dt.month, today_dt.day)
                 t = today_s['ohaeng']
 
                 if u == t:
-                    base     = 78
-                    rationale = f"{u}のエネルギーが共鳴する今日"
+                    base      = 78
+                    rationale = f"{today_jst_str} — {u}のエネルギーが共鳴する今日"
                 elif _GEN.get(t) == u:
-                    base     = 90
-                    rationale = f"{t}の気があなたの{u}を輝かせる今日"
+                    base      = 90
+                    rationale = f"{today_jst_str} — {t}の気があなたの{u}を輝かせる今日"
                 elif _GEN.get(u) == t:
-                    base     = 82
-                    rationale = f"あなたの{u}が{t}の気を育む今日"
+                    base      = 82
+                    rationale = f"{today_jst_str} — あなたの{u}が{t}の気を育む今日"
                 elif _RES.get(u) == t:
-                    base     = 68
-                    rationale = f"あなたの{u}が{t}の気と向き合う今日"
+                    base      = 68
+                    rationale = f"{today_jst_str} — あなたの{u}が{t}の気と向き合う今日"
                 else:
-                    base     = 55
-                    rationale = f"{t}の気の中、{u}のあなたが整える今日"
+                    base      = 55
+                    rationale = f"{today_jst_str} — {t}の気の中、{u}のあなたが整える今日"
 
                 dp        = saju.get('day_pillar', '')
                 variation = ord(dp[1]) % 7 - 3 if len(dp) >= 2 else 0

@@ -5,6 +5,7 @@ import random
 import string
 import threading
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
 from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI
@@ -43,10 +44,11 @@ def save_user(user_id, year, month, day):
 def send_daily_messages():
     """매일 오전 7시(JST) 등록된 모든 유저에게 오늘의 처방전 push"""
     import requests as req
+    today = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y年%m月%d日")
     users = load_users()
     if not users:
         return
-    print(f"⏰ [朝のメッセージ] {len(users)}명에게 발송 시작")
+    print(f"⏰ [朝のメッセージ] {today} | {len(users)}명에게 발송 시작")
     for uid, data in users.items():
         try:
             saju          = LineManse.calculate(data['year'], data['month'], data['day'])
