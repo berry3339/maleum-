@@ -32,12 +32,41 @@ def get_time_info():
     return current_time_str, hour, period, forbidden, recommended, instruction
 
 
+def split_message(text, limit=4500):
+    """LINE 5000字制限対応: テキストを limit 字以内に分割して返す"""
+    if len(text) <= limit:
+        return [text]
+    parts = []
+    while len(text) > limit:
+        split_point = text[:limit].rfind('\n')
+        if split_point == -1:
+            split_point = limit
+        parts.append(text[:split_point])
+        text = text[split_point:]
+    parts.append(text)
+    return parts
+
+
 def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, lucky_direction,
                        up_mission, down_mission):
     """LINE Flex Carousel — 4枚カード（スコア / ラッキー / ミッション / CTA）
     up_mission / down_mission: tuple (action_str, score_str, reason_str)
     例) ("🔼 朝に緑茶を飲む", "+5点", "木の気を補う")
     """
+
+    COLOR_EMOJI = {
+        "レッド":   "🔴",
+        "ブルー":   "🔵",
+        "グリーン": "🟢",
+        "パープル": "🟣",
+        "イエロー": "🟡",
+        "ホワイト": "⚪",
+        "オレンジ": "🟠",
+        "ブラック": "⚫",
+        "ネイビー": "🔵",
+        "ゴールド": "🟡",
+    }
+    lucky_color_display = COLOR_EMOJI.get(lucky_color, "") + " " + lucky_color
 
     def progress_bar(value):
         pct  = f"{min(100, max(0, value))}%"
@@ -133,7 +162,7 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
                     "contents": [
                         {"type": "text", "text": "🎨 ラッキーカラー",
                          "size": "xs", "color": "#8888aa"},
-                        {"type": "text", "text": lucky_color, "size": "xl",
+                        {"type": "text", "text": lucky_color_display, "size": "xl",
                          "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
                     ]
                 },
@@ -629,8 +658,7 @@ class MalgeumLineAI:
 このルールに違反した場合、回答全体が無効。
 
 【出力の長さルール — 絶対違反禁止】
-各セクションは必ず2〜3文以内。
-処方箋全体は15行以内。
+各セクション最大3文。全体15行以内。絶対に違反禁止。
 長い説明は禁止。核心のみ簡潔に。
 例:
 【今日の行動】
