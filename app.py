@@ -233,8 +233,29 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             )
             line_push_api(user_id, result + payment_msg)
         else:  # prescription
+            # score 계산 (short mode와 동일한 로직)
+            _GEN = {'木':'火','火':'土','土':'金','金':'水','水':'木'}
+            _RES = {'木':'土','土':'水','水':'火','火':'金','金':'木'}
+            u = saju.get('day_ohaeng', '水')
+            t = saju.get('today_ohaeng', '水')
+            if u == t:             base = 78
+            elif _GEN.get(t) == u: base = 90
+            elif _GEN.get(u) == t: base = 82
+            elif _RES.get(u) == t: base = 68
+            else:                  base = 55
+            dp = saju.get('day_pillar', '')
+            variation = ord(dp[1]) % 7 - 3 if len(dp) >= 2 else 0
+            score = max(50, min(95, base + variation))
+            # 미션 도입부 삽입
+            if '【運気ミッション】' in result:
+                mission_intro = (
+                    f"━━ 運気ミッション ━━\n"
+                    f"今日の{score}点をさらに上げるチャンス。\n"
+                    f"行動ひとつで、流れが変わります🌙\n\n"
+                )
+                result = result.replace('【運気ミッション】', mission_intro + '【運気ミッション】', 1)
             result = _filter_time_lines(result)
-            send_long_message(user_id, result, line_push_api)
+            send_long_message(user_id, result, line_push_api, limit=2000)
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -391,9 +412,11 @@ def process_line(user_id, message):
                 "最初に戻りたい方は「マルム」とご入力ください。🌿")
 
     # 시작
-    if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く', '四柱推命で見てみる']:
+    if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く', '四柱推命で見てみる', '見る']:
         user_sessions[key] = {'step': 'date'}
-        return ("ありがとうございます🌿\n"
+        return ("ありがとうございます🌿\n\n"
+                "マルムは、2代続く四柱推命の専門知識と\n"
+                "AIを融合した本格鑑定です🌙\n\n"
                 "あなたの命式から、\n"
                 "今日の流れを読み解いてみましょう。\n\n"
                 "生年月日を8桁で送ってください。\n"
