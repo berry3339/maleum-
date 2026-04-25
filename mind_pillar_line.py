@@ -177,93 +177,10 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
         }
     }
 
-    # ── カード2: ラッキー3要素 ────────────────────────────────────
-    card2 = {
-        "type": "bubble", "size": "mega",
-        "header": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
-            "contents": [
-                {"type": "text", "text": "今日のラッキー", "color": "#c9a84c",
-                 "size": "sm", "weight": "bold", "align": "center"}
-            ]
-        },
-        "body": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#f9f7f2", "paddingAll": "24px",
-            "contents": [
-                {
-                    "type": "box", "layout": "vertical",
-                    "contents": [
-                        {"type": "text", "text": "🎨 ラッキーカラー",
-                         "size": "xs", "color": "#8888aa"},
-                        {"type": "text", "text": lucky_color_display, "size": "xl",
-                         "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
-                    ]
-                },
-                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
-                {
-                    "type": "box", "layout": "vertical", "margin": "lg",
-                    "contents": [
-                        {"type": "text", "text": "🔢 ラッキーナンバー",
-                         "size": "xs", "color": "#8888aa"},
-                        {"type": "text", "text": str(lucky_number), "size": "xl",
-                         "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
-                    ]
-                },
-                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
-                {
-                    "type": "box", "layout": "vertical", "margin": "lg",
-                    "contents": [
-                        {"type": "text", "text": "🧭 ラッキー方位",
-                         "size": "xs", "color": "#8888aa"},
-                        {"type": "text", "text": lucky_direction, "size": "xl",
-                         "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
-                    ]
-                }
-            ]
-        }
-    }
-
-    # ── カード3: ミッション プレビュー ───────────────────────────
-    card3 = {
-        "type": "bubble", "size": "mega",
-        "header": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
-            "contents": [
-                {"type": "text", "text": "今日のミッション", "color": "#c9a84c",
-                 "size": "sm", "weight": "bold", "align": "center"},
-                {"type": "text", "text": "プレビュー", "color": "#8890b0",
-                 "size": "xxs", "align": "center", "margin": "xs"}
-            ]
-        },
-        "body": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#f9f7f2", "paddingAll": "20px",
-            "contents": [
-                {"type": "text",
-                 "text": f"🔼 {up_score}のチャンスがあります",
-                 "size": "sm", "color": "#1a5c1a", "weight": "bold"},
-                {"type": "text",
-                 "text": f"🔽 {down_score}の危険があります",
-                 "size": "sm", "color": "#8b1a1a", "weight": "bold",
-                 "margin": "md"},
-                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
-                {"type": "text", "text": "全ミッションは詳細レポートで🔒",
-                 "size": "xxs", "color": "#8888aa",
-                 "align": "center", "margin": "lg"}
-            ]
-        }
-    }
-
-    return {
-        "type": "carousel",
-        "contents": [card1, card2, card3]
-    }
+    return card1
 
 
-def build_prescription_cards(text):
+def build_prescription_cards(text, saju=None):
     """有料処方箋テキストから ラッキー/ミッション/辛口 の3枚カードを生成"""
     import re
 
@@ -271,15 +188,83 @@ def build_prescription_cards(text):
         m = re.search(rf'【{re.escape(section)}】(.*?)(?=【|$)', text, re.DOTALL)
         return m.group(1).strip() if m else ""
 
+    # ── ラッキーカード: オーハン基準5項目 ────────────────────────
+    OHAENG_LUCKY_MAP = {
+        "木": ("グリーン", 3, "東"),
+        "火": ("レッド",   7, "南"),
+        "土": ("イエロー", 5, "中央"),
+        "金": ("ホワイト", 8, "西"),
+        "水": ("ネイビー", 1, "北"),
+    }
+    COLOR_EMOJI = {
+        "レッド": "🔴", "グリーン": "🟢", "イエロー": "🟡",
+        "ホワイト": "⚪", "ネイビー": "🔵", "ゴールド": "🟡",
+    }
+    u = (saju or {}).get('day_ohaeng', '水') if saju else '水'
+    lc, ln, ld = OHAENG_LUCKY_MAP.get(u, ("ゴールド", 6, "南"))
+    color_display = COLOR_EMOJI.get(lc, "") + " " + lc
+
+    # AI テキストからタイム・アイテム抽出
+    lucky_section = extract("ラッキーアイテム")
+    l_time = l_item = ""
+    for line in lucky_section.split('\n'):
+        line = line.strip()
+        if '⏰' in line:
+            l_time = line.split(':', 1)[-1].strip() if ':' in line else line
+        elif '🌿' in line:
+            l_item = line.split(':', 1)[-1].strip() if ':' in line else line
+
+    def lucky_row(label, value, margin=True):
+        row = {
+            "type": "box", "layout": "vertical",
+            "contents": [
+                {"type": "text", "text": label, "size": "xs", "color": "#8888aa"},
+                {"type": "text", "text": value or "—", "size": "md",
+                 "weight": "bold", "color": "#1a1f3a", "margin": "xs", "wrap": True}
+            ]
+        }
+        if margin:
+            row["margin"] = "lg"
+        return row
+
+    lucky_card = {
+        "type": "bubble", "size": "mega",
+        "header": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
+            "contents": [
+                {"type": "text", "text": "今日のラッキー", "color": "#c9a84c",
+                 "size": "sm", "weight": "bold", "align": "center"},
+                {"type": "text", "text": "詳細版", "color": "#8890b0",
+                 "size": "xxs", "align": "center", "margin": "xs"}
+            ]
+        },
+        "body": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#f9f7f2", "paddingAll": "20px",
+            "contents": [
+                lucky_row("🎨 ラッキーカラー",  color_display, margin=False),
+                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
+                lucky_row("🔢 ラッキーナンバー", str(ln)),
+                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
+                lucky_row("🧭 ラッキー方位",    ld),
+                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
+                lucky_row("⏰ ラッキータイム",  l_time),
+                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
+                lucky_row("🌿 ラッキーアイテム", l_item),
+            ]
+        }
+    }
+
+    # ── ミッション/辛口: テキスト抽出バブル ─────────────────────
     def text_bubble(header_title, body_text, header_sub=None):
         lines = [l.strip() for l in body_text.split('\n') if l.strip()]
         body_items = []
-        for i, line in enumerate(lines[:10]):
+        for i, line in enumerate(lines[:12]):
             item = {"type": "text", "text": line, "size": "sm",
                     "color": "#3d3d3d", "wrap": True}
             if i > 0:
                 item["margin"] = "sm"
-            # UPは緑、DOWNは赤
             if line.startswith("🔼"):
                 item["color"] = "#1a5c1a"
             elif line.startswith("🔽"):
@@ -287,7 +272,6 @@ def build_prescription_cards(text):
             body_items.append(item)
         if not body_items:
             body_items = [{"type": "text", "text": "—", "size": "sm", "color": "#8888aa"}]
-
         header_contents = [
             {"type": "text", "text": header_title, "color": "#c9a84c",
              "size": "sm", "weight": "bold", "align": "center"}
@@ -311,9 +295,8 @@ def build_prescription_cards(text):
             }
         }
 
-    lucky_card   = text_bubble("ラッキーアイテム",  extract("ラッキーアイテム"))
     mission_card = text_bubble("運気ミッション", extract("運気ミッション"), "本日の全ミッション")
-    advice_card  = text_bubble("辛口アドバイス",   extract("辛口アドバイス"))
+    advice_card  = text_bubble("辛口アドバイス", extract("辛口アドバイス"))
 
     return {
         "type": "carousel",

@@ -218,6 +218,7 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                 "\n\n🌿 今日のエネルギーは、とても良い状態です。\n"
                 "ただ…この点数の裏に、\n"
                 "少し「もったいない流れ」も隠れています🌙\n\n"
+                "この処方箋は、今日の深夜0時に消えます🌙\n\n"
                 "少しでも気になる方だけ、\n"
                 "このタイミングを逃さずにご覧ください🌙\n\n"
                 "この先では、\n"
@@ -255,7 +256,7 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             result = _filter_time_lines(result)
             # 処方箋カード3枚（ラッキー/ミッション/辛口）を先に発送
             try:
-                cards = build_prescription_cards(result)
+                cards = build_prescription_cards(result, saju)
                 line_push_api(user_id, cards)
             except Exception as card_err:
                 print(f"⚠️ [処方箋カード生成エラー] {card_err}")
