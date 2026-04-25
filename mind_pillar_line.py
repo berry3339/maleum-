@@ -285,43 +285,13 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
             "type": "box", "layout": "vertical",
             "backgroundColor": "#f9f7f2", "paddingAll": "20px",
             "contents": [
-                {
-                    "type": "box", "layout": "vertical",
-                    "contents": [
-                        {
-                            "type": "box", "layout": "horizontal",
-                            "contents": [
-                                {"type": "text", "text": up_action, "size": "xs",
-                                 "color": "#1a5c1a", "weight": "bold",
-                                 "flex": 3, "wrap": True},
-                                {"type": "text", "text": up_score, "size": "xs",
-                                 "color": "#1a5c1a", "weight": "bold",
-                                 "align": "end", "flex": 1}
-                            ]
-                        },
-                        {"type": "text", "text": up_reason, "size": "xxs",
-                         "color": "#8888aa", "margin": "xs"}
-                    ]
-                },
-                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
-                {
-                    "type": "box", "layout": "vertical", "margin": "lg",
-                    "contents": [
-                        {
-                            "type": "box", "layout": "horizontal",
-                            "contents": [
-                                {"type": "text", "text": down_action, "size": "xs",
-                                 "color": "#8b1a1a", "weight": "bold",
-                                 "flex": 3, "wrap": True},
-                                {"type": "text", "text": down_score, "size": "xs",
-                                 "color": "#8b1a1a", "weight": "bold",
-                                 "align": "end", "flex": 1}
-                            ]
-                        },
-                        {"type": "text", "text": down_reason, "size": "xxs",
-                         "color": "#8888aa", "margin": "xs"}
-                    ]
-                },
+                {"type": "text",
+                 "text": f"🔼 {up_score}のチャンスがあります",
+                 "size": "sm", "color": "#1a5c1a", "weight": "bold"},
+                {"type": "text",
+                 "text": f"🔽 {down_score}の危険があります",
+                 "size": "sm", "color": "#8b1a1a", "weight": "bold",
+                 "margin": "md"},
                 {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
                 {"type": "text", "text": "全ミッションは詳細レポートで🔒",
                  "size": "xxs", "color": "#8888aa",
@@ -629,6 +599,32 @@ class MalgeumLineAI:
 その後、2段階の洞察を書いてください。"""
 
             max_tokens = 600
+
+            # 無料 preview: AI 呼び出し不要 → 1行本質 + 절단 문구で返す
+            PREVIEW_TAGLINE = {
+                "木": "大地に根を張り、天へと伸びる木。",
+                "火": "静かに照らし続ける炎。",
+                "土": "すべてを受け止め、育む大地。",
+                "金": "研ぎ澄まされた刃のような純粋さ。",
+                "水": "深く澄んだ、流れる水の知恵。",
+            }
+            tagline = (
+                f"{ohaeng_emoji} {saju['day_pillar']}（{day_yomi}）"
+                f"— {PREVIEW_TAGLINE.get(saju['ohaeng'], '命のエネルギー。')}"
+            )
+            return (
+                tagline + "\n\n"
+                "今日の流れはかなり良い状態です🌙\n\n"
+                "ただ、\n"
+                "ひとつだけ注意点があります。\n\n"
+                "ここを間違えると\n"
+                "せっかくの運気が崩れる可能性があります。\n\n"
+                "━━━━━━━━━━━━━\n"
+                "ここまで見て、\n"
+                "「少し当たっている」と感じた方だけ\n"
+                "続きをご覧ください。\n"
+                "━━━━━━━━━━━━━"
+            )
 
         else:  # prescription
             ohaeng_emoji  = PrecisionManse.OHAENG_EMOJI.get(saju['ohaeng'], "✨")
