@@ -47,15 +47,27 @@ def split_message(text, limit=4500):
     return parts
 
 
-def send_long_message(user_id, text, push_fn, limit=4500):
+def send_long_message(user_id, text, push_fn, limit=4000):
     """長いテキストを分割してLINE pushで順番に送る（最大5件）
+    分割基準: 文末（。！？）→ 改行 → 強制分割 の順で探す
     push_fn: line_push_api(user_id, text) を受け取るコールバック
     """
     messages = []
     while len(text) > limit:
-        split_point = text[:limit].rfind('\n')
-        if split_point == -1:
-            split_point = limit
+        chunk = text[:limit]
+        # 文末で分割（。！？の直後）
+        split_point = -1
+        for punct in ('。', '！', '？'):
+            pos = chunk.rfind(punct)
+            if pos > split_point:
+                split_point = pos
+        if split_point != -1:
+            split_point += 1  # 句読点を含めて分割
+        else:
+            # 文末が見つからなければ改行で分割
+            split_point = chunk.rfind('\n')
+        if split_point <= 0:
+            split_point = limit  # どちらもなければ強制分割
         messages.append(text[:split_point])
         text = text[split_point:].lstrip('\n')
     messages.append(text)
