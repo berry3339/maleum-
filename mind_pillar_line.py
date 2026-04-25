@@ -47,7 +47,7 @@ def split_message(text, limit=4500):
     return parts
 
 
-def send_long_message(user_id, text, push_fn, limit=4000):
+def send_long_message(user_id, text, push_fn, limit=3500):
     """長いテキストを分割してLINE pushで順番に送る（最大5件）
     分割基準: 文末（。！？）→ 改行 → 強制分割 の順で探す
     push_fn: line_push_api(user_id, text) を受け取るコールバック
@@ -624,19 +624,7 @@ class MalgeumLineAI:
                 f"{ohaeng_emoji} {saju['day_pillar']}（{day_yomi}）"
                 f"— {PREVIEW_TAGLINE.get(saju['ohaeng'], '命のエネルギー。')}"
             )
-            return (
-                tagline + "\n\n"
-                "今日の流れはかなり良い状態です🌙\n\n"
-                "ただ、\n"
-                "ひとつだけ注意点があります。\n\n"
-                "ここを間違えると\n"
-                "せっかくの運気が崩れる可能性があります。\n\n"
-                "━━━━━━━━━━━━━\n"
-                "ここまで見て、\n"
-                "「少し当たっている」と感じた方だけ\n"
-                "続きをご覧ください。\n"
-                "━━━━━━━━━━━━━"
-            )
+            return tagline
 
         else:  # prescription
             ohaeng_emoji  = PrecisionManse.OHAENG_EMOJI.get(saju['ohaeng'], "✨")
