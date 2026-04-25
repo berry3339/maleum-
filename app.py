@@ -266,7 +266,6 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                 "よければまた教えてくださいね。"
             )
             line_push_api(user_id, result + retention_msg)
-            line_push_api(user_id, "このカードを保存して、\n今日のお守りにしてください🌿")
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -515,7 +514,9 @@ def process_line(user_id, message):
                 daemon=True
             ).start()
             return ("🌀 決済を確認しました。\n"
-                    "あなただけの処方箋の封を切ります...")
+                    "あなただけの処方箋の封を切ります...\n\n"
+                    "このカードを保存して、\n"
+                    "今日のお守りにしてください🌿")
         return "コードが正しくありません。もう一度お試しください。🌿"
 
     if step == 'WAITING_COMPAT_SELF':
