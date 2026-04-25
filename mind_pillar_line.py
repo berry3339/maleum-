@@ -310,8 +310,10 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
         }
     }
 
-    # カードを個別リストで返す（分離発送のため）
-    return [card1, card2, card3, card4]
+    return {
+        "type": "carousel",
+        "contents": [card1, card2, card3, card4]
+    }
 
 
 try:
@@ -675,6 +677,8 @@ class MalgeumLineAI:
 各セクション（【本質】【最優先行動】【今週のテーマ】【使命】）は3文以内で書くこと。
 全体は20行以内に収めること。絶対に違反禁止。
 長い説明より核心を短く強く。
+運気ミッションはUP3個・DOWN3個のみ。各ミッションは2行以内。
+全体の処方箋は2000文字以内で必ず収めること。超えた場合、回答全体が無効。
 例:
 【今日の行動】
 午前中、気になる人に

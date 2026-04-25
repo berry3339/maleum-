@@ -4,7 +4,6 @@ import re
 import random
 import string
 import threading
-import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
@@ -54,31 +53,20 @@ def send_daily_messages():
         try:
             saju          = LineManse.calculate(data['year'], data['month'], data['day'])
             ai            = MalgeumLineAI()
-            result = ai.get_prescription(saju, mode='short')
-            if isinstance(result, list):
-                # カードを分離発送
-                for card in result:
-                    req.post(
-                        'https://api.line.me/v2/bot/message/push',
-                        headers={
-                            'Authorization': f"Bearer {os.getenv('LINE_CHANNEL_ACCESS_TOKEN')}",
-                            'Content-Type': 'application/json'
-                        },
-                        json={'to': uid, 'messages': [{"type": "flex", "altText": "🌅 朝のエネルギーガイドをお届けします", "contents": card}]},
-                        timeout=30
-                    )
-                    time.sleep(0.5)
+            result        = ai.get_prescription(saju, mode='short')
+            if isinstance(result, dict):
+                msg_payload = {"type": "flex", "altText": "🌅 朝のエネルギーガイドをお届けします", "contents": result}
             else:
                 msg_payload = {"type": "text", "text": "🌅 朝のメッセージ\n\n" + result}
-                req.post(
-                    'https://api.line.me/v2/bot/message/push',
-                    headers={
-                        'Authorization': f"Bearer {os.getenv('LINE_CHANNEL_ACCESS_TOKEN')}",
-                        'Content-Type': 'application/json'
-                    },
-                    json={'to': uid, 'messages': [msg_payload]},
-                    timeout=30
-                )
+            req.post(
+                'https://api.line.me/v2/bot/message/push',
+                headers={
+                    'Authorization': f"Bearer {os.getenv('LINE_CHANNEL_ACCESS_TOKEN')}",
+                    'Content-Type': 'application/json'
+                },
+                json={'to': uid, 'messages': [msg_payload]},
+                timeout=30
+            )
             print(f"✅ [暁push] {uid[:16]}")
         except Exception as e:
             print(f"❌ [暁push오류] {uid[:16]}: {e}")
@@ -267,7 +255,7 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                 "今日のミッション、どれか試してみましたか？\n"
                 "よければまた教えてくださいね。"
             )
-            send_long_message(user_id, result + retention_msg, line_push_api, limit=2000)
+            line_push_api(user_id, result + retention_msg)
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -297,14 +285,8 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
 def handle_line_event(user_id, message, reply_token):
     """일반 메시지: process_line → reply — background thread에서 실행"""
     try:
-        result = process_line(user_id, message)
-        # Flex カードリスト → push で順番に分離発送
-        if isinstance(result, list):
-            for card in result:
-                line_push_api(user_id, card)
-                time.sleep(0.5)
-        else:
-            line_reply_api(reply_token, result)
+        text = process_line(user_id, message)
+        line_reply_api(reply_token, text)
     except Exception as e:
         print(f"❌ [LINE 처리오류] {e}")
         try:
