@@ -8,7 +8,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
-from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message
+from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
@@ -220,6 +220,9 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                 "少し「もったいない流れ」も隠れています🌙\n\n"
                 "少しでも気になる方だけ、\n"
                 "このタイミングを逃さずにご覧ください🌙\n\n"
+                "この先では、\n"
+                "あなたの「本当の流れ」と\n"
+                "「行動の答え」が明らかになります🌙\n\n"
                 "🔒 今日のもったいないを回避する（¥1,000）\n"
                 "→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n\n"
                 "決済完了後、すぐに続きの処方箋が届きます✨\n"
@@ -250,6 +253,12 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                 )
                 result = result.replace('【運気ミッション】', mission_intro + '【運気ミッション】', 1)
             result = _filter_time_lines(result)
+            # 処方箋カード3枚（ラッキー/ミッション/辛口）を先に発送
+            try:
+                cards = build_prescription_cards(result)
+                line_push_api(user_id, cards)
+            except Exception as card_err:
+                print(f"⚠️ [処方箋カード生成エラー] {card_err}")
             retention_msg = (
                 "\n\n明日は少し流れが変わるタイミングになりそうです🌙\n"
                 "今日のミッション、どれか試してみましたか？\n"

@@ -126,11 +126,10 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
 
     cat_rows = [cat_row(name, val) for name, val in categories.items()]
 
-    # ミッションを先に展開（card1内で使用）
     up_action, up_score, up_reason       = up_mission
     down_action, down_score, down_reason = down_mission
 
-    # ── カード1枚のみ: スコア + プログレスバー + ラッキー + ミッション + CTA ──
+    # ── カード1: スコア + プログレスバー ──────────────────────────
     card1 = {
         "type": "bubble", "size": "mega",
         "header": {
@@ -172,44 +171,154 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
                 {
                     "type": "box", "layout": "vertical",
                     "backgroundColor": "#f9f7f2", "paddingAll": "20px",
-                    "contents": cat_rows + [
-                        {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
-                        {"type": "text",
-                         "text": f"🎨 {lucky_color_display}　🔢 {lucky_number}　🧭 {lucky_direction}",
-                         "size": "xs", "color": "#3d3d3d", "margin": "md", "wrap": True},
-                        {"type": "separator", "margin": "md", "color": "#e0dbd0"},
-                        {"type": "text",
-                         "text": f"🔼 {up_score}のチャンス　🔽 {down_score}の注意",
-                         "size": "xs", "color": "#666680", "margin": "md"},
-                        {"type": "text", "text": "全ミッションは詳細レポートで🔒",
-                         "size": "xxs", "color": "#8888aa", "margin": "xs"}
-                    ]
-                }
-            ]
-        },
-        "footer": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
-            "contents": [
-                {
-                    "type": "button",
-                    "action": {
-                        "type": "message",
-                        "label": "詳細レポートを見る  ¥1,000",
-                        "text": "詳細レポート"
-                    },
-                    "style": "primary", "color": "#c9a84c", "height": "sm"
-                },
-                {
-                    "type": "text", "text": "より深い洞察をお届けします",
-                    "size": "xxs", "color": "#8890b0",
-                    "align": "center", "margin": "sm"
+                    "contents": cat_rows
                 }
             ]
         }
     }
 
-    return card1
+    # ── カード2: ラッキー3要素 ────────────────────────────────────
+    card2 = {
+        "type": "bubble", "size": "mega",
+        "header": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
+            "contents": [
+                {"type": "text", "text": "今日のラッキー", "color": "#c9a84c",
+                 "size": "sm", "weight": "bold", "align": "center"}
+            ]
+        },
+        "body": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#f9f7f2", "paddingAll": "24px",
+            "contents": [
+                {
+                    "type": "box", "layout": "vertical",
+                    "contents": [
+                        {"type": "text", "text": "🎨 ラッキーカラー",
+                         "size": "xs", "color": "#8888aa"},
+                        {"type": "text", "text": lucky_color_display, "size": "xl",
+                         "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
+                    ]
+                },
+                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
+                {
+                    "type": "box", "layout": "vertical", "margin": "lg",
+                    "contents": [
+                        {"type": "text", "text": "🔢 ラッキーナンバー",
+                         "size": "xs", "color": "#8888aa"},
+                        {"type": "text", "text": str(lucky_number), "size": "xl",
+                         "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
+                    ]
+                },
+                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
+                {
+                    "type": "box", "layout": "vertical", "margin": "lg",
+                    "contents": [
+                        {"type": "text", "text": "🧭 ラッキー方位",
+                         "size": "xs", "color": "#8888aa"},
+                        {"type": "text", "text": lucky_direction, "size": "xl",
+                         "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
+                    ]
+                }
+            ]
+        }
+    }
+
+    # ── カード3: ミッション プレビュー ───────────────────────────
+    card3 = {
+        "type": "bubble", "size": "mega",
+        "header": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
+            "contents": [
+                {"type": "text", "text": "今日のミッション", "color": "#c9a84c",
+                 "size": "sm", "weight": "bold", "align": "center"},
+                {"type": "text", "text": "プレビュー", "color": "#8890b0",
+                 "size": "xxs", "align": "center", "margin": "xs"}
+            ]
+        },
+        "body": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#f9f7f2", "paddingAll": "20px",
+            "contents": [
+                {"type": "text",
+                 "text": f"🔼 {up_score}のチャンスがあります",
+                 "size": "sm", "color": "#1a5c1a", "weight": "bold"},
+                {"type": "text",
+                 "text": f"🔽 {down_score}の危険があります",
+                 "size": "sm", "color": "#8b1a1a", "weight": "bold",
+                 "margin": "md"},
+                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
+                {"type": "text", "text": "全ミッションは詳細レポートで🔒",
+                 "size": "xxs", "color": "#8888aa",
+                 "align": "center", "margin": "lg"}
+            ]
+        }
+    }
+
+    return {
+        "type": "carousel",
+        "contents": [card1, card2, card3]
+    }
+
+
+def build_prescription_cards(text):
+    """有料処方箋テキストから ラッキー/ミッション/辛口 の3枚カードを生成"""
+    import re
+
+    def extract(section):
+        m = re.search(rf'【{re.escape(section)}】(.*?)(?=【|$)', text, re.DOTALL)
+        return m.group(1).strip() if m else ""
+
+    def text_bubble(header_title, body_text, header_sub=None):
+        lines = [l.strip() for l in body_text.split('\n') if l.strip()]
+        body_items = []
+        for i, line in enumerate(lines[:10]):
+            item = {"type": "text", "text": line, "size": "sm",
+                    "color": "#3d3d3d", "wrap": True}
+            if i > 0:
+                item["margin"] = "sm"
+            # UPは緑、DOWNは赤
+            if line.startswith("🔼"):
+                item["color"] = "#1a5c1a"
+            elif line.startswith("🔽"):
+                item["color"] = "#8b1a1a"
+            body_items.append(item)
+        if not body_items:
+            body_items = [{"type": "text", "text": "—", "size": "sm", "color": "#8888aa"}]
+
+        header_contents = [
+            {"type": "text", "text": header_title, "color": "#c9a84c",
+             "size": "sm", "weight": "bold", "align": "center"}
+        ]
+        if header_sub:
+            header_contents.append(
+                {"type": "text", "text": header_sub, "color": "#8890b0",
+                 "size": "xxs", "align": "center", "margin": "xs"}
+            )
+        return {
+            "type": "bubble", "size": "mega",
+            "header": {
+                "type": "box", "layout": "vertical",
+                "backgroundColor": "#1a1f3a", "paddingAll": "16px",
+                "contents": header_contents
+            },
+            "body": {
+                "type": "box", "layout": "vertical",
+                "backgroundColor": "#f9f7f2", "paddingAll": "20px",
+                "contents": body_items
+            }
+        }
+
+    lucky_card   = text_bubble("ラッキーアイテム",  extract("ラッキーアイテム"))
+    mission_card = text_bubble("運気ミッション", extract("運気ミッション"), "本日の全ミッション")
+    advice_card  = text_bubble("辛口アドバイス",   extract("辛口アドバイス"))
+
+    return {
+        "type": "carousel",
+        "contents": [lucky_card, mission_card, advice_card]
+    }
 
 
 try:
