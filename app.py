@@ -258,7 +258,6 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             try:
                 cards = build_prescription_cards(result, saju)
                 line_push_api(user_id, cards)
-                line_push_api(user_id, "このカードを保存して、\n今日のお守りにしてください🌿")
             except Exception as card_err:
                 print(f"⚠️ [処方箋カード生成エラー] {card_err}")
             retention_msg = (
@@ -267,6 +266,7 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                 "よければまた教えてくださいね。"
             )
             line_push_api(user_id, result + retention_msg)
+            line_push_api(user_id, "このカードを保存して、\n今日のお守りにしてください🌿")
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
