@@ -47,15 +47,16 @@ def split_message(text, limit=4500):
     return parts
 
 
-def send_long_message(user_id, text, push_fn, limit=3500):
+def send_long_message(user_id, text, push_fn, limit=3000):
     """長いテキストを分割してLINE pushで順番に送る（最大5件）
-    分割基準: 文末（。！？）→ 改行 → 強制分割 の順で探す
+    分割基準: 文末（。！？）のみ。見つからない場合のみ強制分割。
+    改行での分割は行わない（文章途中の切断防止）。
     push_fn: line_push_api(user_id, text) を受け取るコールバック
     """
     messages = []
     while len(text) > limit:
         chunk = text[:limit]
-        # 文末で分割（。！？の直後）
+        # 文末（。！？）で分割 — 改行フォールバックなし
         split_point = -1
         for punct in ('。', '！', '？'):
             pos = chunk.rfind(punct)
@@ -64,10 +65,7 @@ def send_long_message(user_id, text, push_fn, limit=3500):
         if split_point != -1:
             split_point += 1  # 句読点を含めて分割
         else:
-            # 文末が見つからなければ改行で分割
-            split_point = chunk.rfind('\n')
-        if split_point <= 0:
-            split_point = limit  # どちらもなければ強制分割
+            split_point = limit  # 文末が見つからない場合のみ強制分割
         messages.append(text[:split_point])
         text = text[split_point:].lstrip('\n')
     messages.append(text)
@@ -312,10 +310,8 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
         }
     }
 
-    return {
-        "type": "carousel",
-        "contents": [card1, card2, card3, card4]
-    }
+    # カードを個別リストで返す（分離発送のため）
+    return [card1, card2, card3, card4]
 
 
 try:
