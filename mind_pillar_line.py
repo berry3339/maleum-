@@ -126,7 +126,11 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
 
     cat_rows = [cat_row(name, val) for name, val in categories.items()]
 
-    # ── カード1: スコア + プログレスバー (hero 廃止 → body 統合) ──
+    # ミッションを先に展開（card1内で使用）
+    up_action, up_score, up_reason       = up_mission
+    down_action, down_score, down_reason = down_mission
+
+    # ── カード1枚のみ: スコア + プログレスバー + ラッキー + ミッション + CTA ──
     card1 = {
         "type": "bubble", "size": "mega",
         "header": {
@@ -168,89 +172,19 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
                 {
                     "type": "box", "layout": "vertical",
                     "backgroundColor": "#f9f7f2", "paddingAll": "20px",
-                    "contents": cat_rows
-                }
-            ]
-        }
-    }
-
-    # ── カード2: ラッキー3要素 ────────────────────────────────────
-    card2 = {
-        "type": "bubble", "size": "mega",
-        "header": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
-            "contents": [
-                {"type": "text", "text": "今日のラッキー", "color": "#c9a84c",
-                 "size": "sm", "weight": "bold", "align": "center"}
-            ]
-        },
-        "body": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#f9f7f2", "paddingAll": "24px",
-            "contents": [
-                {
-                    "type": "box", "layout": "vertical",
-                    "contents": [
-                        {"type": "text", "text": "🎨 ラッキーカラー",
-                         "size": "xs", "color": "#8888aa"},
-                        {"type": "text", "text": lucky_color_display, "size": "xl",
-                         "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
-                    ]
-                },
-                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
-                {
-                    "type": "box", "layout": "vertical", "margin": "lg",
-                    "contents": [
-                        {"type": "text", "text": "🔢 ラッキーナンバー",
-                         "size": "xs", "color": "#8888aa"},
-                        {"type": "text", "text": str(lucky_number), "size": "xl",
-                         "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
-                    ]
-                },
-                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
-                {
-                    "type": "box", "layout": "vertical", "margin": "lg",
-                    "contents": [
-                        {"type": "text", "text": "🧭 ラッキー方位",
-                         "size": "xs", "color": "#8888aa"},
-                        {"type": "text", "text": lucky_direction, "size": "xl",
-                         "weight": "bold", "color": "#1a1f3a", "margin": "sm"}
+                    "contents": cat_rows + [
+                        {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
+                        {"type": "text",
+                         "text": f"🎨 {lucky_color_display}　🔢 {lucky_number}　🧭 {lucky_direction}",
+                         "size": "xs", "color": "#3d3d3d", "margin": "md", "wrap": True},
+                        {"type": "separator", "margin": "md", "color": "#e0dbd0"},
+                        {"type": "text",
+                         "text": f"🔼 {up_score}のチャンス　🔽 {down_score}の注意",
+                         "size": "xs", "color": "#666680", "margin": "md"},
+                        {"type": "text", "text": "全ミッションは詳細レポートで🔒",
+                         "size": "xxs", "color": "#8888aa", "margin": "xs"}
                     ]
                 }
-            ]
-        }
-    }
-
-    # ── カード3: 結제 CTA ─────────────────────────────────────────
-    card3 = {
-        "type": "bubble", "size": "mega",
-        "header": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
-            "contents": [
-                {"type": "text", "text": "詳細レポート", "color": "#c9a84c",
-                 "size": "sm", "weight": "bold", "align": "center"},
-                {"type": "text", "text": "¥1,000", "color": "#8890b0",
-                 "size": "xxs", "align": "center", "margin": "xs"}
-            ]
-        },
-        "body": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#f9f7f2", "paddingAll": "20px",
-            "contents": [
-                {"type": "text", "text": "【詳細レポートでお届けするもの】",
-                 "size": "xs", "weight": "bold", "color": "#1a1f3a"},
-                {"type": "text", "text": "✓ 今日の最優先行動（根拠付き）",
-                 "size": "xs", "color": "#3d3d3d", "margin": "md"},
-                {"type": "text", "text": "✓ 今週のテーマ",
-                 "size": "xs", "color": "#3d3d3d", "margin": "sm"},
-                {"type": "text", "text": "✓ あなたの本質と使命",
-                 "size": "xs", "color": "#3d3d3d", "margin": "sm"},
-                {"type": "text", "text": "✓ 明日から試せる3つの行動",
-                 "size": "xs", "color": "#3d3d3d", "margin": "sm"},
-                {"type": "text", "text": "✓ ラッキータイム＆アイテム",
-                 "size": "xs", "color": "#3d3d3d", "margin": "sm"}
             ]
         },
         "footer": {
@@ -275,45 +209,7 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
         }
     }
 
-    # ── カード4: ミッション プレビュー ───────────────────────────
-    up_action, up_score, up_reason     = up_mission
-    down_action, down_score, down_reason = down_mission
-
-    card4 = {
-        "type": "bubble", "size": "mega",
-        "header": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#1a1f3a", "paddingAll": "16px",
-            "contents": [
-                {"type": "text", "text": "今日のミッション", "color": "#c9a84c",
-                 "size": "sm", "weight": "bold", "align": "center"},
-                {"type": "text", "text": "プレビュー", "color": "#8890b0",
-                 "size": "xxs", "align": "center", "margin": "xs"}
-            ]
-        },
-        "body": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#f9f7f2", "paddingAll": "20px",
-            "contents": [
-                {"type": "text",
-                 "text": f"🔼 {up_score}のチャンスがあります",
-                 "size": "sm", "color": "#1a5c1a", "weight": "bold"},
-                {"type": "text",
-                 "text": f"🔽 {down_score}の危険があります",
-                 "size": "sm", "color": "#8b1a1a", "weight": "bold",
-                 "margin": "md"},
-                {"type": "separator", "margin": "lg", "color": "#e0dbd0"},
-                {"type": "text", "text": "全ミッションは詳細レポートで🔒",
-                 "size": "xxs", "color": "#8888aa",
-                 "align": "center", "margin": "lg"}
-            ]
-        }
-    }
-
-    return {
-        "type": "carousel",
-        "contents": [card1, card2, card3, card4]
-    }
+    return card1
 
 
 try:
@@ -787,7 +683,7 @@ UPミッション3つ・DOWNミッション3つを上記ルールに従い出力
 【今日の最優先行動】【今週のテーマ】【あなたの{u}の使命】
 無料版の内容は一切繰り返さず、より深いレイヤーの洞察のみ提示すること。"""
 
-            max_tokens = 1200
+            max_tokens = 3000
 
         response = self.client.messages.create(
             model="claude-sonnet-4-5",
