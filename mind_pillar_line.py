@@ -304,6 +304,35 @@ def build_prescription_cards(text, saju=None):
     }
 
 
+def build_kyoumei_card(result):
+    """궁합 full 결과 텍스트에서 공명도 % 와 코멘트를 추출해 Flex 버블 생성"""
+    import re
+    pct_match = re.search(r'共鳴度[：:]\s*(\d+)%', result)
+    pct = (pct_match.group(1) + '%') if pct_match else '—%'
+    comment_match = re.search(r'「([^」\n]+)」', result)
+    comment = f'「{comment_match.group(1)}」' if comment_match else '二つの魂が響き合う'
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#1a1a2e",
+            "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "推しとの共鳴度", "size": "sm",
+                 "color": "#888888", "align": "center"},
+                {"type": "text", "text": pct, "size": "3xl", "weight": "bold",
+                 "color": "#FF69B4", "align": "center"},
+                {"type": "separator", "margin": "lg"},
+                {"type": "text", "text": comment, "size": "xs", "color": "#888888",
+                 "align": "center", "wrap": True, "margin": "lg"},
+                {"type": "text", "text": "🔮 マルム｜推し相性診断", "size": "xxs",
+                 "color": "#aaaaaa", "align": "center", "margin": "md"}
+            ]
+        }
+    }
+
+
 try:
     import anthropic
 except ImportError:
