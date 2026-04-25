@@ -278,12 +278,15 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
         ai     = MalgeumLineAI()
         result = ai.get_compatibility(saju1, saju2, mode=mode)
         if mode == 'preview':
+            kyoumei_code = 'KYOUMEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            s_key = f'line_{user_id}'
+            user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'kyoumei_code': kyoumei_code}
             payment_msg = (
                 "\n\n──────────────\n"
-                "🔒 運命の処方箋を受け取る (¥590)\n"
+                "🔒 推しとの運命の処方箋を受け取る（¥590）\n"
                 "→ https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E\n\n"
-                "✅ ご決済後は「共鳴を開く」とご入力ください。\n"
-                "最初に戻りたい方は「マルム」とご入力ください。🌿"
+                "決済完了後、以下のコードをご入力ください🔑\n"
+                f"🔑 {kyoumei_code}"
             )
             line_push_api(user_id, result + payment_msg)
         else:
@@ -366,6 +369,24 @@ def process_line(user_id, message):
                         "今日のお守りにしてください🌿")
             return "まず生年月日を入力してください🌿"
         return "コードが正しくありません。もう一度お試しください。🌿"
+
+    # KYOUMEI- コード グローバル認識 (推し相性決済)
+    if message.strip().startswith('KYOUMEI-'):
+        session = user_sessions.get(key, {})
+        stored_code = session.get('kyoumei_code', '')
+        if stored_code and message.strip() == stored_code:
+            partner = session.get('partner_birth')
+            if 'year' in session and partner:
+                user_sessions[key] = {k: v for k, v in session.items() if k != 'kyoumei_code'}
+                threading.Thread(
+                    target=compatibility_analysis,
+                    args=(user_id, session['year'], session['month'], session['day'],
+                          partner['year'], partner['month'], partner['day'], 'full'),
+                    daemon=True
+                ).start()
+                return "🌀 決済を確認しました。\n推しとの運命の処方箋の封を切ります..."
+            return "まず「推し相性」から始めてください🌿"
+        return "コードが正しくありません。🌿"
 
     # 処方箋を開く / レポートを開く
     if message in ('処方箋を開く', 'レポートを開く'):
