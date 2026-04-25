@@ -490,6 +490,13 @@ def process_line(user_id, message):
                 saju   = LineManse.calculate(session['year'], session['month'], session['day'])
                 ai     = MalgeumLineAI()
                 result = ai.get_prescription(saju, mode='short', birth_time=session.get('birth_time', '不明'), category=category)
+                # Flex カード返信後、preview テキスト+決済案内をpushで非同期送信
+                threading.Thread(
+                    target=deep_analysis,
+                    args=(user_id, session['year'], session['month'], session['day'],
+                          'preview', session.get('birth_time', '不明'), category),
+                    daemon=True
+                ).start()
                 return result
             except Exception as e:
                 return f"❌ エラーが発生しました: {e}"
