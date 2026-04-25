@@ -215,20 +215,21 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             session = user_sessions.get(key, {})
             user_sessions[key] = {**session, 'payment_code': payment_code}
             payment_msg = (
-                "\n\n【マルムとは？】\n"
-                "よくある「AI自動占い」ではありません。\n"
-                "2代続く四柱推命の家系と、\n"
-                "東洋哲学を専攻した専門知識を\n"
-                "独自のAI分析と融合。\n"
-                "あなたの命式だけに基づく\n"
-                "「本格的な処方箋」をお届けします。\n\n"
-                "✓ 今日の最優先行動（根拠付き）\n"
-                "✓ 運気ミッション（+/-点数）\n"
-                "✓ 愛のある辛口アドバイス\n"
-                "✓ ラッキータイム＆アイテム\n\n"
-                "🔒 詳細レポートを見る ¥1,000\n"
+                "\n\n🌿 今日のエネルギーは、とても良い状態です。\n"
+                "ただ…このままだと、\n"
+                "少し「もったいない」タイミングでもあります🌙\n\n"
+                "今日、避けた方がいい行動を知ることで、\n"
+                "この流れは自然とあなたの味方になります。\n\n"
+                "━━━━━━━━━━━━━\n"
+                "少しでも思い当たる方だけ、\n"
+                "この先の処方箋をお受け取りください。\n"
+                "━━━━━━━━━━━━━\n\n"
+                "このままだと少しだけ、\n"
+                "もったいないかもしれません🌙\n\n"
+                "🔒 今日のもったいないを回避する（¥1,000）\n"
                 "→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n\n"
-                "決済後はコードをご入力ください\n"
+                "決済完了後、すぐに続きの処方箋が届きます✨\n"
+                "以下のコードをご入力ください🔑\n"
                 f"🔑 {payment_code}"
             )
             line_push_api(user_id, result + payment_msg)
@@ -255,7 +256,12 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                 )
                 result = result.replace('【運気ミッション】', mission_intro + '【運気ミッション】', 1)
             result = _filter_time_lines(result)
-            send_long_message(user_id, result, line_push_api, limit=2000)
+            retention_msg = (
+                "\n\n明日は少し流れが変わるタイミングになりそうです🌙\n"
+                "今日のミッション、どれか試してみましたか？\n"
+                "よければまた教えてくださいね。"
+            )
+            send_long_message(user_id, result + retention_msg, line_push_api, limit=2000)
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
