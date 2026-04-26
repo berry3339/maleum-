@@ -305,7 +305,9 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'kyoumei_code': kyoumei_code}
             payment_msg = (
-                "\n\n──────────────\n"
+                "\n\nここまでで「当たっている」と\n"
+                "感じた方だけ、この先をご覧ください🌙\n\n"
+                "──────────────\n"
                 "🔒 推しとの運命の処方箋を受け取る（¥590）\n"
                 "→ https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E\n\n"
                 "💳 PayPalアカウントなしでも\n"
@@ -461,9 +463,9 @@ def process_line(user_id, message):
                     "8桁で入力してください。\n"
                     "例）19930616")
         user_sessions[key] = {**session, 'step': 'WAITING_PARTNER'}
-        return ("推しの名前と生年月日を教えてください✨\n"
+        return ("推しのお名前と生年月日を教えてください✨\n"
                 "例）カズハ 20010122\n"
-                "名前だけでもOKです🌙")
+                "お名前なしで生年月日だけでもOKです🌙")
 
     # 鑑定予約 (따옴표/특수문자 포함 입력도 인식)
     if re.search(r'鑑定予約', message):
@@ -585,9 +587,9 @@ def process_line(user_id, message):
                 if not (1920 <= year <= 2010) or not (1 <= month <= 12) or not (1 <= day <= 31):
                     return "❌ 正しい生年月日を入力してください。\n例）19930616"
                 user_sessions[key] = {**session, 'step': 'WAITING_PARTNER', 'year': year, 'month': month, 'day': day}
-                return ("次に、あの人の生年月日を\n"
-                        "8桁で静かに入力してください。🌙\n"
-                        "例）19970901")
+                return ("推しのお名前と生年月日を教えてください✨\n"
+                        "例）カズハ 20010122\n"
+                        "お名前なしで生年月日だけでもOKです🌙")
             except Exception:
                 return "❌ 8桁の数字で入力してください。\n例）19930616"
         return "❌ 8桁の数字で入力してください。\n例）19930616"
