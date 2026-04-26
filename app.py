@@ -307,7 +307,12 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             payment_msg = (
                 "\n\nここまでで「当たっている」と\n"
                 "感じた方だけ、この先をご覧ください🌙\n\n"
-                "──────────────\n"
+                "🔒 あなたの共鳴カードは準備できています。\n\n"
+                "┏━━━━━━━━━━━━━━━━━━━┓\n"
+                "   💘 ██%🌙\n"
+                "   「████████████████」\n"
+                "┗━━━━━━━━━━━━━━━━━━━┛\n\n"
+                "決済後、このカードの封が開きます✨\n\n"
                 "🔒 推しとの運命の処方箋を受け取る（¥590）\n"
                 "→ https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E\n\n"
                 "💳 PayPalアカウントなしでも\n"
