@@ -188,21 +188,14 @@ def build_prescription_cards(text, saju=None):
         m = re.search(rf'【{re.escape(section)}】(.*?)(?=【|$)', text, re.DOTALL)
         return m.group(1).strip() if m else ""
 
-    # ── ラッキーカード: オーハン基準5項目 ────────────────────────
-    OHAENG_LUCKY_MAP = {
-        "木": ("緑（みどり）", 3, "東"),
-        "火": ("赤（あか）",   7, "南"),
-        "土": ("黄色（きいろ）", 5, "中央"),
-        "金": ("白（しろ）", 8, "西"),
-        "水": ("紺色（こんいろ）", 1, "北"),
-    }
-    COLOR_EMOJI = {
-        "赤（あか）": "🔴", "緑（みどり）": "🟢", "黄色（きいろ）": "🟡",
-        "白（しろ）": "⚪", "紺色（こんいろ）": "🔵", "ゴールド": "🟡",
-    }
-    u = (saju or {}).get('day_ohaeng', '水') if saju else '水'
-    lc, ln, ld = OHAENG_LUCKY_MAP.get(u, ("ゴールド", 6, "南"))
-    color_display = COLOR_EMOJI.get(lc, "") + " " + lc
+    # ── ラッキーカード: AIテキストから全項目を抽出 ────────────────────────
+    color_match     = re.search(r'ラッキーカラー[：:]\s*(.+?)[\n（\(]', text)
+    number_match    = re.search(r'ラッキーナンバー[：:]\s*(\d+)', text)
+    direction_match = re.search(r'ラッキー方位[：:]\s*(.+?)[\n（\(]', text)
+    lc = color_match.group(1).strip()     if color_match     else "—"
+    ln = number_match.group(1).strip()    if number_match    else "—"
+    ld = direction_match.group(1).strip() if direction_match else "—"
+    color_display = lc
 
     # AI テキストからタイム・アイテム抽出
     lucky_section = extract("ラッキーアイテム")
@@ -784,7 +777,10 @@ UPミッション3つ・DOWNミッション3つを上記ルールに従い出力
 上記ルールに従い1つ出力すること。
 
 【ラッキーアイテム】
-命式に基づき以下の4つを必ず出力すること。省略・空欄は絶対禁止:
+命式に基づき以下の7つを必ず出力すること。省略・空欄は絶対禁止:
+🎨 ラッキーカラー: 日本語で1色（例：緑（みどり）、紺色（こんいろ）等）
+🔢 ラッキーナンバー: 五行別ルールに従った1〜9の数字1つ
+🧭 ラッキー方位: 方角1つ（東・西・南・北・中央のいずれか）
 📅 ラッキー曜日: 1つ
 ⏰ ラッキータイム: 時間帯で（24時間表記禁止。「午後から」「夕方頃」等）
 🌿 ラッキーアイテム: 具体的なもの1つ
