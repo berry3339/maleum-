@@ -308,13 +308,14 @@ def build_prescription_cards(text, saju=None):
     }
 
 
-def build_kyoumei_card(result):
+def build_kyoumei_card(result, partner_name=None):
     """궁합 full 결과 텍스트에서 공명도 % 와 코멘트를 추출해 Flex 버블 생성"""
     import re
     pct_match = re.search(r'共鳴度[：:]\s*(\d+)%', result)
     pct = (pct_match.group(1) + '%') if pct_match else '—%'
     comment_match = re.search(r'「([^」\n]+)」', result)
     comment = f'「{comment_match.group(1)}」' if comment_match else '二つの魂が響き合う'
+    title = f"{partner_name}との共鳴度" if partner_name else "推しとの共鳴度"
     return {
         "type": "bubble",
         "body": {
@@ -323,7 +324,7 @@ def build_kyoumei_card(result):
             "backgroundColor": "#1a1a2e",
             "paddingAll": "20px",
             "contents": [
-                {"type": "text", "text": "推しとの共鳴度", "size": "sm",
+                {"type": "text", "text": title, "size": "sm",
                  "color": "#888888", "align": "center"},
                 {"type": "text", "text": pct, "size": "3xl", "weight": "bold",
                  "color": "#FF69B4", "align": "center"},

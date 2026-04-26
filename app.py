@@ -210,12 +210,32 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
         result = ai.get_prescription(saju, mode=mode, birth_time=birth_time, category=category)
 
         if mode == 'preview':
+            # スコア計算（Flexカードと同じロジック）
+            _GEN = {'木':'火','火':'土','土':'金','金':'水','水':'木'}
+            _RES = {'木':'土','土':'水','水':'火','火':'金','金':'木'}
+            _u = saju.get('ohaeng', '水')
+            _today_s = LineManse.calculate(
+                datetime.now(ZoneInfo("Asia/Tokyo")).year,
+                datetime.now(ZoneInfo("Asia/Tokyo")).month,
+                datetime.now(ZoneInfo("Asia/Tokyo")).day
+            )
+            _t = _today_s.get('ohaeng', '水')
+            if _u == _t:             _base = 78
+            elif _GEN.get(_t) == _u: _base = 90
+            elif _GEN.get(_u) == _t: _base = 82
+            elif _RES.get(_u) == _t: _base = 68
+            else:                    _base = 55
+            _dp = saju.get('day_pillar', '')
+            _var = ord(_dp[1]) % 7 - 3 if len(_dp) >= 2 else 0
+            score = max(50, min(95, _base + _var))
+
             payment_code = generate_payment_code()
             key = f'line_{user_id}'
             session = user_sessions.get(key, {})
             user_sessions[key] = {**session, 'payment_code': payment_code}
             payment_msg = (
-                "\n\n🌿 今日のエネルギーは、とても良い状態です。\n"
+                f"\n\n🌿 今日の運気スコア：{score}点\n"
+                "とても良い状態です。\n"
                 "ただ…この点数の裏に、\n"
                 "少し「もったいない流れ」も隠れています🌙\n\n"
                 "この処方箋は、今日の深夜0時に消えます🌙\n\n"
@@ -273,7 +293,7 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
 
-def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='preview'):
+def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='preview', partner_name=None):
     """궁합 분석 → push API — background thread에서 실행"""
     try:
         saju1  = LineManse.calculate(year, month, day)
@@ -297,7 +317,7 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             line_push_api(user_id, result + payment_msg)
         else:
             try:
-                card = build_kyoumei_card(result)
+                card = build_kyoumei_card(result, partner_name=partner_name)
                 line_push_api(user_id, card)
             except Exception as card_err:
                 print(f"⚠️ [共鳴カード生成エラー] {card_err}")
@@ -392,7 +412,8 @@ def process_line(user_id, message):
                 threading.Thread(
                     target=compatibility_analysis,
                     args=(user_id, session['year'], session['month'], session['day'],
-                          partner['year'], partner['month'], partner['day'], 'full'),
+                          partner['year'], partner['month'], partner['day'], 'full',
+                          session.get('partner_name')),
                     daemon=True
                 ).start()
                 return "🌀 決済を確認しました。\n推しとの運命の処方箋の封を切ります..."
@@ -440,9 +461,9 @@ def process_line(user_id, message):
                     "8桁で入力してください。\n"
                     "例）19930616")
         user_sessions[key] = {**session, 'step': 'WAITING_PARTNER'}
-        return ("次に、あの人の生年月日を\n"
-                "8桁で静かに入力してください。🌙\n"
-                "例）19970901")
+        return ("推しの名前と生年月日を教えてください✨\n"
+                "例）カズハ 20010122\n"
+                "名前だけでもOKです🌙")
 
     # 鑑定予約 (따옴표/특수문자 포함 입력도 인식)
     if re.search(r'鑑定予約', message):
@@ -573,30 +594,35 @@ def process_line(user_id, message):
 
     if step == 'WAITING_PARTNER':
         normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
-        digits = ''.join(filter(str.isdigit, normalized))
-        if len(digits) == 8:
+        date_match = re.search(r'(\d{8})', normalized)
+        if date_match:
             try:
+                digits  = date_match.group(1)
                 p_year  = int(digits[0:4])
                 p_month = int(digits[4:6])
                 p_day   = int(digits[6:8])
                 if not (1920 <= p_year <= 2010) or not (1 <= p_month <= 12) or not (1 <= p_day <= 31):
-                    return "❌ 正しい生年月日を入力してください。\n例）19970901"
+                    return "❌ 正しい生年月日を入力してください。\n例）カズハ 20010122"
                 if 'year' not in session:
                     user_sessions[key] = {}
                     return ("まず「四柱推命で見てみる」と入力して、\n"
                             "生年月日を教えてください。🌿\n"
                             "その後、推し相性をお楽しみいただけます。")
-                user_sessions[key] = {**session, 'partner_birth': {'year': p_year, 'month': p_month, 'day': p_day}}
+                # 名前: 数字8桁を除いた残り
+                partner_name = re.sub(r'\d{8}', '', message).strip() or None
+                user_sessions[key] = {**session,
+                    'partner_birth': {'year': p_year, 'month': p_month, 'day': p_day},
+                    'partner_name': partner_name}
                 threading.Thread(
                     target=compatibility_analysis,
                     args=(user_id, session['year'], session['month'], session['day'],
-                          p_year, p_month, p_day, 'preview'),
+                          p_year, p_month, p_day, 'preview', partner_name),
                     daemon=True
                 ).start()
                 return "少々お待ちくださいませ。🌙"
             except Exception:
-                return "❌ 8桁の数字で入力してください。\n例）19970901"
-        return "❌ 8桁の数字で入力してください。\n例）19970901"
+                return "❌ 名前と生年月日を入力してください。\n例）カズハ 20010122"
+        return "❌ 名前と生年月日を入力してください。\n例）カズハ 20010122"
 
     if step == 'booking':
         if re.search(r'\d+[月日時分]|[月日時]\d+', message):
