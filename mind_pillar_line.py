@@ -180,6 +180,19 @@ def build_flex_fortune(score, rationale, categories, lucky_color, lucky_number, 
     return card1
 
 
+def extract_lucky_info(text):
+    """AIテキストからラッキー情報（カラー・ナンバー・方位）を抽出して返す"""
+    import re
+    color     = re.search(r'ラッキーカラー[：:]\s*(.+?)[\n]', text)
+    number    = re.search(r'ラッキーナンバー[：:]\s*(\d+)', text)
+    direction = re.search(r'ラッキー方位[：:]\s*(.+?)[\n]', text)
+    return {
+        'color':     color.group(1).strip()     if color     else '—',
+        'number':    number.group(1)            if number    else '—',
+        'direction': direction.group(1).strip() if direction else '—',
+    }
+
+
 def build_prescription_cards(text, saju=None):
     """有料処方箋テキストから ラッキー/ミッション/辛口 の3枚カードを生成"""
     import re
@@ -189,12 +202,10 @@ def build_prescription_cards(text, saju=None):
         return m.group(1).strip() if m else ""
 
     # ── ラッキーカード: AIテキストから全項目を抽出 ────────────────────────
-    color_match     = re.search(r'ラッキーカラー[：:]\s*(.+?)[\n（\(]', text)
-    number_match    = re.search(r'ラッキーナンバー[：:]\s*(\d+)', text)
-    direction_match = re.search(r'ラッキー方位[：:]\s*(.+?)[\n（\(]', text)
-    lc = color_match.group(1).strip()     if color_match     else "—"
-    ln = number_match.group(1).strip()    if number_match    else "—"
-    ld = direction_match.group(1).strip() if direction_match else "—"
+    lucky_info    = extract_lucky_info(text)
+    lc            = lucky_info['color']
+    ln            = lucky_info['number']
+    ld            = lucky_info['direction']
     color_display = lc
 
     # AI テキストからタイム・アイテム抽出
