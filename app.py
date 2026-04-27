@@ -289,27 +289,32 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             dp = saju.get('day_pillar', '')
             variation = ord(dp[1]) % 7 - 3 if len(dp) >= 2 else 0
             score = max(50, min(95, base + variation))
-            # 미션 도입부 삽입
-            if '【運気ミッション】' in result:
-                mission_intro = (
-                    f"━━ 運気ミッション ━━\n"
-                    f"今日の{score}点をさらに上げるチャンス。\n"
-                    f"行動ひとつで、流れが変わります🌙\n\n"
-                )
-                result = result.replace('【運気ミッション】', mission_intro + '【運気ミッション】', 1)
             result = _filter_time_lines(result)
-            # 処方箋カード3枚（ラッキー/ミッション/辛口）を先に発送
+            # カード3枚（本質/エネルギー/ラッキー）を先に発送
             try:
                 cards = build_prescription_cards(result, saju)
                 line_push_api(user_id, cards)
             except Exception as card_err:
                 print(f"⚠️ [処方箋カード生成エラー] {card_err}")
+            # テキスト処方箋: 本質/最優先行動/今週テーマ/使命のみ
+            import re as _re
+            keep_kw = ['本質', '最優先行動', '今週のテーマ', '使命', '明日']
+            _parts  = _re.split(r'(?=【)', result)
+            _kept   = []
+            for _p in _parts:
+                _hm = _re.match(r'【([^】]+)】', _p)
+                if not _hm:
+                    if _p.strip():
+                        _kept.append(_p.rstrip())
+                elif any(kw in _hm.group(1) for kw in keep_kw):
+                    _kept.append(_p.rstrip())
+            filtered_result = '\n\n'.join(_kept)
             retention_msg = (
-                "\n\n明日は少し流れが変わるタイミングになりそうです🌙\n"
-                "今日のミッション、どれか試してみましたか？\n"
-                "よければまた教えてくださいね。"
+                "\n\n━━━━━━━━━━━━━\n"
+                "また気になったときは、\n"
+                "いつでも話しかけてくださいね🌿"
             )
-            line_push_api(user_id, result + retention_msg)
+            line_push_api(user_id, filtered_result + retention_msg)
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
