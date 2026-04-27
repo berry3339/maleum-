@@ -417,10 +417,12 @@ def process_line(user_id, message):
                     args=(user_id, session['year'], session['month'], session['day'], 'prescription', session.get('birth_time', '不明'), session.get('category')),
                     daemon=True
                 ).start()
-                return ("🌀 決済を確認しました。\n"
-                        "あなただけの処方箋の封を切ります...\n\n"
-                        "このカードを保存して、\n"
-                        "今日のお守りにしてください🌿")
+                return ("🌀 決済を確認しました。\n\n"
+                        "🔮 お客様の大切な一日に\n"
+                        "完璧な答えをお届けするため、\n"
+                        "誠心誠意、分析を深めております。\n\n"
+                        "精緻な結果を導き出すため、\n"
+                        "今しばらくお待ちくださいませ🌿")
             return "まず生年月日を入力してください🌿"
         return "コードが正しくありません。もう一度お試しください。🌿"
 
@@ -471,7 +473,7 @@ def process_line(user_id, message):
         return ("マルムへようこそ🌿\n\n"
                 "韓国式四柱推命で、\n"
                 "あなたの今日の流れを読み解きます。\n\n"
-                "「今日の運勢を見る」と\n"
+                "「運勢を見る」と\n"
                 "入力してください🌸")
 
     # 魂の共鳴 / 推し相性 → 글로벌 트리거 (포함되면 작동)
@@ -500,7 +502,7 @@ def process_line(user_id, message):
                 "最初に戻りたい方は「マルム」とご入力ください。🌿")
 
     # 시작
-    if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く', '四柱推命で見てみる', '見る', '今日の運勢', '今日の運勢を見る']:
+    if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く', '四柱推命で見てみる', '見る', '今日の運勢', '今日の運勢を見る', '運勢を見る']:
         user_sessions[key] = {'step': 'date'}
         return ("ありがとうございます🌿\n\n"
                 "今日の流れ、少しだけ気になりませんか？🌸\n"
