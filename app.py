@@ -401,7 +401,7 @@ def line():
                             daemon=True
                         ).start()
                     else:
-                        line_reply_api(reply_token, "まず「四柱推命で見てみる」と入力してください。🌿")
+                        line_reply_api(reply_token, "まず「運勢を見る」と入力してください。🌿")
                     continue
 
                 # 일반 메시지: background thread
@@ -516,7 +516,7 @@ def process_line(user_id, message):
                 "最初に戻りたい方は「マルム」とご入力ください。🌿")
 
     # 시작
-    if message in ['start', 'はじめ', 'スタート', 'こんにちは', '안녕', '扉を開く', '四柱推命で見てみる', '見る', '今日の運勢', '今日の運勢を見る', '運勢を見る']:
+    if message in ('四柱推命で見てみる', '運勢を見る', '扉を開く'):
         user_sessions[key] = {'step': 'date'}
         return ("ありがとうございます🌿\n\n"
                 "今日の流れ、少しだけ気になりませんか？🌸\n"

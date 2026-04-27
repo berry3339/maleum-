@@ -193,114 +193,8 @@ def extract_lucky_info(text):
     }
 
 
-def build_honshitsu_card(saju):
-    """処方箋カード1: 本質要約カード（日柱・五行関係・注意一言）"""
-    day_pillar = saju.get('day_pillar', '—')
-    u  = saju.get('day_ohaeng', '水')
-    t  = saju.get('today_ohaeng', '水')
-    _EMOJI = {'木': '🌿', '火': '🔥', '土': '🌍', '金': '✨', '水': '💧'}
-    _GEN   = {'木':'火','火':'土','土':'金','金':'水','水':'木'}
-    _RES   = {'木':'土','土':'水','水':'火','火':'金','金':'木'}
-    emoji  = _EMOJI.get(u, '🌿')
-    if u == t:
-        rel, day_type, caution = f"{u}比和", "共鳴の日", "停滞に注意"
-    elif _GEN.get(t) == u:
-        rel, day_type, caution = f"{t}生{u}", "受け取る日", "満足で止まらない"
-    elif _GEN.get(u) == t:
-        rel, day_type, caution = f"{u}生{t}", "与える日", "与えすぎ注意"
-    elif _RES.get(u) == t:
-        rel, day_type, caution = f"{u}剋{t}", "整える日", "強引に動かない"
-    else:
-        rel, day_type, caution = f"{t}剋{u}", "試される日", "力を温存して"
-    return {
-        "type": "bubble", "size": "mega",
-        "body": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#1a1a2e", "paddingAll": "24px",
-            "contents": [
-                {"type": "text", "text": "あなたの本質", "size": "xs",
-                 "color": "#8888aa", "align": "center"},
-                {"type": "text", "text": f"{emoji} {day_pillar}", "size": "3xl",
-                 "weight": "bold", "color": "#c9a84c", "align": "center", "margin": "md"},
-                {"type": "separator", "margin": "lg", "color": "#333355"},
-                {"type": "text", "text": f"{rel} — {day_type}", "size": "sm",
-                 "color": "#c8c4b8", "align": "center", "margin": "lg"},
-                {"type": "text", "text": f"⚠ {caution}", "size": "xs",
-                 "color": "#888888", "align": "center", "margin": "sm"}
-            ]
-        }
-    }
-
-
-def build_energy_card(text, saju):
-    """処方箋カード2: 今日のエネルギー흐름カード（午前/午後/夜間バー + 最優先行動）"""
-    import re
-    u  = saju.get('day_ohaeng', '水')
-    t  = saju.get('today_ohaeng', '水')
-    dp = saju.get('day_pillar', '')
-    _GEN = {'木':'火','火':'土','土':'金','金':'水','水':'木'}
-    _RES = {'木':'土','土':'水','水':'火','火':'金','金':'木'}
-    if u == t:             base = 78
-    elif _GEN.get(t) == u: base = 90
-    elif _GEN.get(u) == t: base = 82
-    elif _RES.get(u) == t: base = 68
-    else:                  base = 55
-    var   = ord(dp[1]) % 7 - 3 if len(dp) >= 2 else 0
-    score = max(50, min(95, base + var))
-    v     = ord(dp[0]) % 5 if dp else 2
-    am_pct  = min(95, max(40, score - 5 + v))
-    pm_pct  = min(95, max(40, score + 3 - v))
-    ngt_pct = min(90, max(35, score - 8 + v * 2))
-    m = re.search(r'【今日の最優先行動】(.*?)(?=【|$)', text, re.DOTALL)
-    action = ""
-    if m:
-        lines = [l.strip() for l in m.group(1).strip().split('\n') if l.strip()]
-        action = lines[0] if lines else ""
-    def time_bar(label, pct):
-        return {
-            "type": "box", "layout": "vertical", "margin": "lg",
-            "contents": [
-                {"type": "box", "layout": "horizontal", "contents": [
-                    {"type": "text", "text": label, "size": "xs", "color": "#8888aa", "flex": 2},
-                    {"type": "text", "text": f"{pct}%", "size": "xs", "color": "#c9a84c",
-                     "weight": "bold", "align": "end", "flex": 1}
-                ]},
-                {"type": "box", "layout": "horizontal", "height": "6px", "margin": "xs",
-                 "contents": [
-                    {"type": "box", "layout": "vertical", "backgroundColor": "#c9a84c",
-                     "width": f"{pct}%", "contents": []},
-                    {"type": "box", "layout": "vertical", "backgroundColor": "#333355",
-                     "width": f"{100 - pct}%", "contents": []}
-                ]}
-            ]
-        }
-    contents = [
-        {"type": "text", "text": "今日のエネルギー", "size": "xs",
-         "color": "#8888aa", "align": "center"},
-        time_bar("🌅 午前", am_pct),
-        time_bar("☀️ 午後", pm_pct),
-        time_bar("🌙 夜間", ngt_pct),
-    ]
-    if action:
-        contents += [
-            {"type": "separator", "margin": "lg", "color": "#333355"},
-            {"type": "text", "text": "今日の最優先行動", "size": "xs",
-             "color": "#8888aa", "margin": "lg"},
-            {"type": "text", "text": action, "size": "sm",
-             "color": "#c8c4b8", "wrap": True, "margin": "xs"}
-        ]
-    return {
-        "type": "bubble", "size": "mega",
-        "body": {
-            "type": "box", "layout": "vertical",
-            "backgroundColor": "#1a1a2e", "paddingAll": "20px",
-            "contents": contents
-        }
-    }
-
-
 def build_prescription_cards(text, saju=None):
-    """有料処方箋カード3枚（本質/エネルギー/ラッキー）を生成"""
+    """有料処方箋テキストから ラッキー/ミッション/辛口 の3枚カードを生成"""
     import re
 
     def extract(section):
@@ -408,10 +302,7 @@ def build_prescription_cards(text, saju=None):
     mission_card = text_bubble("運気ミッション", extract("運気ミッション"), "本日の全ミッション")
     advice_card  = text_bubble("辛口アドバイス", extract("辛口アドバイス"))
 
-    honshitsu_card = build_honshitsu_card(saju) if saju else None
-    energy_card    = build_energy_card(text, saju) if saju else None
-    cards = [c for c in [honshitsu_card, energy_card, lucky_card, mission_card, advice_card] if c]
-    return {"type": "carousel", "contents": cards}
+    return {"type": "carousel", "contents": [lucky_card, mission_card, advice_card]}
 
 
 def build_kyoumei_card(result, partner_name=None):
