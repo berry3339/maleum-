@@ -67,6 +67,19 @@ def send_daily_messages():
                 json={'to': uid, 'messages': [msg_payload]},
                 timeout=30
             )
+            follow_text = ("今日のあなたに、\n"
+                           "まだ届いていないメッセージがあります🌙\n\n"
+                           "詳しく知りたい方は\n"
+                           "「運勢を見る」と入力してください🌸")
+            req.post(
+                'https://api.line.me/v2/bot/message/push',
+                headers={
+                    'Authorization': f"Bearer {os.getenv('LINE_CHANNEL_ACCESS_TOKEN')}",
+                    'Content-Type': 'application/json'
+                },
+                json={'to': uid, 'messages': [{"type": "text", "text": follow_text}]},
+                timeout=30
+            )
             print(f"✅ [暁push] {uid[:16]}")
         except Exception as e:
             print(f"❌ [暁push오류] {uid[:16]}: {e}")
