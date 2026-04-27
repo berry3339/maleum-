@@ -366,9 +366,51 @@ def build_prescription_cards(text, saju=None):
         }
     }
 
+    # ── ミッション/辛口カード ─────────────────────────────────────
+    def text_bubble(header_title, body_text, header_sub=None):
+        lines = [l.strip() for l in body_text.split('\n') if l.strip()]
+        body_items = []
+        for i, line in enumerate(lines[:12]):
+            item = {"type": "text", "text": line, "size": "sm",
+                    "color": "#3d3d3d", "wrap": True}
+            if i > 0:
+                item["margin"] = "sm"
+            if line.startswith("🔼"):
+                item["color"] = "#1a5c1a"
+            elif line.startswith("🔽"):
+                item["color"] = "#8b1a1a"
+            body_items.append(item)
+        if not body_items:
+            body_items = [{"type": "text", "text": "—", "size": "sm", "color": "#8888aa"}]
+        header_contents = [
+            {"type": "text", "text": header_title, "color": "#c9a84c",
+             "size": "sm", "weight": "bold", "align": "center"}
+        ]
+        if header_sub:
+            header_contents.append(
+                {"type": "text", "text": header_sub, "color": "#8890b0",
+                 "size": "xxs", "align": "center", "margin": "xs"}
+            )
+        return {
+            "type": "bubble", "size": "mega",
+            "header": {
+                "type": "box", "layout": "vertical",
+                "backgroundColor": "#1a1f3a", "paddingAll": "16px",
+                "contents": header_contents
+            },
+            "body": {
+                "type": "box", "layout": "vertical",
+                "backgroundColor": "#f9f7f2", "paddingAll": "20px",
+                "contents": body_items
+            }
+        }
+
+    mission_card = text_bubble("運気ミッション", extract("運気ミッション"), "本日の全ミッション")
+    advice_card  = text_bubble("辛口アドバイス", extract("辛口アドバイス"))
+
     honshitsu_card = build_honshitsu_card(saju) if saju else None
     energy_card    = build_energy_card(text, saju) if saju else None
-    cards = [c for c in [honshitsu_card, energy_card, lucky_card] if c]
+    cards = [c for c in [honshitsu_card, energy_card, lucky_card, mission_card, advice_card] if c]
     return {"type": "carousel", "contents": cards}
 
 
