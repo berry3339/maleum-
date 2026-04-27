@@ -682,7 +682,7 @@ class MalgeumLineAI:
             pillar_header = (
                 f"【あなたの本質：日柱】\n"
                 f"{ohaeng_emoji} {saju['day_pillar']}（{day_yomi}）／ {saju['ohaeng']}のエネルギー\n"
-                f"（以下を4〜6行で書くこと：\n"
+                f"（以下を3文以内で簡潔に書くこと：\n"
                 f"① 「5つの気（木・火・土・金・水）のうち、あなたは{u}の使命を持って生まれた」という書き出しで5つの気の原理に自然に触れながら、あなたの{u}を詩的に描写すること\n"
                 f"② 今日の五行との相生相剋：今日は{today_ohaeng_emoji}{today_ohaeng}の気。関係→【{today_relation}】。この命理学的意味を1〜2文で具体的に説明すること\n"
                 f"③ この関係が今日この人にどう作用するかを1文で締めること\n"
