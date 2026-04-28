@@ -8,7 +8,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
-from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card
+from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_mystery_kyoumei_card
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
@@ -326,21 +326,10 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             kyoumei_code = 'KYOUMEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'kyoumei_code': kyoumei_code}
+            line_push_api(user_id, build_mystery_kyoumei_card())
             payment_msg = (
                 "\n\nここまでで「当たっている」と\n"
                 "感じた方だけ、この先をご覧ください🌙\n\n"
-                "🔒 あなたの共鳴カードは準備できています。\n\n"
-                "┏━━━━━━━━━━━━━━━━━━━┓\n"
-                "   💘 ██%🌙\n"
-                "   「████████████████」\n"
-                "┗━━━━━━━━━━━━━━━━━━━┛\n\n"
-                "決済後、このカードの封が開きます✨\n\n"
-                "この処方箋は、\n"
-                "あなたが推しに届ける\n"
-                "『見えない応援のエネルギー』を\n"
-                "整えてくれます。\n\n"
-                "あなたの想いが一番綺麗な形で\n"
-                "推しに伝わるように🌙\n\n"
                 "🔒 推しとの運命の処方箋を受け取る（¥590）\n"
                 "→ https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E\n\n"
                 "💳 PayPalアカウントなしでも\n"

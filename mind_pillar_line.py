@@ -335,6 +335,31 @@ def build_kyoumei_card(result, partner_name=None):
     }
 
 
+def build_mystery_kyoumei_card():
+    """결제 전 블러 처리된 미스터리 공명도 카드"""
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#1a1a2e",
+            "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "推しとの共鳴度",
+                 "size": "sm", "color": "#888888", "align": "center"},
+                {"type": "text", "text": "??%",
+                 "size": "3xl", "weight": "bold", "color": "#FF69B4", "align": "center"},
+                {"type": "separator", "margin": "lg"},
+                {"type": "text", "text": "「????????????????」",
+                 "size": "xs", "color": "#555555", "align": "center",
+                 "wrap": True, "margin": "lg"},
+                {"type": "text", "text": "🔒 決済後に公開されます",
+                 "size": "xxs", "color": "#FF69B4", "align": "center", "margin": "md"}
+            ]
+        }
+    }
+
+
 try:
     import anthropic
 except ImportError:
@@ -896,6 +921,12 @@ UPミッション3つ・DOWNミッション3つを上記ルールに従い出力
 ・すべての洞察の前に、必ず五行の根拠を簡潔に示すこと。根拠なしに感想のみを述べることは禁止。
 ・命令形は絶対に使わないこと。必ず提案形で表現すること。
 ・最後に必ず温かい応援の言葉を添えること：「無理をしなくても大丈夫です」「できる範囲で十分です」のいずれか。
+
+【推し相性プレビュー文字数制限】
+プレビューは必ず以下の形式のみ:
+【二人の気の関係】1文のみ
+【魂の共鳴】3文以内
+長い説明絶対禁止。軽くてワクワクするトーンで。
 
 必ず以下の構成のみで書くこと:
 
