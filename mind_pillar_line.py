@@ -371,6 +371,31 @@ def build_mystery_kyoumei_card():
     }
 
 
+def build_mystery_fukuen_card():
+    """재회 분석 결제 전 미스터리 카드 (보라색 테마)"""
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#2d1b69",
+            "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "あの人との再会可能性",
+                 "size": "sm", "color": "#9b8ec4", "align": "center"},
+                {"type": "text", "text": "??%",
+                 "size": "3xl", "weight": "bold", "color": "#c9a0dc", "align": "center"},
+                {"type": "separator", "margin": "lg"},
+                {"type": "text", "text": "「????????????????」",
+                 "size": "xs", "color": "#555577", "align": "center",
+                 "wrap": True, "margin": "lg"},
+                {"type": "text", "text": "🔒 決済後に公開されます",
+                 "size": "xxs", "color": "#c9a0dc", "align": "center", "margin": "md"}
+            ]
+        }
+    }
+
+
 try:
     import anthropic
 except ImportError:
@@ -1133,6 +1158,112 @@ LINEではマークダウンが表示されないため。
 
 上記の構成で全궁합 분석を書いてください。"""
 
+            max_tokens = 1200
+
+        response = self.client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": user_message}],
+            system=system_prompt
+        )
+        return response.content[0].text
+
+    def get_fukuen(self, saju1: dict, saju2: dict, partner_name: str = None, mode: str = 'preview') -> str:
+        today = datetime.now().strftime('%Y年%m月%d日')
+
+        _GENERATE = {"木":"火","火":"土","土":"金","金":"水","水":"木"}
+        _RESTRICT  = {"木":"土","土":"水","水":"火","火":"金","金":"木"}
+        o1 = saju1['ohaeng']
+        o2 = saju2['ohaeng']
+        e1 = PrecisionManse.OHAENG_EMOJI.get(o1, "✨")
+        e2 = PrecisionManse.OHAENG_EMOJI.get(o2, "✨")
+
+        if o1 == o2:
+            relation = f"比和（{o1}と{o2}）— 同じ気が響き合う"
+        elif _GENERATE.get(o1) == o2:
+            relation = f"相生・{o1}生{o2} — あなたの気が相手を育てる"
+        elif _GENERATE.get(o2) == o1:
+            relation = f"相生・{o2}生{o1} — 相手の気があなたを育てる"
+        elif _RESTRICT.get(o1) == o2:
+            relation = f"相剋・{o1}剋{o2} — あなたの気が相手を制する"
+        else:
+            relation = f"相剋・{o2}剋{o1} — 相手の気があなたを制する"
+
+        partner_label = partner_name if partner_name else "あの人"
+
+        if mode == 'preview':
+            system_prompt = """【あの人の本音 プレビュー】
+推し活お姉さんではなく、
+恋愛相談に乗ってくれる親友のトーンで。
+やさしく、でも核心をつくように。
+
+マークダウン禁止。#や**は絶対使わない。
+
+形式:
+💔 二人の今の距離感: [1줄]
+🌙 あの人の本音: [2줄. 핵심만]
+
+例:
+💔 二人の今の距離感: 近いようで遠い、霧の中の二人
+🌙 あの人の本音: 実はあなたのSNSをこっそり見てるかも。
+でも自分からは連絡できない理由があって……"""
+
+            user_message = f"""今日の日付: {today}
+
+あなた:
+- 日柱: {saju1['day_pillar']}
+- 五行: {e1}{o1}（{saju1['ohaeng_desc']}）
+- 現在の大運: {saju1['cycle']}
+
+{partner_label}:
+- 日柱: {saju2['day_pillar']}
+- 五行: {e2}{o2}（{saju2['ohaeng_desc']}）
+- 現在の大運: {saju2['cycle']}
+
+二人の五行関係: {relation}
+
+上記の構成でプレビューを書いてください。"""
+            max_tokens = 600
+
+        else:  # full
+            system_prompt = """【あの人の本音フルレポート】
+恋愛相談の親友トーンで。やさしく核心をつく。
+マークダウン禁止。#や**は絶対使わない。
+具体的な年齢は書かない。
+
+禁止ワード: 師匠 鍛える 溶鉱炉 刃 剣 騎士 戦士 修行 試練 覚醒 悟り 宿命
+
+必須形式（각 항목 1行ずつ）:
+🔋 あの人の今の気持ち: [■■■□□] XX%
+（あなたへの未練ゲージ。60〜100%の範囲。日付に基づいて変動させること）
+
+💬 あの人が連絡しない理由: [2줄]
+📅 連絡が来やすいタイミング: [具体的な曜日/時間帯]
+🎯 あなたがすべき行動: [1つだけ具体的に]
+⚠️ 今だけは絶対やらないで: [1つ]
+📸 再会の可能性: XX%（五行関係から算出）
+
+✨ 再会ラッキー
+🎨 ラッキーカラー: [色]
+🌿 ラッキーアイテム: [具体的]
+⏰ ベストタイム: [時間帯]
+💬 今日のキーワード: [1語]"""
+
+            user_message = f"""今日の日付: {today}
+
+あなた:
+- 日柱: {saju1['day_pillar']}
+- 五行: {e1}{o1}（{saju1['ohaeng_desc']}）
+- 現在の大運: {saju1['cycle']}
+
+{partner_label}:
+- 日柱: {saju2['day_pillar']}
+- 五行: {e2}{o2}（{saju2['ohaeng_desc']}）
+- 現在の大運: {saju2['cycle']}
+
+二人の五行関係: {relation}
+
+上記の構成でフルレポートを書いてください。"""
             max_tokens = 1200
 
         response = self.client.messages.create(

@@ -8,7 +8,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
-from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_mystery_kyoumei_card
+from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_mystery_kyoumei_card, build_mystery_fukuen_card
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
@@ -358,6 +358,42 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
         print(f"❌ [궁합분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
 
+def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='preview', partner_name=None):
+    """재회 분석 → push API — background thread에서 실행"""
+    try:
+        saju1  = LineManse.calculate(year, month, day)
+        saju2  = LineManse.calculate(p_year, p_month, p_day)
+        ai     = MalgeumLineAI()
+        result = ai.get_fukuen(saju1, saju2, partner_name=partner_name, mode=mode)
+        if mode == 'preview':
+            fukuen_code = 'FUKUEN-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            s_key = f'line_{user_id}'
+            user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'fukuen_code': fukuen_code}
+            line_push_api(user_id, build_mystery_fukuen_card())
+            payment_msg = (
+                "\n\nここまでで「当たっている」と\n"
+                "感じた方だけ、この先をご覧ください🌙\n\n"
+                "🔒 あの人との運命の処方箋を受け取る（¥890）\n"
+                "→ https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E\n\n"
+                "💳 PayPalアカウントなしでも\n"
+                "クレジットカードでお支払いいただけます✨\n\n"
+                "決済完了後、以下のコードをご入力ください🔑\n"
+                f"🔑 {fukuen_code}"
+            )
+            line_push_api(user_id, result + payment_msg)
+        else:
+            share_msg = (
+                "\n\n━━━━━━━━━━━━━\n"
+                "このレポートを保存して、\n"
+                "あの人との縁を大切にしてください🌙\n"
+                "━━━━━━━━━━━━━"
+            )
+            line_push_api(user_id, result + share_msg)
+    except Exception as e:
+        print(f"❌ [재회분석오류] {e}")
+        line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
+
+
 def handle_line_event(user_id, message, reply_token):
     """일반 메시지: process_line → reply — background thread에서 실행"""
     try:
@@ -454,6 +490,25 @@ def process_line(user_id, message):
             return "まず「推し相性」から始めてください🌿"
         return "コードが正しくありません。🌿"
 
+    # FUKUEN- コード グローバル認識 (再会決済)
+    if message.strip().startswith('FUKUEN-'):
+        session = user_sessions.get(key, {})
+        stored_code = session.get('fukuen_code', '')
+        if stored_code and message.strip() == stored_code:
+            partner = session.get('fukuen_partner_birth')
+            if 'year' in session and partner:
+                user_sessions[key] = {k: v for k, v in session.items() if k != 'fukuen_code'}
+                threading.Thread(
+                    target=fukuen_analysis,
+                    args=(user_id, session['year'], session['month'], session['day'],
+                          partner['year'], partner['month'], partner['day'], 'full',
+                          session.get('fukuen_partner_name')),
+                    daemon=True
+                ).start()
+                return "🌀 決済を確認しました。\nあの人との運命の封を切ります..."
+            return "まず「あの人」から始めてください🌿"
+        return "コードが正しくありません。🌿"
+
     # 処方箋を開く / レポートを開く
     if message in ('処方箋を開く', 'レポートを開く'):
         session = user_sessions.get(key, {})
@@ -484,6 +539,20 @@ def process_line(user_id, message):
                 "あなたの今日の流れを読み解きます。\n\n"
                 "「今日の運勢」\n"
                 "入力してください🌸")
+
+    # あの人 / 復縁 → 재회 모드
+    if 'あの人' in message or '復縁' in message:
+        session = user_sessions.get(key, {})
+        if 'year' not in session:
+            user_sessions[key] = {**session, 'step': 'WAITING_FUKUEN_SELF'}
+            return ("💔 あの人との運命を読み解きます🌙\n\n"
+                    "まず、あなたの生年月日を\n"
+                    "8桁で教えてください✨\n"
+                    "例）19930616")
+        user_sessions[key] = {**session, 'step': 'WAITING_FUKUEN_PARTNER'}
+        return ("相手のお名前と生年月日を教えてください💫\n"
+                "例）ユウタ 19950315\n"
+                "お名前なしで生年月日だけでもOKです🌙")
 
     # 魂の共鳴 / 推し相性 → 글로벌 트리거 (포함되면 작동)
     if '魂の共鳴' in message or '推し相性' in message:
@@ -607,6 +676,54 @@ def process_line(user_id, message):
                     "このカードを保存して、\n"
                     "今日のお守りにしてください🌿")
         return "コードが正しくありません。もう一度お試しください。🌿"
+
+    if step == 'WAITING_FUKUEN_SELF':
+        normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
+        digits = ''.join(filter(str.isdigit, normalized))
+        if len(digits) == 8:
+            try:
+                year  = int(digits[0:4])
+                month = int(digits[4:6])
+                day   = int(digits[6:8])
+                if not (1920 <= year <= 2010) or not (1 <= month <= 12) or not (1 <= day <= 31):
+                    return "❌ 正しい生年月日を入力してください。\n例）19930616"
+                user_sessions[key] = {**session, 'step': 'WAITING_FUKUEN_PARTNER',
+                                      'year': year, 'month': month, 'day': day}
+                return ("相手のお名前と生年月日を教えてください💫\n"
+                        "例）ユウタ 19950315\n"
+                        "お名前なしで生年月日だけでもOKです🌙")
+            except Exception:
+                return "❌ 8桁の数字で入力してください。\n例）19930616"
+        return "❌ 8桁の数字で入力してください。\n例）19930616"
+
+    if step == 'WAITING_FUKUEN_PARTNER':
+        normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
+        date_match = re.search(r'(\d{8})', normalized)
+        if date_match:
+            try:
+                digits  = date_match.group(1)
+                p_year  = int(digits[0:4])
+                p_month = int(digits[4:6])
+                p_day   = int(digits[6:8])
+                if not (1920 <= p_year <= 2010) or not (1 <= p_month <= 12) or not (1 <= p_day <= 31):
+                    return "❌ 正しい生年月日を入力してください。\n例）ユウタ 19950315"
+                if 'year' not in session:
+                    user_sessions[key] = {}
+                    return "まず「あの人」と入力して、生年月日を教えてください🌿"
+                partner_name = re.sub(r'\d{8}', '', message).strip() or None
+                user_sessions[key] = {**session,
+                    'fukuen_partner_birth': {'year': p_year, 'month': p_month, 'day': p_day},
+                    'fukuen_partner_name': partner_name}
+                threading.Thread(
+                    target=fukuen_analysis,
+                    args=(user_id, session['year'], session['month'], session['day'],
+                          p_year, p_month, p_day, 'preview', partner_name),
+                    daemon=True
+                ).start()
+                return "少々お待ちくださいませ。🌙"
+            except Exception:
+                return "❌ お名前と生年月日を入力してください。\n例）ユウタ 19950315"
+        return "❌ お名前と生年月日を入力してください。\n例）ユウタ 19950315"
 
     if step == 'WAITING_COMPAT_SELF':
         normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
