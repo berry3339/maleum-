@@ -346,6 +346,84 @@ def build_kyoumei_card(result, partner_name=None):
     }
 
 
+def build_kyoumei_chemistry_card(result):
+    """케미+역할 카드"""
+    import re
+    clean = result.replace('*','').replace('#','')
+    chemi    = re.search(r'二人のケミ[：:]\s*(.+?)[\n]', clean)
+    my_role  = re.search(r'あなたの役割[：:]\s*(.+?)[\n]', clean)
+    oshi_role= re.search(r'推しの役割[：:]\s*(.+?)[\n]', clean)
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#1a1a2e",
+            "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "✨ 二人のケミ",
+                 "size": "sm", "color": "#FFD700", "align": "center"},
+                {"type": "text", "text": chemi.group(1).strip() if chemi else "—",
+                 "size": "xs", "color": "#FFFFFF", "align": "center",
+                 "wrap": True, "margin": "md"},
+                {"type": "separator", "margin": "lg", "color": "#FFFFFF30"},
+                {"type": "text", "text": "🔮 あなたの役割",
+                 "size": "sm", "color": "#FF69B4", "align": "center", "margin": "lg"},
+                {"type": "text", "text": my_role.group(1).strip() if my_role else "—",
+                 "size": "xs", "color": "#FFFFFF", "align": "center",
+                 "wrap": True, "margin": "md"},
+                {"type": "separator", "margin": "lg", "color": "#FFFFFF30"},
+                {"type": "text", "text": "💖 推しの役割",
+                 "size": "sm", "color": "#FF69B4", "align": "center", "margin": "lg"},
+                {"type": "text", "text": oshi_role.group(1).strip() if oshi_role else "—",
+                 "size": "xs", "color": "#FFFFFF", "align": "center",
+                 "wrap": True, "margin": "md"},
+                {"type": "text", "text": "🔮 マルム｜魂の処方箋",
+                 "size": "xxs", "color": "#888888", "align": "center", "margin": "lg"}
+            ]
+        }
+    }
+
+
+def build_kyoumei_mission_card(result):
+    """미션+주의+싱크로 카드"""
+    import re
+    clean   = result.replace('*','').replace('#','')
+    mission = re.search(r'推し活ミッション[：:]\s*(.+?)[\n]', clean)
+    warning = re.search(r'気をつけて[：:]\s*(.+?)[\n]', clean)
+    sync    = re.search(r'シンクロ率[：:]\s*(.+?)[\n]', clean)
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#1a1a2e",
+            "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "🎯 今日の推し活ミッション",
+                 "size": "sm", "color": "#FFD700", "align": "center"},
+                {"type": "text", "text": mission.group(1).strip() if mission else "—",
+                 "size": "xs", "color": "#FFFFFF", "align": "center",
+                 "wrap": True, "margin": "md"},
+                {"type": "separator", "margin": "lg", "color": "#FFFFFF30"},
+                {"type": "text", "text": "⚠️ 今日だけ気をつけて",
+                 "size": "sm", "color": "#FF6B6B", "align": "center", "margin": "lg"},
+                {"type": "text", "text": warning.group(1).strip() if warning else "—",
+                 "size": "xs", "color": "#FFFFFF", "align": "center",
+                 "wrap": True, "margin": "md"},
+                {"type": "separator", "margin": "lg", "color": "#FFFFFF30"},
+                {"type": "text", "text": "📸 今日のシンクロ率",
+                 "size": "sm", "color": "#FF69B4", "align": "center", "margin": "lg"},
+                {"type": "text", "text": sync.group(1).strip() if sync else "—",
+                 "size": "xs", "color": "#FFFFFF", "align": "center",
+                 "wrap": True, "margin": "md"},
+                {"type": "text", "text": "🔮 マルム｜魂の処方箋",
+                 "size": "xxs", "color": "#888888", "align": "center", "margin": "lg"}
+            ]
+        }
+    }
+
+
 def build_mystery_kyoumei_card():
     """결제 전 블러 처리된 미스터리 공명도 카드"""
     return {

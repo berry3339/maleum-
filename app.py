@@ -8,7 +8,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
-from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card
+from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
@@ -340,20 +340,36 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             )
             line_push_api(user_id, result + payment_msg)
         else:
+            # カード1: ケミ+役割
             try:
-                card = build_kyoumei_card(result, partner_name=partner_name)
-                line_push_api(user_id, card)
-            except Exception as card_err:
-                print(f"⚠️ [共鳴カード生成エラー] {card_err}")
-            share_msg = (
-                "\n\n━━━━━━━━━━━━━\n"
-                "このカードを保存して、\n"
-                "今日のお守りにしてください🌿\n"
-                "もし推しへの気持ちが溢れたら、\n"
-                "このカードをそっとシェアしてみてください🌙\n"
-                "━━━━━━━━━━━━━"
-            )
-            line_push_api(user_id, result + share_msg)
+                line_push_api(user_id, build_kyoumei_chemistry_card(result))
+            except Exception as e:
+                print(f"⚠️ [ケミカード生成エラー] {e}")
+            # カード2: ミッション+注意+シンクロ
+            try:
+                line_push_api(user_id, build_kyoumei_mission_card(result))
+            except Exception as e:
+                print(f"⚠️ [ミッションカード生成エラー] {e}")
+            # テキスト: ラッキーアイテムのみ抽出
+            import re as _re
+            _clean = result.replace('*','').replace('#','')
+            _lucky_m = _re.search(r'(✨\s*今日の推し活ラッキー.+?)(?:\n\n|\Z)', _clean, _re.DOTALL)
+            if _lucky_m:
+                _lucky_lines = _lucky_m.group(1).strip().split('\n')
+                _out, _done = [], False
+                for _l in _lucky_lines:
+                    _out.append(_l)
+                    if 'キーワード' in _l:
+                        _done = True
+                        break
+                if not _done:
+                    _out = _lucky_lines
+                line_push_api(user_id, '\n'.join(_out))
+            # カード3: 共鳴度
+            try:
+                line_push_api(user_id, build_kyoumei_card(result, partner_name=partner_name))
+            except Exception as e:
+                print(f"⚠️ [共鳴カード生成エラー] {e}")
     except Exception as e:
         print(f"❌ [궁합분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
