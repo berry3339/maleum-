@@ -308,7 +308,8 @@ def build_prescription_cards(text, saju=None):
 def build_kyoumei_card(result, partner_name=None):
     """궁합 full 결과 텍스트에서 공명도 % 와 코멘트를 추출해 Flex 버블 생성"""
     import re
-    pct_match = re.search(r'(\d+)\s*%', result.replace('*',''))
+    clean_result = result.replace('*', '').replace('#', '')
+    pct_match = re.search(r'(\d+)\s*%', clean_result)
     pct = (pct_match.group(1) + '%') if pct_match else '—%'
     print(f"[DEBUG] 공명도 파싱 결과: {pct}")
     comment_match = re.search(r'「([^」\n]+)」', result)
@@ -981,7 +982,7 @@ UPミッション3つ・DOWNミッション3つを上記ルールに従い出力
 ひらがな・カタカナ中心。SNSに載せたくなるような軽さで。
 
 【絶対禁止ワード】
-師匠、鍛える、溶鉱炉、刃、剣、騎士、戦士、修行、試練、覚醒、悟り、宿命
+師匠、鍛える、溶鉱炉、刃、剣、騎士、戦士、修行、試練、覚醒、悟り、宿命、名刀、鉄
 （武侠・ファンタジー系の言葉は全て禁止）
 
 【必須トーン】
