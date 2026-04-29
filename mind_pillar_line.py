@@ -396,6 +396,40 @@ def build_mystery_fukuen_card():
     }
 
 
+def build_fukuen_omamori_card():
+    """재회 결제 후 발송하는 부적 카드"""
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#2d1b69",
+            "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "🕯️ 再会のお守り 🕯️",
+                 "size": "md", "color": "#FFD700",
+                 "align": "center", "weight": "bold"},
+                {"type": "separator", "margin": "lg",
+                 "color": "#FFD70050"},
+                {"type": "text", "text": "このカードをスクショして\nロック画面に設定してね",
+                 "size": "xs", "color": "#CCCCCC",
+                 "align": "center", "wrap": True, "margin": "lg"},
+                {"type": "text", "text": "毎晩寝る前に\nあの人の名前を\n心の中で3回呼んでみて🌙",
+                 "size": "sm", "color": "#FFFFFF",
+                 "align": "center", "wrap": True, "margin": "lg"},
+                {"type": "separator", "margin": "lg",
+                 "color": "#FFD70050"},
+                {"type": "text", "text": "ふたりの縁の波動が\n少しずつ近づいていくよ✨",
+                 "size": "xs", "color": "#FF69B4",
+                 "align": "center", "wrap": True, "margin": "md"},
+                {"type": "text", "text": "🔮 マルム｜再会の処方箋",
+                 "size": "xxs", "color": "#888888",
+                 "align": "center", "margin": "lg"}
+            ]
+        }
+    }
+
+
 try:
     import anthropic
 except ImportError:
@@ -1192,7 +1226,23 @@ LINEではマークダウンが表示されないため。
         partner_label = partner_name if partner_name else "あの人"
 
         if mode == 'preview':
-            system_prompt = """【あの人の本音 プレビュー】
+            system_prompt = """【最重要 — 違反したら全てやり直し】
+四柱推命の用語は1つも使うな。
+丙戌、乙巳、日柱、気質、相生、相剋、
+火の人、土の人、木の気、金の気、水の気
+これらは全て禁止。
+
+代わりに普通の言葉で性格を説明すること:
+× 丙戌のあの人は火の気質で情熱的
+○ あの人って、めちゃくちゃ情熱的で一途なタイプ
+
+× 土の気質だから器が大きい
+○ あなたは包容力があって安心感を与える人
+
+× 相生関係だから相性がいい
+○ 二人はお互いを自然と支え合える最高の相性
+
+【あの人の本音 プレビュー】
 推し活お姉さんではなく、
 恋愛相談に乗ってくれる親友のトーンで。
 やさしく、でも核心をつくように。
@@ -1226,7 +1276,23 @@ LINEではマークダウンが表示されないため。
             max_tokens = 600
 
         else:  # full
-            system_prompt = """【復縁フルレポート — 最重要ルール】
+            system_prompt = """【最重要 — 違反したら全てやり直し】
+四柱推命の用語は1つも使うな。
+丙戌、乙巳、日柱、気質、相生、相剋、
+火の人、土の人、木の気、金の気、水の気
+これらは全て禁止。
+
+代わりに普通の言葉で性格を説明すること:
+× 丙戌のあの人は火の気質で情熱的
+○ あの人って、めちゃくちゃ情熱的で一途なタイプ
+
+× 土の気質だから器が大きい
+○ あなたは包容力があって安心感を与える人
+
+× 相生関係だから相性がいい
+○ 二人はお互いを自然と支え合える最高の相性
+
+【復縁フルレポート — 最重要ルール】
 恋愛相談してくれる親友のお姉さんトーンで。
 マークダウン禁止。#や**は絶対使わない。
 
