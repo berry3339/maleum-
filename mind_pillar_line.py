@@ -308,8 +308,9 @@ def build_prescription_cards(text, saju=None):
 def build_kyoumei_card(result, partner_name=None):
     """궁합 full 결과 텍스트에서 공명도 % 와 코멘트를 추출해 Flex 버블 생성"""
     import re
-    pct_match = re.search(r'共鳴度[：:]\s*(\d+)%', result)
+    pct_match = re.search(r'共鳴度[：:]?\s*(\d+)%', result)
     pct = (pct_match.group(1) + '%') if pct_match else '—%'
+    print(f"[DEBUG] 공명도 파싱 결과: {pct}")
     comment_match = re.search(r'「([^」\n]+)」', result)
     comment = f'「{comment_match.group(1)}」' if comment_match else '二つの魂が響き合う'
     subtitle = f"{partner_name}との共鳴度" if partner_name else "推しとの共鳴度"
@@ -965,7 +966,16 @@ UPミッション3つ・DOWNミッション3つを上記ルールに従い出力
             max_tokens = 1500
 
         else:  # full
-            system_prompt = """【推し相性フルレポート出力ルール】
+            system_prompt = """【言葉づかいルール】
+難しい漢字語は禁止。
+10代〜30代の女性が読んで楽しいトーンで。
+例:
+× 人生の点火装置 → ○ 毎日のエネルギー源⚡️
+× 成長の軌跡   → ○ これまでの頑張り✨
+× 運命の共鳴   → ○ 最高の相性💖
+ひらがな・カタカナ中心。SNSに載せたくなるような軽さで。
+
+【推し相性フルレポート出力ルール】
 軽く楽しいトーンで書くこと。長い説明は絶対禁止。
 必ず以下の形式のみ:
 
