@@ -339,18 +339,19 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             # テキスト: ラッキーアイテムのみ抽出
             import re as _re
             _clean = result.replace('*','').replace('#','')
-            _lucky_m = _re.search(r'(✨\s*今日の推し活ラッキー.+?)(?:\n\n|\Z)', _clean, _re.DOTALL)
-            if _lucky_m:
-                _lucky_lines = _lucky_m.group(1).strip().split('\n')
-                _out, _done = [], False
-                for _l in _lucky_lines:
-                    _out.append(_l)
-                    if 'キーワード' in _l:
-                        _done = True
-                        break
-                if not _done:
-                    _out = _lucky_lines
-                line_push_api(user_id, '\n'.join(_out))
+            _header_m = _re.search(r'✨\s*今日の推し活ラッキー', _clean)
+            if _header_m:
+                _after = _clean[_header_m.start():]
+                _color = _re.search(r'🎨[^\n]+', _after)
+                _item  = _re.search(r'🌿[^\n]+', _after)
+                _time  = _re.search(r'⏰[^\n]+', _after)
+                _kw    = _re.search(r'💬[^\n]+', _after)
+                _parts = ["✨ 今日の推し活ラッキー"]
+                for _m in [_color, _item, _time, _kw]:
+                    if _m:
+                        _parts.append(_m.group(0).strip())
+                if len(_parts) > 1:
+                    line_push_api(user_id, '\n'.join(_parts))
             # カード3: 共鳴度
             try:
                 line_push_api(user_id, build_kyoumei_card(result, partner_name=partner_name))
