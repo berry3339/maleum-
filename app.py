@@ -24,7 +24,7 @@ CATEGORY_LABELS = {
 }
 
 def generate_payment_code():
-    return 'MARU-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return 'MARU-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
 
 USERS_FILE = '/data/users.json'
 
@@ -303,7 +303,7 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
         ai     = MalgeumLineAI()
         result = ai.get_compatibility(saju1, saju2, mode=mode)
         if mode == 'preview':
-            kyoumei_code = 'KYOUMEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            kyoumei_code = 'KYOUMEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'kyoumei_code': kyoumei_code}
             line_push_api(user_id, result)
@@ -359,7 +359,7 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
         ai     = MalgeumLineAI()
         result = ai.get_fukuen(saju1, saju2, partner_name=partner_name, mode=mode)
         if mode == 'preview':
-            fukuen_code = 'FUKUEN-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            fukuen_code = 'FUKUEN-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'fukuen_code': fukuen_code}
             line_push_api(user_id, result)
