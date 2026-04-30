@@ -424,6 +424,38 @@ def build_kyoumei_mission_card(result):
     }
 
 
+def build_kyoumei_preview_card(chemistry_text):
+    """결제 전 케미 프리뷰 카드"""
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#FFF0F5",
+            "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "✨ ふたりのケミ ✨",
+                 "size": "md", "color": "#FF69B4",
+                 "align": "center", "weight": "bold"},
+                {"type": "separator", "margin": "lg",
+                 "color": "#FFB6C150"},
+                {"type": "text", "text": chemistry_text,
+                 "size": "sm", "color": "#333333",
+                 "align": "center", "wrap": True, "margin": "lg"},
+                {"type": "separator", "margin": "lg",
+                 "color": "#FFB6C150"},
+                {"type": "text",
+                 "text": "このさきには\nもっとふかいヒミツが\nかくされています🌙",
+                 "size": "xs", "color": "#999999",
+                 "align": "center", "wrap": True, "margin": "lg"},
+                {"type": "text", "text": "🔮 マルム｜こころの処方せん",
+                 "size": "xxs", "color": "#CCCCCC",
+                 "align": "center", "margin": "lg"}
+            ]
+        }
+    }
+
+
 def build_mystery_kyoumei_card():
     """결제 전 블러 처리된 미스터리 공명도 카드"""
     return {

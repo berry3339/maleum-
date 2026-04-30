@@ -8,7 +8,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
-from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card
+from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_kyoumei_preview_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
@@ -306,15 +306,24 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             kyoumei_code = 'KYOUMEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'kyoumei_code': kyoumei_code}
-            line_push_api(user_id, result)
-            line_push_api(user_id, "ここまでで「当たっている」と\n感じた方だけ、この先をご覧ください🌙")
+            # ①ミステリーカード
             line_push_api(user_id, build_mystery_kyoumei_card())
+            # ②ケミ プレビューカード (APIテキストからケミ1行を抽出)
+            import re as _re2
+            _clean2 = result.replace('*','').replace('#','')
+            _chemi = _re2.search(r'ケミ[：:]\s*(.+?)[\n]', _clean2)
+            _chemi_text = _chemi.group(1).strip() if _chemi else "ふたりのシンクロ✨"
+            line_push_api(user_id, build_kyoumei_preview_card(_chemi_text))
+            # ③感性メッセージ
+            line_push_api(user_id, "ここまでで「当たっている」と\n感じた方だけ、この先をご覧ください🌙")
+            # ④決済チケットカード
             line_push_api(user_id, build_payment_ticket_card(
                 590,
                 "https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E",
                 kyoumei_code,
                 "推しとの運命の処方箋"
             ))
+            # ⑤コードテキスト
             line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{kyoumei_code}")
         else:
             # カード1: ケミ+役割
