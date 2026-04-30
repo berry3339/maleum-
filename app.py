@@ -8,7 +8,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
-from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card
+from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
@@ -246,35 +246,15 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             key = f'line_{user_id}'
             session = user_sessions.get(key, {})
             user_sessions[key] = {**session, 'payment_code': payment_code}
-            payment_msg = (
-                f"\n\n🌿 今日の運気スコア：{score}点\n"
-                "とても良い状態です。\n"
-                "ただ…この点数の裏に、\n"
-                "少し「もったいない流れ」も隠れています🌙\n\n"
-                "この処方箋は、今日の深夜0時に消えます🌙\n\n"
-                "少しでも気になる方だけ、\n"
-                "このタイミングを逃さずにご覧ください🌙\n\n"
-                "この先では、\n"
-                "あなたの「本当の流れ」と\n"
-                "「行動の答え」が明らかになります🌙\n\n"
-                "📋 詳細レポートの内容：\n"
-                "✓ あなたの本質と今日の流れ\n"
-                "✓ 今日の最優先行動（根拠付き）\n"
-                "✓ 運気ミッション UP/DOWN 6つ\n"
-                "✓ 愛のある辛口アドバイス\n"
-                "✓ ラッキーアイテム全5つ\n"
-                "✓ 明日への一言\n"
-                "（所要時間 約2分）\n\n"
-                "🔒 今日のもったいないを回避する（¥1,000）\n"
-                "→ https://www.paypal.com/ncp/payment/G7K49PXY32R2C\n\n"
-                "💳 PayPalアカウントなしでも\n"
-                "クレジットカードでお支払いいただけます✨\n"
-                "🔐 お支払いはPayPalの安全な環境で処理されます\n\n"
-                "決済完了後、すぐに続きの処方箋が届きます✨\n"
-                "以下のコードをご入力ください🔑\n"
-                f"🔑 {payment_code}"
-            )
-            line_push_api(user_id, result + payment_msg)
+            line_push_api(user_id, result)
+            line_push_api(user_id, "ここまでで「当たっている」と\n感じた方だけ、この先をご覧ください🌙")
+            line_push_api(user_id, build_payment_ticket_card(
+                1000,
+                "https://www.paypal.com/ncp/payment/G7K49PXY32R2C",
+                payment_code,
+                "今日の運気処方箋"
+            ))
+            line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{payment_code}")
         else:  # prescription
             # score 계산 (short mode와 동일한 로직)
             _GEN = {'木':'火','火':'土','土':'金','金':'水','水':'木'}
@@ -326,19 +306,16 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             kyoumei_code = 'KYOUMEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'kyoumei_code': kyoumei_code}
+            line_push_api(user_id, result)
+            line_push_api(user_id, "ここまでで「当たっている」と\n感じた方だけ、この先をご覧ください🌙")
             line_push_api(user_id, build_mystery_kyoumei_card())
-            payment_msg = (
-                "\n\nここまでで「当たっている」と\n"
-                "感じた方だけ、この先をご覧ください🌙\n\n"
-                "🔒 推しとの運命の処方箋を受け取る（¥590）\n"
-                "→ https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E\n\n"
-                "💳 PayPalアカウントなしでも\n"
-                "クレジットカードでお支払いいただけます✨\n"
-                "🔐 お支払いはPayPalの安全な環境で処理されます\n\n"
-                "決済完了後、以下のコードをご入力ください🔑\n"
-                f"🔑 {kyoumei_code}"
-            )
-            line_push_api(user_id, result + payment_msg)
+            line_push_api(user_id, build_payment_ticket_card(
+                590,
+                "https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E",
+                kyoumei_code,
+                "推しとの運命の処方箋"
+            ))
+            line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{kyoumei_code}")
         else:
             # カード1: ケミ+役割
             try:
@@ -385,18 +362,16 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             fukuen_code = 'FUKUEN-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'fukuen_code': fukuen_code}
+            line_push_api(user_id, result)
+            line_push_api(user_id, "ここまでで「当たっている」と\n感じた方だけ、この先をご覧ください🌙")
             line_push_api(user_id, build_mystery_fukuen_card())
-            payment_msg = (
-                "\n\nここまでで「当たっている」と\n"
-                "感じた方だけ、この先をご覧ください🌙\n\n"
-                "🔒 あの人との運命の処方箋を受け取る（¥890）\n"
-                "→ https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E\n\n"
-                "💳 PayPalアカウントなしでも\n"
-                "クレジットカードでお支払いいただけます✨\n\n"
-                "決済完了後、以下のコードをご入力ください🔑\n"
-                f"🔑 {fukuen_code}"
-            )
-            line_push_api(user_id, result + payment_msg)
+            line_push_api(user_id, build_payment_ticket_card(
+                890,
+                "https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E",
+                fukuen_code,
+                "あの人との運命の処方箋"
+            ))
+            line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{fukuen_code}")
         else:
             share_msg = (
                 "\n\n━━━━━━━━━━━━━\n"

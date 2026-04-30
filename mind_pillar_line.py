@@ -508,6 +508,54 @@ def build_fukuen_omamori_card():
     }
 
 
+def build_payment_ticket_card(price, payment_url, code, title="運命の処方箋"):
+    """결제 티켓 카드 — 버튼 포함 Flex Message"""
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#2d1b69",
+            "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "🎟️ " + title,
+                 "size": "md", "color": "#FFD700",
+                 "align": "center", "weight": "bold"},
+                {"type": "separator", "margin": "lg",
+                 "color": "#FFD70050"},
+                {"type": "text",
+                 "text": "あなただけの特別な処方箋が\n準備できています✨",
+                 "size": "xs", "color": "#FFFFFF",
+                 "align": "center", "wrap": True, "margin": "lg"},
+                {"type": "text",
+                 "text": "¥" + str(price),
+                 "size": "xxl", "color": "#FF69B4",
+                 "align": "center", "weight": "bold", "margin": "lg"},
+                {"type": "text",
+                 "text": "決済後すぐに届きます⚡️",
+                 "size": "xxs", "color": "#CCCCCC",
+                 "align": "center", "margin": "md"},
+                {"type": "text",
+                 "text": "💳 カードでもOK✨",
+                 "size": "xxs", "color": "#CCCCCC",
+                 "align": "center", "margin": "sm"}
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {"type": "button",
+                 "action": {"type": "uri",
+                            "label": "🔓 処方箋を開く",
+                            "uri": payment_url},
+                 "style": "primary",
+                 "color": "#FF69B4"}
+            ]
+        }
+    }
+
+
 try:
     import anthropic
 except ImportError:
