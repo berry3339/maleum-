@@ -705,7 +705,7 @@ class MalgeumLineAI:
         self.client = anthropic.Anthropic(api_key=self.api_key)
 
     def get_prescription(self, saju: dict, mode: str = 'short', birth_time: str = '不明', category: str = None) -> str:
-        today = datetime.now().strftime('%Y年%m月%d日')
+        today = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y年%m月%d日')
 
         # カテゴリー指示文（選択されたテーマに完全集中させるルール）
         category_system_rule = (
@@ -864,7 +864,7 @@ class MalgeumLineAI:
 推奨表現: {recommended}
 指示: {instruction}
 
-今日の日付: {today}
+今日の日付: {today}（昨日とは必ず異なる内容を生成すること）
 {birth_note}
 
 ユーザーの四柱命式（この値のみ使用すること）:
@@ -1090,7 +1090,7 @@ UPミッション3つ・DOWNミッション3つを上記ルールに従い出力
 推奨表現: {recommended}
 指示: {instruction}
 
-今日の日付: {today}
+今日の日付: {today}（昨日とは必ず異なる内容を生成すること）
 {birth_note}
 
 ユーザーの四柱命式（この値のみ使用すること）:
@@ -1119,7 +1119,7 @@ UPミッション3つ・DOWNミッション3つを上記ルールに従い出力
         return result_prefix + response.content[0].text
 
     def get_compatibility(self, saju1: dict, saju2: dict, mode: str = 'preview') -> str:
-        today = datetime.now().strftime('%Y年%m月%d日')
+        today = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y年%m月%d日')
 
         # 二人の五行つながりを判定
         _GENERATE = {"木":"火","火":"土","土":"金","金":"水","水":"木"}
@@ -1408,7 +1408,7 @@ LINEではマークダウンが表示されないため。
         return response.content[0].text
 
     def get_fukuen(self, saju1: dict, saju2: dict, partner_name: str = None, mode: str = 'preview') -> str:
-        today = datetime.now().strftime('%Y年%m月%d日')
+        today = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y年%m月%d日')
 
         _GENERATE = {"木":"火","火":"土","土":"金","金":"水","水":"木"}
         _RESTRICT  = {"木":"土","土":"水","水":"火","火":"金","金":"木"}

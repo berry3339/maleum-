@@ -53,7 +53,7 @@ def send_daily_messages():
         try:
             saju          = LineManse.calculate(data['year'], data['month'], data['day'])
             ai            = MalgeumLineAI()
-            result        = ai.get_prescription(saju, mode='short')
+            result        = ai.get_prescription(saju, mode='preview')
             if isinstance(result, dict):
                 msg_payload = {"type": "flex", "altText": "🌅 朝のエネルギーガイドをお届けします", "contents": result}
             else:
