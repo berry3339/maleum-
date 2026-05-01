@@ -377,7 +377,7 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             line_push_api(user_id, build_mystery_fukuen_card())
             line_push_api(user_id, build_payment_ticket_card(
                 890,
-                "https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E",
+                "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2",
                 fukuen_code,
                 "あの人との運命の処方箋"
             ))
