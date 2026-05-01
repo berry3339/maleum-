@@ -373,7 +373,7 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'fukuen_code': fukuen_code}
             line_push_api(user_id, result)
-            line_push_api(user_id, "ここまでで「当たっている」と\n感じた方だけ、この先をご覧ください🌙")
+            line_push_api(user_id, "少しでも『思い当たるかも…』と感じた方へ🌙\nこの先で、あの人との本当の結末と\n『ふたりの未来』を覗いてみませんか？")
             line_push_api(user_id, build_mystery_fukuen_card())
             line_push_api(user_id, build_payment_ticket_card(
                 890,
