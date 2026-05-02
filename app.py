@@ -3,6 +3,7 @@ import json
 import re
 import random
 import string
+import time
 import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -420,7 +421,39 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             ))
             line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{fukuen_code}")
         else:
-            line_push_api(user_id, result)
+            # 유료 리포트를 섹션 헤더 기준으로 4개 메시지로 분할 전송
+            def _extract(text, start_markers, end_markers):
+                """start_markers 중 첫 번째 등장 위치 ~ end_markers 직전까지 추출"""
+                s = len(text)
+                for m in start_markers:
+                    idx = text.find(m)
+                    if idx != -1:
+                        s = min(s, idx)
+                e = len(text)
+                for m in end_markers:
+                    idx = text.find(m, s + 1)
+                    if idx != -1:
+                        e = min(e, idx)
+                return text[s:e].strip()
+
+            msg1 = _extract(result,
+                ["🌙 あの人"],
+                ["✨ ふたりの縁", "🔋"])
+            msg2 = _extract(result,
+                ["✨ ふたりの縁", "🔋"],
+                ["🎯"])
+            msg3 = _extract(result,
+                ["🎯"],
+                ["📸"])
+            msg4 = _extract(result,
+                ["📸"],
+                [])
+
+            for msg in [msg1, msg2, msg3, msg4]:
+                if msg:
+                    line_push_api(user_id, msg)
+                    time.sleep(1.5)
+
             line_push_api(user_id,
                 "🌙 3日後、あの人の気持ちに\n"
                 "もう一度変化がくるよ。\n\n"
