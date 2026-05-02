@@ -401,6 +401,18 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
                 "既読スルーされる可能性が高いけど、\n"
                 "それは\"嫌い\"じゃなくて\"どうしていいかわからない\"だよ🌙"
             )
+            line_push_api(user_id,
+                "🕯️ あなただけの再会のお守り 🕯️\n\n"
+                "このカードをスクショして\n"
+                "ロック画面に設定してみてね。\n\n"
+                "毎晩寝る前に\n"
+                "あの人の名前を心の中で3回呼んでみて🌙\n\n"
+                "ふたりの縁が\n"
+                "少しずつ近づいていくよ✨\n\n"
+                "このお守りは誰にも見せないでね。\n"
+                "あなただけのひみつだから🌙"
+            )
+            line_push_api(user_id, build_fukuen_omamori_card())
             line_push_api(user_id, build_mystery_fukuen_card())
             line_push_api(user_id, build_payment_ticket_card(
                 890,
@@ -417,7 +429,6 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
                 "━━━━━━━━━━━━━"
             )
             line_push_api(user_id, result + share_msg)
-            line_push_api(user_id, build_fukuen_omamori_card())
     except Exception as e:
         print(f"❌ [재회분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
