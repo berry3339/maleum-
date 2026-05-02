@@ -8,7 +8,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
-from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_kyoumei_preview_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card
+from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_kyoumei_preview_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card, build_fukuen_payment_ticket_card
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
@@ -414,11 +414,9 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             )
             line_push_api(user_id, build_fukuen_omamori_card())
             line_push_api(user_id, build_mystery_fukuen_card())
-            line_push_api(user_id, build_payment_ticket_card(
+            line_push_api(user_id, build_fukuen_payment_ticket_card(
                 890,
-                "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2",
-                fukuen_code,
-                "あの人との運命の処方箋"
+                "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2"
             ))
             line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{fukuen_code}")
         else:

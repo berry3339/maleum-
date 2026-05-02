@@ -540,6 +540,66 @@ def build_fukuen_omamori_card():
     }
 
 
+def build_fukuen_payment_ticket_card(price, payment_url):
+    """재회 전용 결제 티켓 카드 — 届くもの 리스트 포함"""
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#2d1b69",
+            "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "💌 あの人との運命の処方せん",
+                 "size": "sm", "color": "#FFD700",
+                 "align": "center", "weight": "bold", "wrap": True},
+                {"type": "separator", "margin": "lg", "color": "#FFD70050"},
+                {"type": "text",
+                 "text": "あなただけの処方せんが\n準備できてるよ✨",
+                 "size": "xs", "color": "#FFFFFF",
+                 "align": "center", "wrap": True, "margin": "lg"},
+                {"type": "text",
+                 "text": "¥" + str(price),
+                 "size": "xxl", "color": "#FF69B4",
+                 "align": "center", "weight": "bold", "margin": "lg"},
+                {"type": "separator", "margin": "lg", "color": "#FFD70030"},
+                {"type": "text", "text": "届くもの:",
+                 "size": "xs", "color": "#FFD700",
+                 "weight": "bold", "margin": "lg"},
+                {"type": "text", "text": "🌙 あの人が今あなたに言いたいこと",
+                 "size": "xs", "color": "#FFFFFF", "wrap": True, "margin": "sm"},
+                {"type": "text", "text": "🌙 再会のベストタイミング",
+                 "size": "xs", "color": "#FFFFFF", "wrap": True, "margin": "sm"},
+                {"type": "text", "text": "🌙 やっちゃダメなNG行動",
+                 "size": "xs", "color": "#FFFFFF", "wrap": True, "margin": "sm"},
+                {"type": "text", "text": "🌙 ふたりの未来の結末",
+                 "size": "xs", "color": "#FFFFFF", "wrap": True, "margin": "sm"},
+                {"type": "separator", "margin": "lg", "color": "#FFD70030"},
+                {"type": "text",
+                 "text": "おしはらいの後すぐに届くよ⚡",
+                 "size": "xxs", "color": "#CCCCCC",
+                 "align": "center", "margin": "md"},
+                {"type": "text",
+                 "text": "💳 カードでもOK✨",
+                 "size": "xxs", "color": "#CCCCCC",
+                 "align": "center", "margin": "sm"}
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {"type": "button",
+                 "action": {"type": "uri",
+                            "label": "🔓 処方せんを受け取る",
+                            "uri": payment_url},
+                 "style": "primary",
+                 "color": "#FF69B4"}
+            ]
+        }
+    }
+
+
 def build_payment_ticket_card(price, payment_url, code, title="うんめいの処方せん"):
     """결제 티켓 카드 — 버튼 포함 Flex Message"""
     return {
