@@ -373,7 +373,6 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'fukuen_code': fukuen_code}
             line_push_api(user_id, result)
-            line_push_api(user_id, "少しでも『思い当たるかも…』と感じた方へ🌙\nこの先で、あの人との本当の結末と\n『ふたりの未来』を覗いてみませんか？")
             line_push_api(user_id, build_mystery_fukuen_card())
             line_push_api(user_id, build_payment_ticket_card(
                 890,
@@ -582,7 +581,7 @@ def process_line(user_id, message):
                 "最初に戻りたい方は「マルム」とご入力ください。🌿")
 
     # 시작
-    if message in ('四柱推命で見てみる', '今日の運勢を見る', '今日の運勢', '扉を開く'):
+    if message in ('運勢を見る', '四柱推命で見てみる', '今日の運勢を見る', '今日の運勢', '扉を開く'):
         user_sessions[key] = {'step': 'date'}
         return ("ありがとうございます🌿\n\n"
                 "今日の流れ、少しだけ気になりませんか？🌸\n"
