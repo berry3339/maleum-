@@ -730,11 +730,11 @@ def process_line(user_id, message):
         emo_q2 = message
         q1 = session.get('fukuen_emo_q1', '')
         if 'ずっと頭から離れない' in q1:
-            emo_reply = "ずっと想い続けてきたんだね。\nその気持ち、星が読み取ってくれます🌙"
+            emo_reply = "ずっと想い続けてきたんだね。\nその気持ち、あの人に届いてるかもしれないよ。ちょっと調べてみるね🌙"
         elif '今日何回も' in q1:
-            emo_reply = "今日もずっと考えてたんだね。\nその思い、ちゃんと届いてるよ🌙"
+            emo_reply = "今日もずっと考えてたんだね。\nその気持ち、あの人に届いてるかもしれないよ。ちょっと調べてみるね🌙"
         else:
-            emo_reply = "さっきも思い出してたんだね。\nその気持ち、星が読み取ってくれます🌙"
+            emo_reply = "さっきも思い出してたんだね。\nその気持ち、あの人に届いてるかもしれないよ。ちょっと調べてみるね🌙"
         user_sessions[key] = {**session, 'step': 'WAITING_FUKUEN_SELF', 'fukuen_emo_q2': emo_q2}
         return (f"{emo_reply}\n\n"
                 "💔 あの人との運命を読み解きます🌙\n\n"
