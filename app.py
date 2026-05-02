@@ -403,6 +403,10 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
                 "それは\"嫌い\"じゃなくて\"どうしていいかわからない\"だよ🌙"
             )
             line_push_api(user_id, build_fukuen_omamori_card())
+            line_push_api(user_id,
+                "ここまで読んで\"当たってるかも\"って思った？\n"
+                "この先で、あの人との本当の結末を見てみない？🌙"
+            )
             line_push_api(user_id, build_mystery_fukuen_card())
             line_push_api(user_id, build_fukuen_payment_ticket_card(
                 890,
