@@ -470,7 +470,7 @@ def line():
                     if 'year' in session:
                         line_reply_api(reply_token,
                             "🌀 詳細レポートを準備します。\n"
-                            "少々お待ちくださいませ。"
+                            "少し待っててね🌿"
                         )
                         threading.Thread(
                             target=deep_analysis,
@@ -785,7 +785,7 @@ def process_line(user_id, message):
                           p_year, p_month, p_day, 'preview', partner_name),
                     daemon=True
                 ).start()
-                return "少々お待ちくださいませ。🌙"
+                return "少し待っててね。\nふたりの縁の糸をたどってるから…🌙"
             except Exception:
                 return "❌ お名前と生年月日を入力してください。\n例）ユウタ 19950315"
         return "❌ お名前と生年月日を入力してください。\n例）ユウタ 19950315"
@@ -835,7 +835,7 @@ def process_line(user_id, message):
                           p_year, p_month, p_day, 'preview', partner_name),
                     daemon=True
                 ).start()
-                return "少々お待ちくださいませ。🌙"
+                return "少し待っててね🌙"
             except Exception:
                 return "❌ 名前と生年月日を入力してください。\n例）カズハ 20010122"
         return "❌ 名前と生年月日を入力してください。\n例）カズハ 20010122"
