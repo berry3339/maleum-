@@ -388,6 +388,19 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'fukuen_code': fukuen_code}
             line_push_api(user_id, result)
+            line_push_api(user_id,
+                "🔮 あの人の性格、3つのキーワード\n\n"
+                "・一度好きになったら忘れられない一途さ\n"
+                "・プライドが高くて、自分から連絡できないタイプ\n"
+                "・でも夜になると気持ちがゆるんで、あなたのSNSをこっそり見てるかも"
+            )
+            line_push_api(user_id,
+                "⚠️ 今、連絡したらどうなる？\n\n"
+                "今すぐ連絡すると、あの人は\n"
+                "「嬉しいけど、素直になれない」状態。\n"
+                "既読スルーされる可能性が高いけど、\n"
+                "それは\"嫌い\"じゃなくて\"どうしていいかわからない\"だよ🌙"
+            )
             line_push_api(user_id, build_mystery_fukuen_card())
             line_push_api(user_id, build_payment_ticket_card(
                 890,
