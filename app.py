@@ -157,10 +157,25 @@ def process_kakao(user_id, message):
 # LINE 챗봇
 # ============================================================================
 def _build_line_message(payload):
-    """str → textメッセージ, dict → Flex Messageに変換"""
+    """str → textメッセージ, dict(type=text) → Quick Reply, dict → Flex Messageに変換"""
+    if isinstance(payload, dict) and payload.get('type') == 'text':
+        return payload
     if isinstance(payload, dict):
         return {"type": "flex", "altText": "今日の運勢をお届けします🌿", "contents": payload}
     return {"type": "text", "text": payload}
+
+def build_quick_reply_message(text, labels):
+    """Quick Reply 버튼이 달린 텍스트 메시지 dict 반환"""
+    return {
+        "type": "text",
+        "text": text,
+        "quickReply": {
+            "items": [
+                {"type": "action", "action": {"type": "message", "label": l, "text": l}}
+                for l in labels
+            ]
+        }
+    }
 
 def line_reply_api(reply_token, payload):
     """LINE reply API 호출 (text str または Flex dict を受け付ける)"""
@@ -544,16 +559,11 @@ def process_line(user_id, message):
     # あの人 / 復縁 → 재회 모드
     if 'あの人' in message or '復縁' in message:
         session = user_sessions.get(key, {})
-        if 'year' not in session:
-            user_sessions[key] = {**session, 'step': 'WAITING_FUKUEN_SELF'}
-            return ("💔 あの人との運命を読み解きます🌙\n\n"
-                    "まず、あなたの生年月日を\n"
-                    "8桁で教えてください✨\n"
-                    "例）19930616")
-        user_sessions[key] = {**session, 'step': 'WAITING_FUKUEN_PARTNER'}
-        return ("相手のお名前と生年月日を教えてください💫\n"
-                "例）ユウタ 19950315\n"
-                "お名前なしで生年月日だけでもOKです🌙")
+        user_sessions[key] = {**session, 'step': 'FUKUEN_EMO_Q1'}
+        return build_quick_reply_message(
+            "あの人のこと、最後に思い出したのはいつ？🌙",
+            ["さっき", "今日何回も", "ずっと頭から離れない"]
+        )
 
     # 魂の共鳴 / 推し相性 → 글로벌 트리거 (포함되면 작동)
     if '魂の共鳴' in message or '推し相性' in message:
@@ -677,6 +687,30 @@ def process_line(user_id, message):
                     "このカードを保存して、\n"
                     "今日のお守りにしてください🌿")
         return "コードが正しくありません。もう一度お試しください。🌿"
+
+    if step == 'FUKUEN_EMO_Q1':
+        emo_q1 = message
+        user_sessions[key] = {**session, 'step': 'FUKUEN_EMO_Q2', 'fukuen_emo_q1': emo_q1}
+        return build_quick_reply_message(
+            "今の気持ちに近いのはどれ？",
+            ["まだ好き。会いたい", "気になるけど、怖い", "忘れたいのに思い出す"]
+        )
+
+    if step == 'FUKUEN_EMO_Q2':
+        emo_q2 = message
+        q1 = session.get('fukuen_emo_q1', '')
+        if 'ずっと頭から離れない' in q1:
+            emo_reply = "ずっと想い続けてきたんだね。\nその気持ち、星が読み取ってくれます🌙"
+        elif '今日何回も' in q1:
+            emo_reply = "今日もずっと考えてたんだね。\nその思い、ちゃんと届いてるよ🌙"
+        else:
+            emo_reply = "さっきも思い出してたんだね。\nその気持ち、星が読み取ってくれます🌙"
+        user_sessions[key] = {**session, 'step': 'WAITING_FUKUEN_SELF', 'fukuen_emo_q2': emo_q2}
+        return (f"{emo_reply}\n\n"
+                "💔 あの人との運命を読み解きます🌙\n\n"
+                "まず、あなたの生年月日を\n"
+                "8桁で教えてください✨\n"
+                "例）19930616")
 
     if step == 'WAITING_FUKUEN_SELF':
         normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
