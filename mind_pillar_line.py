@@ -496,9 +496,13 @@ def build_mystery_fukuen_card():
                 {"type": "text", "text": "??%",
                  "size": "3xl", "weight": "bold", "color": "#c9a0dc", "align": "center"},
                 {"type": "separator", "margin": "lg"},
-                {"type": "text", "text": "「????????????????」",
-                 "size": "xs", "color": "#555577", "align": "center",
-                 "wrap": True, "margin": "lg"},
+                {"type": "text",
+                 "text": "ここまで読んで\n\"当たってるかも\"って思った？",
+                 "size": "sm", "color": "#FF69B4", "align": "center",
+                 "wrap": True, "margin": "lg", "weight": "bold"},
+                {"type": "text",
+                 "text": "━━━━━━━━━━━━",
+                 "size": "xxs", "color": "#555577", "align": "center", "margin": "md"},
                 {"type": "text", "text": "🔒 おしはらいの後に公開されます",
                  "size": "xxs", "color": "#c9a0dc", "align": "center", "margin": "md"}
             ]
