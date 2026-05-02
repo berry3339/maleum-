@@ -420,13 +420,21 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             ))
             line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{fukuen_code}")
         else:
-            share_msg = (
-                "\n\n━━━━━━━━━━━━━\n"
-                "このレポートを保存して、\n"
-                "あの人との縁を大切にしてください🌙\n"
-                "━━━━━━━━━━━━━"
+            line_push_api(user_id, result)
+            line_push_api(user_id,
+                "🌙 3日後、あの人の気持ちに\n"
+                "もう一度変化がくるよ。\n\n"
+                "そのとき、またここに来てね。\n"
+                "新しい波動を読んであげる✨"
             )
-            line_push_api(user_id, result + share_msg)
+            # TODO: LINE友だち追加URL取得後に有効化
+            # line_push_api(user_id,
+            #     "💌 もし周りに恋で悩んでる子がいたら\n"
+            #     "このリンクを送ってあげてね。\n\n"
+            #     "あなたと同じように\n"
+            #     "救われるかもしれないから🌙\n\n"
+            #     "👉 https://line.me/R/ti/p/@XXXXXXX"
+            # )
     except Exception as e:
         print(f"❌ [재회분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
