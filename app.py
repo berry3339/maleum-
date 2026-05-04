@@ -263,7 +263,7 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             session = user_sessions.get(key, {})
             user_sessions[key] = {**session, 'payment_code': payment_code}
             line_push_api(user_id, result)
-            line_push_api(user_id, "ここまでで「当たっている」と\n感じた方だけ、この先をご覧ください🌙")
+            line_push_api(user_id, "推しとの相性度が気になる？\n推しとの運命の処方せんを受け取ってね🌙")
             line_push_api(user_id, build_payment_ticket_card(
                 1000,
                 "https://www.paypal.com/ncp/payment/G7K49PXY32R2C",
@@ -331,7 +331,7 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             _chemi_text = _chemi.group(1).strip() if _chemi else "ふたりのシンクロ✨"
             line_push_api(user_id, build_kyoumei_preview_card(_chemi_text))
             # ③感性メッセージ
-            line_push_api(user_id, "ここまでで「当たっている」と\n感じた方だけ、この先をご覧ください🌙")
+            line_push_api(user_id, "推しとの相性度が気になる？\n推しとの運命の処方せんを受け取ってね🌙")
             # ④決済チケットカード
             line_push_api(user_id, build_payment_ticket_card(
                 590,
