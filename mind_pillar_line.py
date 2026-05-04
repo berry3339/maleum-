@@ -314,7 +314,7 @@ def build_kyoumei_card(result, partner_name=None):
     print(f"[DEBUG] 공명도 파싱 결과: {pct}")
     comment_match = re.search(r'「([^」\n]+)」', result)
     comment = f'「{comment_match.group(1)}」' if comment_match else '二つの魂が響き合う'
-    subtitle = f"{partner_name}との共鳴度（きょうめいど）" if partner_name else "推しとの共鳴度（きょうめいど）"
+    subtitle = f"{partner_name}との相性度（あいしょうど）" if partner_name else "推しとの相性度（あいしょうど）"
     pct_num = int(pct.replace('%', '')) if pct != '—%' else 0
     if pct_num >= 90:
         fate_title = "1000年前から決まっていた運命のソウルメイト🌙"
@@ -339,7 +339,7 @@ def build_kyoumei_card(result, partner_name=None):
                 {"type": "separator", "margin": "lg"},
                 {"type": "text", "text": comment, "size": "xs", "color": "#888888",
                  "align": "center", "wrap": True, "margin": "lg"},
-                {"type": "text", "text": "🔮 あなたの共鳴のお守り💖🌙", "size": "xxs",
+                {"type": "text", "text": "🔮 あなたの相性のお守り💖🌙", "size": "xxs",
                  "color": "#aaaaaa", "align": "center", "margin": "md"}
             ]
         }
@@ -412,7 +412,7 @@ def build_kyoumei_mission_card(result):
                  "size": "xs", "color": "#FFFFFF", "align": "center",
                  "wrap": True, "margin": "md"},
                 {"type": "separator", "margin": "lg", "color": "#FFFFFF30"},
-                {"type": "text", "text": "📸 今日の共鳴度（きょうめいど）",
+                {"type": "text", "text": "📸 今日の相性度（あいしょうど）",
                  "size": "sm", "color": "#FF69B4", "align": "center", "margin": "lg"},
                 {"type": "text", "text": sync.group(1).strip() if sync else "—",
                  "size": "xs", "color": "#FFFFFF", "align": "center",
@@ -466,7 +466,7 @@ def build_mystery_kyoumei_card():
             "backgroundColor": "#1a1a2e",
             "paddingAll": "20px",
             "contents": [
-                {"type": "text", "text": "推しとの共鳴度（きょうめいど）",
+                {"type": "text", "text": "推しとの相性度（あいしょうど）",
                  "size": "sm", "color": "#888888", "align": "center"},
                 {"type": "text", "text": "??%",
                  "size": "3xl", "weight": "bold", "color": "#FF69B4", "align": "center"},
@@ -798,7 +798,7 @@ class MalgeumLineAI:
 
                 if u == t:
                     base      = 78
-                    rationale = f"{today_jst_str} — {u}のエネルギーが共鳴する今日"
+                    rationale = f"{today_jst_str} — {u}のエネルギーが相性がいい今日"
                 elif _GEN.get(t) == u:
                     base      = 90
                     rationale = f"{today_jst_str} — {t}の気があなたの{u}を輝かせる今日"
@@ -911,7 +911,7 @@ class MalgeumLineAI:
 ・現在時刻以前の時間帯への言及は禁止。残りの時間帯のみでアドバイスすること。
 
 【トーン&マナー必須ルール】
-・すべてのアドバイスの前に、必ず四柱推命の根拠を簡潔に示すこと（例：「あなたの○○の○のエネルギーが今日の○の気と共鳴しやすいため、…」）。根拠なしにアドバイスのみを述べることは禁止。
+・すべてのアドバイスの前に、必ず四柱推命の根拠を簡潔に示すこと（例：「あなたの○○の○のエネルギーが今日の○の気と相性が出やすいため、…」）。根拠なしにアドバイスのみを述べることは禁止。
 ・命令形は絶対に使わないこと。必ず提案形で表現すること。「〜してください」→「〜してみませんか」、「やりましょう」→「試してみる価値があるかもしれません」、「必要です」→「おすすめです」。
 ・最後に必ず以下のいずれか1つ以上を含む温かい応援の言葉を添えること：「無理をしなくても大丈夫です」「今日のあなたに寄り添う一歩として」「できる範囲で十分です」
 
@@ -1035,7 +1035,7 @@ class MalgeumLineAI:
 ・月柱の情報を処方箋のどこか1箇所に必ず言及すること（例：「月柱の○○が示すあなたの内面は…」）。
 
 【トーン&マナー必須ルール】
-・すべてのアドバイスの前に、必ず四柱推命の根拠を簡潔に示すこと（例：「あなたの○○の○のエネルギーが今日の○の気と共鳴しやすいため、…」）。根拠なしにアドバイスのみを述べることは禁止。
+・すべてのアドバイスの前に、必ず四柱推命の根拠を簡潔に示すこと（例：「あなたの○○の○のエネルギーが今日の○の気と相性が出やすいため、…」）。根拠なしにアドバイスのみを述べることは禁止。
 ・命令形は絶対に使わないこと。必ず提案形で表現すること。「〜してください」→「〜してみませんか」、「やりましょう」→「試してみる価値があるかもしれません」、「必要です」→「おすすめです」。
 ・最後に必ず以下のいずれか1つ以上を含む温かい応援の言葉を添えること：「無理をしなくても大丈夫です」「今日のあなたに寄り添う一歩として」「できる範囲で十分です」
 
@@ -1427,7 +1427,7 @@ LINEではマークダウンが表示されないため。
 1項目1行。それ以上書くな。
 
 最後に必ず以下のカードをそのまま出力すること（XX%のみ五行つながりから算出して埋めること）:
-共鳴度算出ルール: 相生88〜98% / 比和80〜87% / 相剋75〜85%（75%以上必須）
+相性度算出ルール: 相生88〜98% / 比和80〜87% / 相剋75〜85%（75%以上必須）
 ┏━━━━━━━━━━━━━━━━━━━┓
    💘 推しとのシンクロ率：XX%🌙
 ┗━━━━━━━━━━━━━━━━━━━┛
@@ -1437,9 +1437,9 @@ LINEではマークダウンが表示されないため。
 📸 このカードをスクショして
 推し友とシェアしてみてね！
 
-#マルム #推し相性 #共鳴度
+#マルム #推し相性 #相性度
 
-🌙 明日は二人の共鳴度がどう変わるかな？
+🌙 明日は二人の相性度がどう変わるかな？
 朝7時に新しい運命の処方箋が届くよ。
 忘れずにチェックしてね✨"""
 
