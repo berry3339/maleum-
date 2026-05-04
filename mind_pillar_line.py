@@ -317,7 +317,7 @@ def build_kyoumei_card(result, partner_name=None):
     subtitle = f"{partner_name}との相性度（あいしょうど）" if partner_name else "推しとの相性度（あいしょうど）"
     pct_num = int(pct.replace('%', '')) if pct != '—%' else 0
     if pct_num >= 90:
-        fate_title = "1000年前から決まっていた運命のソウルメイト🌙"
+        fate_title = "1000年前から続いてる、運命のつながり🌙"
     elif pct_num >= 80:
         fate_title = "互いの光で輝き合う奇跡の存在✨"
     else:
