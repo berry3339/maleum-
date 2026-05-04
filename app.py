@@ -373,6 +373,23 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
                 line_push_api(user_id, build_kyoumei_card(result, partner_name=partner_name))
             except Exception as e:
                 print(f"⚠️ [相性カード生成エラー] {e}")
+            # 유료 리포트 후 추가 메시지 3개
+            time.sleep(1.5)
+            line_push_api(user_id,
+                "この結果、推し友にも教えてあげない？🌙\n"
+                "スクショしてストーリーに載せてみてね✨\n"
+                "みんなの相性度も気になるでしょ💖"
+            )
+            time.sleep(1.5)
+            line_push_api(user_id,
+                "他の推しとの相性度も気になる？🌙\n"
+                "もう一度「推しとの相性」って送ってみてね✨"
+            )
+            time.sleep(1.5)
+            line_push_api(user_id,
+                "🌙 明日、推しとの相性度がどう変わるかな？\n"
+                "また気になったときに話しかけてね✨"
+            )
     except Exception as e:
         print(f"❌ [궁합분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
