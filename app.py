@@ -426,7 +426,7 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
                 return text[s:e].strip()
 
             msg1 = _extract(result,
-                ["🌙 あの人"],
+                ["💜", "🌙 あの人"],
                 ["✨ ふたりの縁", "🔋"])
             msg2 = _extract(result,
                 ["✨ ふたりの縁", "🔋"],
