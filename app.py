@@ -558,7 +558,7 @@ def process_line(user_id, message):
             return "まず「推し相性」から始めてください🌿"
         return "コードが正しくありません。🌿"
 
-    # FUKUEN- コード グローバル認識 (再会決済)
+    # FUKUEN- コード グローバル認識 (復縁決済)
     if message.strip().startswith('FUKUEN-'):
         session = user_sessions.get(key, {})
         stored_code = session.get('fukuen_code', '')
