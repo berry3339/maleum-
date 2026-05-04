@@ -617,8 +617,8 @@ def process_line(user_id, message):
             ["さっき", "今日何回も", "ずっと頭から離れない"]
         )
 
-    # 魂の共鳴 / 推し相性 → 글로벌 트리거 (포함되면 작동)
-    if '魂の共鳴' in message or '推し相性' in message:
+    # 推しとの相性 / 推し相性 → 글로벌 트리거 (포함되면 작동)
+    if '推しとの相性' in message or '推し相性' in message:
         session = user_sessions.get(key, {})
         if 'year' not in session:
             user_sessions[key] = {**session, 'step': 'WAITING_COMPAT_SELF'}
