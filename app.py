@@ -442,6 +442,8 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
                 "🌙 恋の悩みがあったら「あの人」って送ってみてね\n"
                 "復縁の可能性、調べてあげるよ✨"
             )
+            time.sleep(1.5)
+            line_push_api(user_id, "🔮 明日の運勢も気になったら下のメニューから「今日の運勢」を見てみてね✨")
     except Exception as e:
         print(f"❌ [궁합분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -525,6 +527,8 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
                 "救われるかもしれないから🌙\n\n"
                 "👉 https://lin.ee/OH0EbHf"
             )
+            time.sleep(1.5)
+            line_push_api(user_id, "🔮 明日の運勢も気になったら下のメニューから「今日の運勢」を見てみてね✨")
     except Exception as e:
         print(f"❌ [재회분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -590,6 +594,8 @@ def kataomoi_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='p
                 "💖 推しとの相性もやってみない？\n"
                 "下のメニューからタップしてね✨"
             )
+            time.sleep(1.5)
+            line_push_api(user_id, "🔮 明日の運勢も気になったら下のメニューから「今日の運勢」を見てみてね✨")
     except Exception as e:
         print(f"❌ [片思い분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
