@@ -314,7 +314,7 @@ def build_kyoumei_card(result, partner_name=None):
     print(f"[DEBUG] 공명도 파싱 결과: {pct}")
     comment_match = re.search(r'「([^」\n]+)」', result)
     comment = f'「{comment_match.group(1)}」' if comment_match else '二つの魂が響き合う'
-    subtitle = f"{partner_name}との相性度（あいしょうど）" if partner_name else "推しとの相性度（あいしょうど）"
+    subtitle = f"{partner_name}との相性度" if partner_name else "推しとの相性度"
     pct_num = int(pct.replace('%', '')) if pct != '—%' else 0
     if pct_num >= 90:
         fate_title = "1000年前から続いてる、運命のつながり🌙"
@@ -412,7 +412,7 @@ def build_kyoumei_mission_card(result):
                  "size": "xs", "color": "#FFFFFF", "align": "center",
                  "wrap": True, "margin": "md"},
                 {"type": "separator", "margin": "lg", "color": "#FFFFFF30"},
-                {"type": "text", "text": "📸 今日の相性度（あいしょうど）",
+                {"type": "text", "text": "📸 今日の相性度",
                  "size": "sm", "color": "#FF69B4", "align": "center", "margin": "lg"},
                 {"type": "text", "text": sync.group(1).strip() if sync else "—",
                  "size": "xs", "color": "#FFFFFF", "align": "center",
@@ -445,7 +445,7 @@ def build_kyoumei_preview_card(chemistry_text):
                 {"type": "separator", "margin": "lg",
                  "color": "#FFB6C150"},
                 {"type": "text",
-                 "text": "このさきには\nもっとふかいヒミツが\nかくされています🌙",
+                 "text": "この先にはもっと深いヒミツが隠されています🌙",
                  "size": "xs", "color": "#999999",
                  "align": "center", "wrap": True, "margin": "lg"},
                 {"type": "text", "text": "🔮 マルム｜こころの処方せん",
@@ -466,7 +466,7 @@ def build_mystery_kyoumei_card():
             "backgroundColor": "#1a1a2e",
             "paddingAll": "20px",
             "contents": [
-                {"type": "text", "text": "推しとの相性度（あいしょうど）",
+                {"type": "text", "text": "推しとの相性度",
                  "size": "sm", "color": "#888888", "align": "center"},
                 {"type": "text", "text": "??%",
                  "size": "3xl", "weight": "bold", "color": "#FF69B4", "align": "center"},
