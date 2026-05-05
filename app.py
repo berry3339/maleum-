@@ -24,6 +24,8 @@ CATEGORY_LABELS = {
     '4': '🌿 心身の健やかさ',
 }
 
+MINI_PRICE = 390
+
 def generate_payment_code():
     return 'MARU-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
 
@@ -39,6 +41,28 @@ def load_users():
 def save_user(user_id, year, month, day):
     users = load_users()
     users[user_id] = {'year': year, 'month': month, 'day': day}
+    with open(USERS_FILE, 'w') as f:
+        json.dump(users, f, ensure_ascii=False, indent=2)
+
+def save_fukuen_paid(user_id, year, month, day, partner_birth):
+    users = load_users()
+    today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
+    if user_id not in users:
+        users[user_id] = {}
+    users[user_id].update({'year': year, 'month': month, 'day': day,
+                           'fukuen_paid_date': today_str, 'fukuen_partner': partner_birth})
+    with open(USERS_FILE, 'w') as f:
+        json.dump(users, f, ensure_ascii=False, indent=2)
+
+def save_kyoumei_paid(user_id, year, month, day, partner_birth, partner_name=None):
+    users = load_users()
+    today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
+    if user_id not in users:
+        users[user_id] = {}
+    users[user_id].update({'year': year, 'month': month, 'day': day,
+                           'kyoumei_paid_date': today_str, 'kyoumei_partner': partner_birth})
+    if partner_name:
+        users[user_id]['kyoumei_partner_name'] = partner_name
     with open(USERS_FILE, 'w') as f:
         json.dump(users, f, ensure_ascii=False, indent=2)
 
@@ -342,6 +366,7 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             # ⑤コードテキスト
             line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{kyoumei_code}")
         else:
+            save_kyoumei_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day}, partner_name)
             # カード1: ケミ+役割
             try:
                 line_push_api(user_id, build_kyoumei_chemistry_card(result))
@@ -432,6 +457,7 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             ))
             line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{fukuen_code}")
         else:
+            save_fukuen_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day})
             # 유료 리포트를 섹션 헤더 기준으로 4개 메시지로 분할 전송
             def _extract(text, start_markers, end_markers):
                 """start_markers 중 첫 번째 등장 위치 ~ end_markers 직전까지 추출"""
@@ -585,6 +611,38 @@ def process_line(user_id, message):
             return "まず「推し相性」から始めてください🌿"
         return "コードが正しくありません。🌿"
 
+    # MINI- コード グローバル認識 (재방문 미니 결제)
+    if message.strip().startswith('MINI-'):
+        session = user_sessions.get(key, {})
+        stored_code = session.get('mini_code', '')
+        if stored_code and message.strip() == stored_code:
+            mini_type = session.get('mini_type', 'fukuen')
+            if mini_type == 'fukuen':
+                partner = session.get('fukuen_partner_birth')
+                if 'year' in session and partner:
+                    user_sessions[key] = {k: v for k, v in session.items() if k != 'mini_code'}
+                    threading.Thread(
+                        target=fukuen_analysis,
+                        args=(user_id, session['year'], session['month'], session['day'],
+                              partner['year'], partner['month'], partner['day'], 'full', None),
+                        daemon=True
+                    ).start()
+                    return "🌀 決済を確認しました。\nあの人の今日の気持ちを読んでいくよ…🌙"
+            else:  # kyoumei
+                partner = session.get('partner_birth')
+                if 'year' in session and partner:
+                    user_sessions[key] = {k: v for k, v in session.items() if k != 'mini_code'}
+                    threading.Thread(
+                        target=compatibility_analysis,
+                        args=(user_id, session['year'], session['month'], session['day'],
+                              partner['year'], partner['month'], partner['day'], 'full',
+                              session.get('partner_name')),
+                        daemon=True
+                    ).start()
+                    return "🌀 決済を確認しました。\n推しとの今日の相性を読んでいくよ…🌙"
+            return "まずメニューから選んでください🌿"
+        return "コードが正しくありません。🌿"
+
     # FUKUEN- コード グローバル認識 (復縁決済)
     if message.strip().startswith('FUKUEN-'):
         session = user_sessions.get(key, {})
@@ -635,18 +693,61 @@ def process_line(user_id, message):
                 "「今日の運勢」\n"
                 "入力してください🌸")
 
-    # あの人 / 復縁 → 재회 모드
+    # あの人 / 復縁 → 재방문 분기 or 신규 플로우
     if 'あの人' in message or '復縁' in message:
         session = user_sessions.get(key, {})
+        users_data = load_users()
+        user_data = users_data.get(user_id, {})
+        fukuen_paid_date = user_data.get('fukuen_paid_date')
+        today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
+        if fukuen_paid_date:
+            if fukuen_paid_date == today_str:
+                return "今日はもう占ったよ🌙\n明日また来てね✨"
+            # 재방문 유저 — 저장된 데이터로 session 채움
+            user_sessions[key] = {
+                **session,
+                'step': 'FUKUEN_RETURN',
+                'year': user_data['year'],
+                'month': user_data['month'],
+                'day': user_data['day'],
+                'fukuen_partner_birth': user_data.get('fukuen_partner'),
+            }
+            return build_quick_reply_message(
+                "おかえり🌙\nあの人の気持ち、前回から変わってるよ。",
+                ["① 今日のあの人の気持ち（ミニ鑑定）", "② もう一度フル処方せん"]
+            )
+        # 신규 유저 — 기존 플로우
         user_sessions[key] = {**session, 'step': 'FUKUEN_EMO_Q1'}
         return build_quick_reply_message(
             "あの人のこと、最後に思い出したのはいつ？🌙",
             ["さっき", "今日何回も", "ずっと頭から離れない"]
         )
 
-    # 推しとの相性 / 推し相性 → 글로벌 트리거 (포함되면 작동)
+    # 推しとの相性 / 推し相性 → 재방문 분기 or 신규 플로우
     if '推しとの相性' in message or '推し相性' in message:
         session = user_sessions.get(key, {})
+        users_data = load_users()
+        user_data = users_data.get(user_id, {})
+        kyoumei_paid_date = user_data.get('kyoumei_paid_date')
+        today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
+        if kyoumei_paid_date:
+            if kyoumei_paid_date == today_str:
+                return "今日はもう占ったよ🌙\n明日また来てね✨"
+            # 재방문 유저
+            user_sessions[key] = {
+                **session,
+                'step': 'KYOUMEI_RETURN',
+                'year': user_data['year'],
+                'month': user_data['month'],
+                'day': user_data['day'],
+                'partner_birth': user_data.get('kyoumei_partner'),
+                'partner_name': user_data.get('kyoumei_partner_name'),
+            }
+            return build_quick_reply_message(
+                "おかえり🌙\n推しとの相性、前回から変わってるよ。",
+                ["① 今日の推しとの相性（ミニ鑑定）", "② もう一度フル処方せん"]
+            )
+        # 신규 유저 — 기존 플로우
         if 'year' not in session:
             user_sessions[key] = {**session, 'step': 'WAITING_COMPAT_SELF'}
             return ("推し相性をチェックします。🌙\n"
@@ -888,6 +989,53 @@ def process_line(user_id, message):
             except Exception:
                 return "❌ 名前と生年月日を入力してください。\n例）カズハ 20010122"
         return "❌ 名前と生年月日を入力してください。\n例）カズハ 20010122"
+
+    if step == 'FUKUEN_RETURN':
+        if '①' in message or 'ミニ鑑定' in message:
+            mini_code = 'MINI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            user_sessions[key] = {**session, 'mini_code': mini_code, 'mini_type': 'fukuen'}
+            def _send_fukuen_mini_payment():
+                line_push_api(user_id, build_fukuen_payment_ticket_card(
+                    MINI_PRICE, "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2"
+                ))
+                line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{mini_code}")
+            threading.Thread(target=_send_fukuen_mini_payment, daemon=True).start()
+            return "🌙 ミニ鑑定の準備をするね。\n少し待っててね✨"
+        if '②' in message or 'フル処方せん' in message:
+            user_sessions[key] = {**session, 'step': 'FUKUEN_EMO_Q1'}
+            return build_quick_reply_message(
+                "あの人のこと、最後に思い出したのはいつ？🌙",
+                ["さっき", "今日何回も", "ずっと頭から離れない"]
+            )
+        return build_quick_reply_message(
+            "おかえり🌙\nあの人の気持ち、前回から変わってるよ。",
+            ["① 今日のあの人の気持ち（ミニ鑑定）", "② もう一度フル処方せん"]
+        )
+
+    if step == 'KYOUMEI_RETURN':
+        if '①' in message or 'ミニ鑑定' in message:
+            mini_code = 'MINI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            user_sessions[key] = {**session, 'mini_code': mini_code, 'mini_type': 'kyoumei'}
+            def _send_kyoumei_mini_payment():
+                line_push_api(user_id, build_payment_ticket_card(
+                    MINI_PRICE,
+                    "https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E",
+                    mini_code,
+                    "今日の推し活ガイド"
+                ))
+                line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{mini_code}")
+            threading.Thread(target=_send_kyoumei_mini_payment, daemon=True).start()
+            return "🌙 ミニ鑑定の準備をするね。\n少し待っててね✨"
+        if '②' in message or 'フル処方せん' in message:
+            user_sessions[key] = {**session, 'step': 'WAITING_COMPAT_SELF'}
+            return ("推し相性をチェックします。🌙\n"
+                    "まず、あなた自身の生年月日を\n"
+                    "8桁で入力してください。\n"
+                    "例）19930616")
+        return build_quick_reply_message(
+            "おかえり🌙\n推しとの相性、前回から変わってるよ。",
+            ["① 今日の推しとの相性（ミニ鑑定）", "② もう一度フル処方せん"]
+        )
 
     if step == 'booking':
         if re.search(r'\d+[月日時分]|[月日時]\d+', message):
