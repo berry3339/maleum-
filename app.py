@@ -1075,6 +1075,7 @@ def process_line(user_id, message):
             mini_code = 'MINI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
             user_sessions[key] = {**session, 'mini_code': mini_code, 'mini_type': 'kataomoi'}
             def _send_kataomoi_mini_payment():
+                line_push_api(user_id, "好きって気持ち、誰にも言えないまま\nここに来てくれたんだね🌙\nその勇気、ちゃんと届いてるよ。\n今日はこっそりおまけしとくね✨")
                 line_push_api(user_id, build_kataomoi_payment_ticket_card(
                     MINI_PRICE, "https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y&locale.x=ja_JP"
                 ))
@@ -1219,6 +1220,7 @@ def process_line(user_id, message):
             mini_code = 'MINI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
             user_sessions[key] = {**session, 'mini_code': mini_code, 'mini_type': 'fukuen'}
             def _send_fukuen_mini_payment():
+                line_push_api(user_id, "あの人のこと、まだ気になって来てくれたんだね🌙\nひとりで抱えてるその気持ち、\nちゃんと受け止めてるよ。\nだから今日はちょっとだけ、おまけしとくね✨")
                 line_push_api(user_id, build_fukuen_payment_ticket_card(
                     MINI_PRICE, "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP"
                 ))
@@ -1241,6 +1243,7 @@ def process_line(user_id, message):
             mini_code = 'MINI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
             user_sessions[key] = {**session, 'mini_code': mini_code, 'mini_type': 'kyoumei'}
             def _send_kyoumei_mini_payment():
+                line_push_api(user_id, "また推しのこと気になって来てくれたんだね🌙\nその推し愛に応えたいから\n今日は特別に少しだけお安くしておくね✨")
                 line_push_api(user_id, build_payment_ticket_card(
                     MINI_PRICE,
                     "https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP",
