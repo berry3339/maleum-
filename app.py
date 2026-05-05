@@ -9,7 +9,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
-from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_kyoumei_lucky_card, build_kyoumei_preview_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card, build_fukuen_payment_ticket_card
+from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_kyoumei_lucky_card, build_kyoumei_preview_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card, build_fukuen_payment_ticket_card, build_mystery_kataomoi_card, build_kataomoi_omamori_card, build_kataomoi_payment_ticket_card
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
@@ -51,6 +51,16 @@ def save_fukuen_paid(user_id, year, month, day, partner_birth):
         users[user_id] = {}
     users[user_id].update({'year': year, 'month': month, 'day': day,
                            'fukuen_paid_date': today_str, 'fukuen_partner': partner_birth})
+    with open(USERS_FILE, 'w') as f:
+        json.dump(users, f, ensure_ascii=False, indent=2)
+
+def save_kataomoi_paid(user_id, year, month, day, partner_birth):
+    users = load_users()
+    today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
+    if user_id not in users:
+        users[user_id] = {}
+    users[user_id].update({'year': year, 'month': month, 'day': day,
+                           'kataomoi_paid_date': today_str, 'kataomoi_partner': partner_birth})
     with open(USERS_FILE, 'w') as f:
         json.dump(users, f, ensure_ascii=False, indent=2)
 
@@ -494,6 +504,71 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             )
     except Exception as e:
         print(f"❌ [재회분석오류] {e}")
+        line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
+
+
+def kataomoi_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='preview', partner_name=None):
+    """片思い 분석 → push API — background thread에서 실행"""
+    try:
+        saju1  = LineManse.calculate(year, month, day)
+        saju2  = LineManse.calculate(p_year, p_month, p_day)
+        ai     = MalgeumLineAI()
+        result = ai.get_kataomoi(saju1, saju2, partner_name=partner_name, mode=mode)
+        if mode == 'preview':
+            kataomoi_code = 'KATAOMOI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            s_key = f'line_{user_id}'
+            user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'kataomoi_code': kataomoi_code}
+            line_push_api(user_id, result)
+            line_push_api(user_id,
+                "⚠️ 今、アプローチしたらどうなる？\n\n"
+                "今すぐ動くと、相手は\n"
+                "「嬉しいけど、どう反応すればいいかわからない」状態。\n"
+                "焦らず、まずは自然な会話から始めてみて🌸"
+            )
+            line_push_api(user_id, build_kataomoi_omamori_card())
+            line_push_api(user_id, build_mystery_kataomoi_card())
+            line_push_api(user_id, build_kataomoi_payment_ticket_card(
+                890,
+                "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP"
+            ))
+            line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{kataomoi_code}")
+        else:
+            save_kataomoi_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day})
+            def _extract(text, start_markers, end_markers):
+                s = len(text)
+                for m in start_markers:
+                    idx = text.find(m)
+                    if idx != -1:
+                        s = min(s, idx)
+                e = len(text)
+                for m in end_markers:
+                    idx = text.find(m, s + 1)
+                    if idx != -1:
+                        e = min(e, idx)
+                return text[s:e].strip()
+
+            msg1 = _extract(result, ["💜", "🌸 好きな人"], ["💘", "🎯"])
+            msg2 = _extract(result, ["💘"], ["🎯"])
+            msg3 = _extract(result, ["🎯"], ["⚠️"])
+            msg4 = _extract(result, ["⚠️"], [])
+
+            for msg in [msg1, msg2, msg3, msg4]:
+                if msg:
+                    line_push_api(user_id, msg)
+                    time.sleep(1.5)
+
+            line_push_api(user_id,
+                "🌙 3日後、好きな人の気持ちに\n"
+                "変化がくるよ。\n\n"
+                "またここに来てね✨"
+            )
+            time.sleep(1.5)
+            line_push_api(user_id,
+                "💖 推しとの相性もやってみない？\n"
+                "下のメニューからタップしてね✨"
+            )
+    except Exception as e:
+        print(f"❌ [片思い분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
 
 
