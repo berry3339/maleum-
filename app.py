@@ -700,6 +700,25 @@ def process_line(user_id, message):
             return "まずメニューから選んでください🌿"
         return "コードが正しくありません。🌿"
 
+    # KATAOMOI- コード グローバル認識 (片思い決済)
+    if message.strip().startswith('KATAOMOI-'):
+        session = user_sessions.get(key, {})
+        stored_code = session.get('kataomoi_code', '')
+        if stored_code and message.strip() == stored_code:
+            partner = session.get('kataomoi_partner_birth')
+            if 'year' in session and partner:
+                user_sessions[key] = {k: v for k, v in session.items() if k != 'kataomoi_code'}
+                threading.Thread(
+                    target=kataomoi_analysis,
+                    args=(user_id, session['year'], session['month'], session['day'],
+                          partner['year'], partner['month'], partner['day'], 'full',
+                          session.get('kataomoi_partner_name')),
+                    daemon=True
+                ).start()
+                return "🌀 決済を確認しました。\n好きな人との運命の封を切ります🌸"
+            return "まず「好きな人」から始めてください🌸"
+        return "コードが正しくありません。🌸"
+
     # FUKUEN- コード グローバル認識 (復縁決済)
     if message.strip().startswith('FUKUEN-'):
         session = user_sessions.get(key, {})
