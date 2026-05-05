@@ -685,7 +685,7 @@ def process_line(user_id, message):
                         daemon=True
                     ).start()
                     return "🌀 決済を確認しました。\nあの人の今日の気持ちを読んでいくよ…🌙"
-            else:  # kyoumei
+            elif mini_type == 'kyoumei':
                 partner = session.get('partner_birth')
                 if 'year' in session and partner:
                     user_sessions[key] = {k: v for k, v in session.items() if k != 'mini_code'}
@@ -697,6 +697,18 @@ def process_line(user_id, message):
                         daemon=True
                     ).start()
                     return "🌀 決済を確認しました。\n推しとの今日の相性を読んでいくよ…🌙"
+            else:  # kataomoi
+                partner = session.get('kataomoi_partner_birth')
+                if 'year' in session and partner:
+                    user_sessions[key] = {k: v for k, v in session.items() if k != 'mini_code'}
+                    threading.Thread(
+                        target=kataomoi_analysis,
+                        args=(user_id, session['year'], session['month'], session['day'],
+                              partner['year'], partner['month'], partner['day'], 'full',
+                              session.get('kataomoi_partner_name')),
+                        daemon=True
+                    ).start()
+                    return "🌀 決済を確認しました。\n好きな人との気持ちを読んでいくよ…🌸"
             return "まずメニューから選んでください🌿"
         return "コードが正しくありません。🌿"
 
@@ -769,8 +781,44 @@ def process_line(user_id, message):
                 "「今日の運勢」\n"
                 "入力してください🌸")
 
+    # 恋占い → 片思い/復縁 선택 Quick Reply
+    if '恋占い' in message:
+        session = user_sessions.get(key, {})
+        return build_quick_reply_message(
+            "どっちの恋の悩みを占おうか？🌙",
+            ["① 片思い", "② 復縁（あの人）"]
+        )
+
+    # 好きな人 → 片思いフロー (재방문 분기 포함)
+    if '好きな人' in message or '① 片思い' in message:
+        session = user_sessions.get(key, {})
+        users_data = load_users()
+        user_data = users_data.get(user_id, {})
+        kataomoi_paid_date = user_data.get('kataomoi_paid_date')
+        today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
+        if kataomoi_paid_date:
+            if kataomoi_paid_date == today_str:
+                return "今日はもう占ったよ🌸\n明日また来てね✨"
+            user_sessions[key] = {
+                **session,
+                'step': 'KATAOMOI_RETURN',
+                'year': user_data['year'],
+                'month': user_data['month'],
+                'day': user_data['day'],
+                'kataomoi_partner_birth': user_data.get('kataomoi_partner'),
+            }
+            return build_quick_reply_message(
+                "おかえり🌸\n好きな人の気持ち、前回から変わってるよ。",
+                ["① 今日の気持ちチェック（ミニ鑑定）", "② もう一度フル処方せん"]
+            )
+        user_sessions[key] = {**session, 'step': 'KATAOMOI_EMO_Q1'}
+        return build_quick_reply_message(
+            "好きな人のこと考えると、どんな気持ち？🌙",
+            ["ドキドキする", "会いたいけど怖い", "どう思われてるか気になる"]
+        )
+
     # あの人 / 復縁 → 재방문 분기 or 신규 플로우
-    if 'あの人' in message or '復縁' in message:
+    if 'あの人' in message or '復縁' in message or '② 復縁（あの人）' in message:
         session = user_sessions.get(key, {})
         users_data = load_users()
         user_data = users_data.get(user_id, {})
@@ -943,6 +991,99 @@ def process_line(user_id, message):
                     "このカードを保存して、\n"
                     "今日のお守りにしてください🌿")
         return "コードが正しくありません。もう一度お試しください。🌿"
+
+    if step == 'KATAOMOI_EMO_Q1':
+        emo_q1 = message
+        user_sessions[key] = {**session, 'step': 'KATAOMOI_EMO_Q2', 'kataomoi_emo_q1': emo_q1}
+        return build_quick_reply_message(
+            "その人と最後に話したのはいつ？",
+            ["最近話した", "しばらく話せてない", "まだちゃんと話したことない"]
+        )
+
+    if step == 'KATAOMOI_EMO_Q2':
+        q1 = session.get('kataomoi_emo_q1', '')
+        if 'ドキドキ' in q1:
+            emo_reply = "そのドキドキ、あの人にも届いてるかも。ちょっと調べてみるね🌙"
+        elif '怖い' in q1:
+            emo_reply = "怖いって思うの、本気だからだよ。あの人の気持ち、見てみようか🌙"
+        else:
+            emo_reply = "気になるよね。あの人の本音、一緒に覗いてみよう🌙"
+        user_sessions[key] = {**session, 'step': 'WAITING_KATAOMOI_SELF', 'kataomoi_emo_q2': message}
+        return (f"{emo_reply}\n\n"
+                "💘 好きな人との縁を読み解きます🌸\n\n"
+                "まず、あなたの生年月日を\n"
+                "8桁で教えてください✨\n"
+                "例）19930616")
+
+    if step == 'WAITING_KATAOMOI_SELF':
+        normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
+        digits = ''.join(filter(str.isdigit, normalized))
+        if len(digits) == 8:
+            try:
+                year  = int(digits[0:4])
+                month = int(digits[4:6])
+                day   = int(digits[6:8])
+                if not (1920 <= year <= 2010) or not (1 <= month <= 12) or not (1 <= day <= 31):
+                    return "❌ 正しい生年月日を入力してください。\n例）19930616"
+                user_sessions[key] = {**session, 'step': 'WAITING_KATAOMOI_PARTNER',
+                                      'year': year, 'month': month, 'day': day}
+                return ("好きな人のお名前と生年月日を教えてください🌸\n"
+                        "例）タクミ 20000315\n"
+                        "お名前なしで生年月日だけでもOKです🌙")
+            except Exception:
+                return "❌ 8桁の数字で入力してください。\n例）19930616"
+        return "❌ 8桁の数字で入力してください。\n例）19930616"
+
+    if step == 'WAITING_KATAOMOI_PARTNER':
+        normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
+        date_match = re.search(r'(\d{8})', normalized)
+        if date_match:
+            try:
+                digits  = date_match.group(1)
+                p_year  = int(digits[0:4])
+                p_month = int(digits[4:6])
+                p_day   = int(digits[6:8])
+                if not (1920 <= p_year <= 2010) or not (1 <= p_month <= 12) or not (1 <= p_day <= 31):
+                    return "❌ 正しい生年月日を入力してください。\n例）タクミ 20000315"
+                if 'year' not in session:
+                    user_sessions[key] = {}
+                    return "まず「好きな人」と入力して、生年月日を教えてください🌸"
+                partner_name = re.sub(r'\d{8}', '', message).strip() or None
+                user_sessions[key] = {**session,
+                    'kataomoi_partner_birth': {'year': p_year, 'month': p_month, 'day': p_day},
+                    'kataomoi_partner_name': partner_name}
+                threading.Thread(
+                    target=kataomoi_analysis,
+                    args=(user_id, session['year'], session['month'], session['day'],
+                          p_year, p_month, p_day, 'preview', partner_name),
+                    daemon=True
+                ).start()
+                return "少し待っててね。\nふたりの縁の糸をたどってるから…🌸"
+            except Exception:
+                return "❌ お名前と生年月日を入力してください。\n例）タクミ 20000315"
+        return "❌ お名前と生年月日を入力してください。\n例）タクミ 20000315"
+
+    if step == 'KATAOMOI_RETURN':
+        if '①' in message or 'ミニ鑑定' in message:
+            mini_code = 'MINI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            user_sessions[key] = {**session, 'mini_code': mini_code, 'mini_type': 'kataomoi'}
+            def _send_kataomoi_mini_payment():
+                line_push_api(user_id, build_kataomoi_payment_ticket_card(
+                    MINI_PRICE, "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP"
+                ))
+                line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{mini_code}")
+            threading.Thread(target=_send_kataomoi_mini_payment, daemon=True).start()
+            return "🌸 ミニ鑑定の準備をするね。\n少し待っててね✨"
+        if '②' in message or 'フル処方せん' in message:
+            user_sessions[key] = {**session, 'step': 'KATAOMOI_EMO_Q1'}
+            return build_quick_reply_message(
+                "好きな人のこと考えると、どんな気持ち？🌙",
+                ["ドキドキする", "会いたいけど怖い", "どう思われてるか気になる"]
+            )
+        return build_quick_reply_message(
+            "おかえり🌸\n好きな人の気持ち、前回から変わってるよ。",
+            ["① 今日の気持ちチェック（ミニ鑑定）", "② もう一度フル処方せん"]
+        )
 
     if step == 'FUKUEN_EMO_Q1':
         emo_q1 = message
