@@ -356,6 +356,10 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                 if msg:
                     line_push_api(user_id, msg)
                     time.sleep(1.5)
+
+            line_push_api(user_id, "🌙 恋の悩みがあったら「恋占い」って送ってみてね\n片思いも復縁も、気持ちに寄り添うよ✨")
+            time.sleep(1.5)
+            line_push_api(user_id, "💖 推しとの相性もやってみない？\n下のメニューから「推しとの相性」をタップしてね✨")
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
