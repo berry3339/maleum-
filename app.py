@@ -64,7 +64,7 @@ def save_kataomoi_paid(user_id, year, month, day, partner_birth):
     with open(USERS_FILE, 'w') as f:
         json.dump(users, f, ensure_ascii=False, indent=2)
 
-def save_kyoumei_paid(user_id, year, month, day, partner_birth, partner_name=None):
+def save_kyoumei_paid(user_id, year, month, day, partner_birth, partner_name=None, score=0):
     users = load_users()
     today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
     if user_id not in users:
@@ -73,6 +73,12 @@ def save_kyoumei_paid(user_id, year, month, day, partner_birth, partner_name=Non
                            'kyoumei_paid_date': today_str, 'kyoumei_partner': partner_birth})
     if partner_name:
         users[user_id]['kyoumei_partner_name'] = partner_name
+    # kyoumei_history: 同じ名前は最新スコアで上書き
+    name_key = partner_name or '不明'
+    history = users[user_id].get('kyoumei_history', [])
+    history = [h for h in history if h.get('name') != name_key]
+    history.append({'name': name_key, 'score': score, 'date': today_str})
+    users[user_id]['kyoumei_history'] = history
     with open(USERS_FILE, 'w') as f:
         json.dump(users, f, ensure_ascii=False, indent=2)
 
@@ -399,7 +405,10 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             # ⑤コードテキスト
             line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{kyoumei_code}")
         else:
-            save_kyoumei_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day}, partner_name)
+            import re as _re_score
+            _score_match = _re_score.search(r'(\d+)\s*%', result.replace('*','').replace('#',''))
+            _score = int(_score_match.group(1)) if _score_match else 0
+            save_kyoumei_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day}, partner_name, score=_score)
             # カード1: ケミ+役割
             try:
                 line_push_api(user_id, build_kyoumei_chemistry_card(result))
@@ -444,6 +453,8 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             )
             time.sleep(1.5)
             line_push_api(user_id, "🔮 明日の運勢も気になったら下のメニューから「今日の運勢」を見てみてね✨")
+            time.sleep(1.5)
+            line_push_api(user_id, "📊 推しランキングが気になったら「推しランキング」って送ってみてね✨")
     except Exception as e:
         print(f"❌ [궁합분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -880,6 +891,26 @@ def process_line(user_id, message):
         return build_quick_reply_message(
             "あの人のこと、最後に思い出したのはいつ？🌙",
             ["さっき", "今日何回も", "ずっと頭から離れない"]
+        )
+
+    # 推しランキング → 過去のKYOUMEI相性履歴をスコア順で表示
+    if message == '推しランキング':
+        users_data = load_users()
+        user_data = users_data.get(user_id, {})
+        history = user_data.get('kyoumei_history', [])
+        if not history:
+            return "まだランキングがないよ🌙\nまずは「推しとの相性」で推しとの相性を調べてみてね✨"
+        sorted_h = sorted(history, key=lambda x: x.get('score', 0), reverse=True)
+        rank_prefix = ['1位 ✨', '2位 💖', '3位 🌙']
+        lines = []
+        for i, h in enumerate(sorted_h):
+            prefix = rank_prefix[i] if i < 3 else f'{i+1}位'
+            lines.append(f"{prefix} {h['name']} — {h['score']}%")
+        ranking_text = '\n'.join(lines)
+        return (
+            f"💖 あなたの推し相性ランキング🌙\n\n"
+            f"{ranking_text}\n\n"
+            f"他の推しも気になる？\nもっとランキングを増やしてみてね✨\n下のメニューから「推しとの相性」をタップ💖"
         )
 
     # 推しとの相性 / 推し相性 → 재방문 분기 or 신규 플로우
