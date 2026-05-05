@@ -904,11 +904,8 @@ def process_line(user_id, message):
     # 시작
     if message in ('運勢を見る', '四柱推命で見てみる', '今日の運勢を見る', '今日の運勢', '扉を開く'):
         user_sessions[key] = {'step': 'date'}
-        return ("ありがとうございます🌿\n\n"
-                "今日の流れ、少しだけ気になりませんか？🌸\n"
-                "今のあなたの状態をもとに、\n"
-                "やさしく読み解いていきます。\n\n"
-                "生年月日を8桁で教えてください✨\n"
+        return ("今日のあなたの流れ、読んでみるね🌙\n"
+                "まず生年月日を8桁で教えて✨\n"
                 "例）19930616")
 
     session = user_sessions.get(key, {})
@@ -929,10 +926,9 @@ def process_line(user_id, message):
                 if not (1 <= day <= 31):
                     return "❌ 正しい生年月日を入力してください。\n例）19930616"
                 user_sessions[key] = {'step': 'time', 'year': year, 'month': month, 'day': day}
-                return ("時間がわからなくても大丈夫です。🌿\n"
-                        "生まれた時間を教えてください。\n"
+                return ("生まれた時間も教えてくれる？🌙\n"
                         "例）0730\n"
-                        "わからない方は「不明」と送ってください。")
+                        "わからなかったら「不明」って送ってね✨")
             except Exception as e:
                 return f"❌ エラーが発生しました: {e}"
         return "❌ 8桁の数字で入力してください。\n例）19930616"
@@ -952,9 +948,8 @@ def process_line(user_id, message):
                 return "❌ 時間は4桁（例：0730）か\n「不明」で送ってください。"
         user_sessions[key] = {'step': 'WAITING_CATEGORY', 'year': year, 'month': month, 'day': day, 'birth_time': birth_time}
         save_user(user_id, year, month, day)
-        return ("命式を確認いたしました。🌿\n"
-                "今日、最も導きを求めているテーマを\n"
-                "番号でお知らせください。\n\n"
+        return ("オッケー、準備できたよ🌙\n"
+                "今日いちばん気になるテーマはどれ？\n\n"
                 "1. 🌸 恋愛とご縁\n"
                 "2. 💼 仕事と使命\n"
                 "3. 💰 金運と豊かさ\n"
