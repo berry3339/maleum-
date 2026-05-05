@@ -333,13 +333,29 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                 line_push_api(user_id, cards)
             except Exception as card_err:
                 print(f"⚠️ [処方箋カード生成エラー] {card_err}")
-            # テキスト処方箋: 全セクション発送
-            retention_msg = (
-                "\n\n━━━━━━━━━━━━━\n"
-                "また気になったときは、\n"
-                "いつでも話しかけてくださいね🌿"
-            )
-            line_push_api(user_id, result + retention_msg)
+            # テキスト処方箋: 4分割で順次発送
+            def _extract(text, start_markers, end_markers):
+                s = len(text)
+                for m in start_markers:
+                    idx = text.find(m)
+                    if idx != -1:
+                        s = min(s, idx)
+                e = len(text)
+                for m in end_markers:
+                    idx = text.find(m, s + 1)
+                    if idx != -1:
+                        e = min(e, idx)
+                return text[s:e].strip()
+
+            msg1 = _extract(result, ["【あなたの本質：日柱】"], ["【今日の最優先行動】"])
+            msg2 = _extract(result, ["【今日の最優先行動】"], ["【あなたの"])
+            msg3 = _extract(result, ["【あなたの"], ["【運気ミッション】", "【辛口アドバイス】", "【ラッキーアイテム】"])
+            msg4 = _extract(result, ["【ラッキーアイテム】"], [])
+
+            for msg in [msg1, msg2, msg3, msg4]:
+                if msg:
+                    line_push_api(user_id, msg)
+                    time.sleep(1.5)
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
