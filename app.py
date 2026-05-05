@@ -290,7 +290,7 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             line_push_api(user_id, "推しとの相性度が気になる？\n推しとの運命の処方せんを受け取ってね🌙")
             line_push_api(user_id, build_payment_ticket_card(
                 1000,
-                "https://www.paypal.com/ncp/payment/G7K49PXY32R2C",
+                "https://www.paypal.com/ncp/payment/G7K49PXY32R2C&locale.x=ja_JP",
                 payment_code,
                 "今日の運気処方箋"
             ))
@@ -359,7 +359,7 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             # ④決済チケットカード
             line_push_api(user_id, build_payment_ticket_card(
                 590,
-                "https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E",
+                "https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP",
                 kyoumei_code,
                 "推しとの運命の処方箋"
             ))
@@ -436,7 +436,7 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             line_push_api(user_id, build_mystery_fukuen_card())
             line_push_api(user_id, build_fukuen_payment_ticket_card(
                 890,
-                "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2"
+                "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP"
             ))
             line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{fukuen_code}")
         else:
@@ -747,7 +747,7 @@ def process_line(user_id, message):
         user_sessions[key] = {**session, 'step': 'booking'}
         return ("ご予約はこちらから承ります。\n"
                 "🔒 1対1 LINE鑑定（30分 ¥5,000）\n"
-                "→ https://www.paypal.com/ncp/payment/4FXDK6WHXU45W\n\n"
+                "→ https://www.paypal.com/ncp/payment/4FXDK6WHXU45W&locale.x=ja_JP\n\n"
                 "ご希望の日時を教えてください。\n"
                 "例）4月25日 20時\n"
                 "最初に戻りたい方は「マルム」とご入力ください。🌿")
@@ -978,7 +978,7 @@ def process_line(user_id, message):
             user_sessions[key] = {**session, 'mini_code': mini_code, 'mini_type': 'fukuen'}
             def _send_fukuen_mini_payment():
                 line_push_api(user_id, build_fukuen_payment_ticket_card(
-                    MINI_PRICE, "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2"
+                    MINI_PRICE, "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP"
                 ))
                 line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{mini_code}")
             threading.Thread(target=_send_fukuen_mini_payment, daemon=True).start()
@@ -1001,7 +1001,7 @@ def process_line(user_id, message):
             def _send_kyoumei_mini_payment():
                 line_push_api(user_id, build_payment_ticket_card(
                     MINI_PRICE,
-                    "https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E",
+                    "https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP",
                     mini_code,
                     "今日の推し活ガイド"
                 ))
