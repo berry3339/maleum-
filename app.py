@@ -73,8 +73,8 @@ def save_kyoumei_paid(user_id, year, month, day, partner_birth, partner_name=Non
                            'kyoumei_paid_date': today_str, 'kyoumei_partner': partner_birth})
     if partner_name:
         users[user_id]['kyoumei_partner_name'] = partner_name
-    # kyoumei_history: 同じ名前は最新スコアで上書き
-    name_key = partner_name or '不明'
+    # kyoumei_history: partner_name 없으면 기존 저장값으로 fallback
+    name_key = partner_name or users[user_id].get('kyoumei_partner_name') or '不明'
     history = users[user_id].get('kyoumei_history', [])
     history = [h for h in history if h.get('name') != name_key]
     history.append({'name': name_key, 'score': score, 'date': today_str})
