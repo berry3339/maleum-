@@ -529,7 +529,7 @@ def kataomoi_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='p
             line_push_api(user_id, build_mystery_kataomoi_card())
             line_push_api(user_id, build_kataomoi_payment_ticket_card(
                 890,
-                "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP"
+                "https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y&locale.x=ja_JP"
             ))
             line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{kataomoi_code}")
         else:
@@ -797,8 +797,9 @@ def process_line(user_id, message):
         kataomoi_paid_date = user_data.get('kataomoi_paid_date')
         today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
         if kataomoi_paid_date:
-            if kataomoi_paid_date == today_str:
-                return "今日はもう占ったよ🌸\n明日また来てね✨"
+            # if kataomoi_paid_date == today_str:  # TODO: テスト後に有効化
+            #     return "今日はもう占ったよ🌸\n明日また来てね✨"
+            if False: pass  # 임시 비활성화
             user_sessions[key] = {
                 **session,
                 'step': 'KATAOMOI_RETURN',
@@ -825,8 +826,9 @@ def process_line(user_id, message):
         fukuen_paid_date = user_data.get('fukuen_paid_date')
         today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
         if fukuen_paid_date:
-            if fukuen_paid_date == today_str:
-                return "今日はもう占ったよ🌙\n明日また来てね✨"
+            # if fukuen_paid_date == today_str:  # TODO: テスト後に有効化
+            #     return "今日はもう占ったよ🌙\n明日また来てね✨"
+            if False: pass  # 임시 비활성화
             # 재방문 유저 — 저장된 데이터로 session 채움
             user_sessions[key] = {
                 **session,
@@ -855,8 +857,9 @@ def process_line(user_id, message):
         kyoumei_paid_date = user_data.get('kyoumei_paid_date')
         today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
         if kyoumei_paid_date:
-            if kyoumei_paid_date == today_str:
-                return "今日はもう占ったよ🌙\n明日また来てね✨"
+            # if kyoumei_paid_date == today_str:  # TODO: テスト後に有効化
+            #     return "今日はもう占ったよ🌙\n明日また来てね✨"
+            if False: pass  # 임시 비활성화
             # 재방문 유저
             user_sessions[key] = {
                 **session,
@@ -1069,7 +1072,7 @@ def process_line(user_id, message):
             user_sessions[key] = {**session, 'mini_code': mini_code, 'mini_type': 'kataomoi'}
             def _send_kataomoi_mini_payment():
                 line_push_api(user_id, build_kataomoi_payment_ticket_card(
-                    MINI_PRICE, "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP"
+                    MINI_PRICE, "https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y&locale.x=ja_JP"
                 ))
                 line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{mini_code}")
             threading.Thread(target=_send_kataomoi_mini_payment, daemon=True).start()
