@@ -829,6 +829,8 @@ def process_line(user_id, message):
             ["① 片思い", "② 復縁（あの人）"]
         )
 
+    _cur_step = user_sessions.get(key, {}).get('step', '')
+
     # 好きな人 → 片思いフロー (재방문 분기 포함)
     if ('好きな人' in message or '① 片思い' in message) \
             and _cur_step not in ('KATAOMOI_RETURN', 'FUKUEN_RETURN', 'KYOUMEI_RETURN'):
@@ -861,7 +863,6 @@ def process_line(user_id, message):
 
     # あの人 / 復縁 → 재방문 분기 or 신규 플로우
     # ① / ② 버튼 응답은 step 핸들러에서 처리 → 트리거 제외
-    _cur_step = user_sessions.get(key, {}).get('step', '')
     if ('あの人' in message or '復縁' in message or '② 復縁（あの人）' in message) \
             and _cur_step not in ('FUKUEN_RETURN', 'KATAOMOI_RETURN', 'KYOUMEI_RETURN'):
         session = user_sessions.get(key, {})
