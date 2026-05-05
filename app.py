@@ -9,7 +9,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
-from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_kyoumei_preview_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card, build_fukuen_payment_ticket_card
+from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_kyoumei_lucky_card, build_kyoumei_preview_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card, build_fukuen_payment_ticket_card
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
@@ -377,22 +377,11 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
                 line_push_api(user_id, build_kyoumei_mission_card(result))
             except Exception as e:
                 print(f"⚠️ [ミッションカード生成エラー] {e}")
-            # テキスト: ラッキーアイテムのみ抽出
-            import re as _re
-            _clean = result.replace('*','').replace('#','')
-            _header_m = _re.search(r'✨\s*今日の推し活ラッキー', _clean)
-            if _header_m:
-                _after = _clean[_header_m.start():]
-                _color = _re.search(r'🎨[^\n]+', _after)
-                _item  = _re.search(r'🌿[^\n]+', _after)
-                _time  = _re.search(r'⏰[^\n]+', _after)
-                _kw    = _re.search(r'💬[^\n]+', _after)
-                _parts = ["✨ 今日の推し活ラッキー"]
-                for _m in [_color, _item, _time, _kw]:
-                    if _m:
-                        _parts.append(_m.group(0).strip())
-                if len(_parts) > 1:
-                    line_push_api(user_id, '\n'.join(_parts))
+            # カード3: 推し活ラッキー
+            try:
+                line_push_api(user_id, build_kyoumei_lucky_card(result))
+            except Exception as e:
+                print(f"⚠️ [ラッキーカード生成エラー] {e}")
             # カード3: 相性度
             try:
                 line_push_api(user_id, build_kyoumei_card(result, partner_name=partner_name))

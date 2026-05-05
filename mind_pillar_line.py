@@ -424,6 +424,60 @@ def build_kyoumei_mission_card(result):
     }
 
 
+def build_kyoumei_lucky_card(result):
+    """推し活ラッキー 카드"""
+    import re
+    clean = result.replace('*', '').replace('#', '')
+    header_m = re.search(r'✨\s*今日の推し活ラッキー', clean)
+    if not header_m:
+        header_m = re.search(r'✨\s*推し活ラッキー', clean)
+    after = clean[header_m.start():] if header_m else clean
+
+    def extract_value(pattern):
+        m = re.search(pattern, after)
+        if m:
+            line = m.group(0).strip()
+            colon = re.search(r'[：:]\s*(.+)', line)
+            return colon.group(1).strip() if colon else line
+        return "—"
+
+    color    = extract_value(r'🎨[^\n]+')
+    item     = extract_value(r'🌿[^\n]+')
+    time_val = extract_value(r'⏰[^\n]+')
+    kw       = extract_value(r'💬[^\n]+')
+
+    rows = []
+    for label, value in [
+        ("🎨 ラッキーカラー",   color),
+        ("🌿 ラッキーアイテム", item),
+        ("⏰ ベストタイム",     time_val),
+        ("💬 今日のキーワード", kw),
+    ]:
+        rows.append({"type": "separator", "margin": "lg", "color": "#FFFFFF30"})
+        rows.append({"type": "text", "text": label,
+                     "size": "sm", "color": "#FF69B4", "align": "center", "margin": "lg"})
+        rows.append({"type": "text", "text": value,
+                     "size": "xs", "color": "#FFFFFF", "align": "center",
+                     "wrap": True, "margin": "md"})
+
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#1a1a2e",
+            "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "✨ 今日の推し活ラッキー",
+                 "size": "sm", "color": "#FFD700", "align": "center"},
+                *rows,
+                {"type": "text", "text": "🔮 マルム｜こころの処方せん",
+                 "size": "xxs", "color": "#888888", "align": "center", "margin": "lg"}
+            ]
+        }
+    }
+
+
 def build_kyoumei_preview_card(chemistry_text):
     """결제 전 케미 프리뷰 카드"""
     return {
