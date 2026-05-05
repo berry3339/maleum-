@@ -960,7 +960,7 @@ def process_line(user_id, message):
                         "わからなかったら「不明」って送ってね✨")
             except Exception as e:
                 return f"❌ エラーが発生しました: {e}"
-        return "❌ 8桁の数字で入力してください。\n例）19930616"
+        return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
 
     if step == 'time':
         year  = session['year']
@@ -1062,8 +1062,8 @@ def process_line(user_id, message):
                         "例）タクミ 20000315\n"
                         "お名前なしで生年月日だけでもOKです🌙")
             except Exception:
-                return "❌ 8桁の数字で入力してください。\n例）19930616"
-        return "❌ 8桁の数字で入力してください。\n例）19930616"
+                return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
+        return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
 
     if step == 'WAITING_KATAOMOI_PARTNER':
         normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
@@ -1157,8 +1157,8 @@ def process_line(user_id, message):
                         "例）ユウタ 19950315\n"
                         "お名前なしで生年月日だけでもOKです🌙")
             except Exception:
-                return "❌ 8桁の数字で入力してください。\n例）19930616"
-        return "❌ 8桁の数字で入力してください。\n例）19930616"
+                return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
+        return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
 
     if step == 'WAITING_FUKUEN_PARTNER':
         normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
@@ -1204,8 +1204,8 @@ def process_line(user_id, message):
                         "例）カズハ 20010122\n"
                         "お名前なしで生年月日だけでもOKです🌙")
             except Exception:
-                return "❌ 8桁の数字で入力してください。\n例）19930616"
-        return "❌ 8桁の数字で入力してください。\n例）19930616"
+                return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
+        return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
 
     if step == 'WAITING_PARTNER':
         normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
