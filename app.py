@@ -1283,7 +1283,7 @@ def process_line(user_id, message):
     FALLBACK_MSG = ("マルムへようこそ🌙\n\n"
                     "下のメニューからえらんでね✨\n\n"
                     "💖 推しとの相性\n"
-                    "🌙 復縁占い\n"
+                    "🌙 恋占い（片思い・復縁）\n"
                     "🔮 今日の運勢")
     if not step:
         return FALLBACK_MSG
