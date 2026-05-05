@@ -102,10 +102,8 @@ def send_daily_messages():
                 json={'to': uid, 'messages': [msg_payload]},
                 timeout=30
             )
-            follow_text = ("今日のあなたに、\n"
-                           "まだ届いていないメッセージがあります🌙\n\n"
-                           "詳しく知りたい方は\n"
-                           "「運勢を見る」と入力してください🌸")
+            follow_text = ("今日のあなたに届いたメッセージがあるよ🌙\n"
+                           "下のメニューから見てみてね✨")
             req.post(
                 'https://api.line.me/v2/bot/message/push',
                 headers={
