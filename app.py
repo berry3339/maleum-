@@ -839,16 +839,16 @@ def process_line(user_id, message):
         user_data = users_data.get(user_id, {})
         kataomoi_paid_date = user_data.get('kataomoi_paid_date')
         today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
-        if kataomoi_paid_date:
+        if kataomoi_paid_date and user_data.get('year'):
             # if kataomoi_paid_date == today_str:  # TODO: テスト後に有効化
             #     return "今日はもう占ったよ🌸\n明日また来てね✨"
             if False: pass  # 임시 비활성화
             user_sessions[key] = {
                 **session,
                 'step': 'KATAOMOI_RETURN',
-                'year': user_data['year'],
-                'month': user_data['month'],
-                'day': user_data['day'],
+                'year': user_data.get('year'),
+                'month': user_data.get('month'),
+                'day': user_data.get('day'),
                 'kataomoi_partner_birth': user_data.get('kataomoi_partner'),
             }
             return build_quick_reply_message(
@@ -870,7 +870,7 @@ def process_line(user_id, message):
         user_data = users_data.get(user_id, {})
         fukuen_paid_date = user_data.get('fukuen_paid_date')
         today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
-        if fukuen_paid_date:
+        if fukuen_paid_date and user_data.get('year'):
             # if fukuen_paid_date == today_str:  # TODO: テスト後に有効化
             #     return "今日はもう占ったよ🌙\n明日また来てね✨"
             if False: pass  # 임시 비활성화
@@ -878,9 +878,9 @@ def process_line(user_id, message):
             user_sessions[key] = {
                 **session,
                 'step': 'FUKUEN_RETURN',
-                'year': user_data['year'],
-                'month': user_data['month'],
-                'day': user_data['day'],
+                'year': user_data.get('year'),
+                'month': user_data.get('month'),
+                'day': user_data.get('day'),
                 'fukuen_partner_birth': user_data.get('fukuen_partner'),
             }
             return build_quick_reply_message(
@@ -914,7 +914,7 @@ def process_line(user_id, message):
         user_data = users_data.get(user_id, {})
         kyoumei_paid_date = user_data.get('kyoumei_paid_date')
         today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
-        if kyoumei_paid_date:
+        if kyoumei_paid_date and user_data.get('year'):
             # if kyoumei_paid_date == today_str:  # TODO: テスト後に有効化
             #     return "今日はもう占ったよ🌙\n明日また来てね✨"
             if False: pass  # 임시 비활성화
@@ -922,9 +922,9 @@ def process_line(user_id, message):
             user_sessions[key] = {
                 **session,
                 'step': 'KYOUMEI_RETURN',
-                'year': user_data['year'],
-                'month': user_data['month'],
-                'day': user_data['day'],
+                'year': user_data.get('year'),
+                'month': user_data.get('month'),
+                'day': user_data.get('day'),
                 'partner_birth': user_data.get('kyoumei_partner'),
                 'partner_name': user_data.get('kyoumei_partner_name'),
             }
