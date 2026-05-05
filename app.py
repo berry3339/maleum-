@@ -301,7 +301,13 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                 1000,
                 "https://www.paypal.com/ncp/payment/G7K49PXY32R2C&locale.x=ja_JP",
                 payment_code,
-                "今日の運気処方箋"
+                "今日の運気処方箋",
+                items=[
+                    "🌙 あなたの本質と今日のエネルギー",
+                    "🌙 今週のテーマ",
+                    "🌙 運気ミッション",
+                    "🌙 辛口アドバイス",
+                ]
             ))
             line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{payment_code}")
         else:  # prescription
