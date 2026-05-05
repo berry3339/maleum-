@@ -896,10 +896,10 @@ def process_line(user_id, message):
                 "最初に戻りたい方は「マルム」とご入力ください。🌿")
 
     FALLBACK_MSG = ("マルムへようこそ🌙\n\n"
-                    "下のメニューから選んでね✨\n\n"
-                    "💖 推しとの相性 → 推しとの運命\n"
-                    "🌙 復縁占い → 「あの人」と入力してね\n"
-                    "🔮 今日の運勢 → 毎日の流れ")
+                    "下のメニューからえらんでね✨\n\n"
+                    "💖 推しとの相性\n"
+                    "🌙 復縁占い\n"
+                    "🔮 今日の運勢")
     if not step:
         return FALLBACK_MSG
     return FALLBACK_MSG
