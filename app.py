@@ -502,14 +502,13 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
                 "💖 推しとの相性もやってみない？\n"
                 "下のメニューから「推しとの相性」をタップしてね✨"
             )
-            # TODO: LINE友だち追加URL取得後に有効化
-            # line_push_api(user_id,
-            #     "💌 もし周りに恋で悩んでる子がいたら\n"
-            #     "このリンクを送ってあげてね。\n\n"
-            #     "あなたと同じように\n"
-            #     "救われるかもしれないから🌙\n\n"
-            #     "👉 https://line.me/R/ti/p/@XXXXXXX"
-            # )
+            line_push_api(user_id,
+                "💌 もし周りに恋で悩んでる子がいたら\n"
+                "このリンクを送ってあげてね。\n\n"
+                "あなたと同じように\n"
+                "救われるかもしれないから🌙\n\n"
+                "👉 https://lin.ee/OH0EbHf"
+            )
     except Exception as e:
         print(f"❌ [재회분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
