@@ -9,7 +9,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
-from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_kyoumei_lucky_card, build_kyoumei_preview_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card, build_fukuen_payment_ticket_card, build_mystery_kataomoi_card, build_kataomoi_omamori_card, build_kataomoi_payment_ticket_card
+from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_kyoumei_lucky_card, build_kyoumei_preview_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card, build_fukuen_payment_ticket_card, build_mystery_kataomoi_card, build_kataomoi_omamori_card, build_kataomoi_payment_ticket_card, build_oshi_ranking_card
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
@@ -900,18 +900,11 @@ def process_line(user_id, message):
         history = user_data.get('kyoumei_history', [])
         if not history:
             return "まだランキングがないよ🌙\nまずは「推しとの相性」で推しとの相性を調べてみてね✨"
-        sorted_h = sorted(history, key=lambda x: x.get('score', 0), reverse=True)
-        rank_prefix = ['1位 ✨', '2位 💖', '3位 🌙']
-        lines = []
-        for i, h in enumerate(sorted_h):
-            prefix = rank_prefix[i] if i < 3 else f'{i+1}位'
-            lines.append(f"{prefix} {h['name']} — {h['score']}%")
-        ranking_text = '\n'.join(lines)
-        return (
-            f"💖 あなたの推し相性ランキング🌙\n\n"
-            f"{ranking_text}\n\n"
-            f"他の推しも気になる？\nもっとランキングを増やしてみてね✨\n下のメニューから「推しとの相性」をタップ💖"
-        )
+        def _send_ranking():
+            line_push_api(user_id, build_oshi_ranking_card(history))
+            line_push_api(user_id, "他の推しも気になる？\nもっとランキングを増やしてみてね✨\n下のメニューから「推しとの相性」をタップ💖")
+        threading.Thread(target=_send_ranking, daemon=True).start()
+        return "💖 推し相性ランキングを表示するよ🌙\n少し待っててね✨"
 
     # 推しとの相性 / 推し相性 → 재방문 분기 or 신규 플로우
     if '推しとの相性' in message or '推し相性' in message:

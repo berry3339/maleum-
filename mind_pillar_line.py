@@ -781,6 +781,57 @@ def build_kataomoi_payment_ticket_card(price, payment_url):
     }
 
 
+def build_oshi_ranking_card(history):
+    """推し相性ランキング Flex Message 카드"""
+    sorted_h = sorted(history, key=lambda x: x.get('score', 0), reverse=True)
+    rank_styles = [
+        ('✨', '#FFD700'),   # 1위 금색
+        ('💖', '#f9a8d4'),   # 2위 핑크
+        ('🌙', '#c4b5fd'),   # 3위 보라
+    ]
+    rows = []
+    for i, h in enumerate(sorted_h):
+        emoji, color = rank_styles[i] if i < 3 else ('', '#FFFFFF')
+        label = f"{i+1}位 {emoji}".strip()
+        rows.append({
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "md",
+            "contents": [
+                {"type": "text", "text": label,
+                 "size": "sm", "color": color,
+                 "flex": 2, "weight": "bold"},
+                {"type": "text", "text": h.get('name', '—'),
+                 "size": "sm", "color": color,
+                 "flex": 4},
+                {"type": "text", "text": f"{h.get('score', 0)}%",
+                 "size": "sm", "color": color,
+                 "flex": 2, "align": "end", "weight": "bold"},
+            ]
+        })
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#1a1a2e",
+            "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "💖 推し相性ランキング",
+                 "size": "md", "color": "#FF69B4",
+                 "align": "center", "weight": "bold"},
+                {"type": "separator", "margin": "lg", "color": "#FF69B430"},
+                *rows,
+                {"type": "separator", "margin": "lg", "color": "#FF69B430"},
+                {"type": "text",
+                 "text": "マルム | こころの処方せん",
+                 "size": "xxs", "color": "#555577",
+                 "align": "center", "margin": "md"},
+            ]
+        }
+    }
+
+
 def build_payment_ticket_card(price, payment_url, code, title="うんめいの処方せん", items=None):
     """결제 티켓 카드 — 버튼 포함 Flex Message"""
     body_contents = [
