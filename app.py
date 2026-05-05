@@ -297,7 +297,6 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             session = user_sessions.get(key, {})
             user_sessions[key] = {**session, 'payment_code': payment_code}
             line_push_api(user_id, result)
-            line_push_api(user_id, "推しとの相性度が気になる？\n推しとの運命の処方せんを受け取ってね🌙")
             line_push_api(user_id, build_payment_ticket_card(
                 1000,
                 "https://www.paypal.com/ncp/payment/G7K49PXY32R2C&locale.x=ja_JP",
