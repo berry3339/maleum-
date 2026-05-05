@@ -390,6 +390,11 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
                 "🌙 明日、推しとの相性度がどう変わるかな？\n"
                 "また気になったときに話しかけてね✨"
             )
+            time.sleep(1.5)
+            line_push_api(user_id,
+                "🌙 恋の悩みがあったら「あの人」って送ってみてね\n"
+                "復縁の可能性、調べてあげるよ✨"
+            )
     except Exception as e:
         print(f"❌ [궁합분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -465,6 +470,11 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
                 "もう一度変化がくるよ。\n\n"
                 "そのとき、またここに来てね。\n"
                 "新しい波動を読んであげる✨"
+            )
+            time.sleep(1.5)
+            line_push_api(user_id,
+                "💖 推しとの相性もやってみない？\n"
+                "下のメニューから「推しとの相性」をタップしてね✨"
             )
             # TODO: LINE友だち追加URL取得後に有効化
             # line_push_api(user_id,
