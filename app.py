@@ -884,7 +884,9 @@ def process_line(user_id, message):
         return "💖 推し相性ランキングを表示するよ🌙\n少し待っててね✨"
 
     # 推しとの相性 / 推し相性 → 재방문 분기 or 신규 플로우
-    if '推しとの相性' in message or '推し相性' in message:
+    # ① / ② 버튼 응답은 step 핸들러에서 처리 → 트리거 제외
+    if ('推しとの相性' in message or '推し相性' in message) \
+            and _cur_step not in ('KATAOMOI_RETURN', 'FUKUEN_RETURN', 'KYOUMEI_RETURN'):
         session = user_sessions.get(key, {})
         users_data = load_users()
         user_data = users_data.get(user_id, {})
