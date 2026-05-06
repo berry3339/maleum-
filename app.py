@@ -429,7 +429,6 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
                 line_push_api(user_id, build_kyoumei_card(result, partner_name=partner_name))
             except Exception as e:
                 print(f"⚠️ [相性カード生成エラー] {e}")
-            # 유료 리포트 후 추가 메시지 3개
             time.sleep(1.5)
             line_push_api(user_id,
                 "この結果、推し友にも教えてあげない？🌙\n"
@@ -438,23 +437,10 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             )
             time.sleep(1.5)
             line_push_api(user_id,
-                "他の推しとの相性度も気になる？🌙\n"
-                "もう一度「推しとの相性」って送ってみてね✨"
+                "他の推しでも占ってみない？🌙\n"
+                "何人か占うと推しランキングができるよ✨\n"
+                "「推しとの相性」ってもう一度送ってみてね💖"
             )
-            time.sleep(1.5)
-            line_push_api(user_id,
-                "🌙 明日、推しとの相性度がどう変わるかな？\n"
-                "また気になったときに話しかけてね✨"
-            )
-            time.sleep(1.5)
-            line_push_api(user_id,
-                "🌙 恋の悩みがあったら「あの人」って送ってみてね\n"
-                "復縁の可能性、調べてあげるよ✨"
-            )
-            time.sleep(1.5)
-            line_push_api(user_id, "🔮 今日の運勢も気になったら下のメニューから「今日の運勢」を見てみてね✨")
-            time.sleep(1.5)
-            line_push_api(user_id, "📊 何人かの推しで相性を調べると、あなただけの推しランキングができるよ🌙\n見たいときは「推しランキング」って送ってね✨")
     except Exception as e:
         print(f"❌ [궁합분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -521,25 +507,16 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
                     time.sleep(1.5)
 
             line_push_api(user_id,
-                "🌙 3日後、あの人の気持ちに\n"
-                "もう一度変化がくるよ。\n\n"
-                "そのとき、またここに来てね。\n"
-                "新しい波動を読んであげる✨"
-            )
-            time.sleep(1.5)
-            line_push_api(user_id,
-                "💖 推しとの相性もやってみない？\n"
-                "下のメニューから「推しとの相性」をタップしてね✨"
-            )
-            line_push_api(user_id,
                 "💌 もし周りに恋で悩んでる子がいたら\n"
-                "このリンクを送ってあげてね。\n\n"
-                "あなたと同じように\n"
-                "救われるかもしれないから🌙\n\n"
+                "このリンクを送ってあげてね🌙\n"
+                "あなたと同じように救われるかもしれないから✨\n"
                 "👉 https://lin.ee/OH0EbHf"
             )
             time.sleep(1.5)
-            line_push_api(user_id, "🔮 今日の運勢も気になったら下のメニューから「今日の運勢」を見てみてね✨")
+            line_push_api(user_id,
+                "🌙 3日後、あの人の気持ちに変化がくるよ。\n"
+                "またここに来てね✨"
+            )
     except Exception as e:
         print(f"❌ [재회분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -596,17 +573,16 @@ def kataomoi_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='p
                     time.sleep(1.5)
 
             line_push_api(user_id,
-                "🌙 3日後、好きな人の気持ちに\n"
-                "変化がくるよ。\n\n"
-                "またここに来てね✨"
+                "💌 もし周りに恋で悩んでる子がいたら\n"
+                "このリンクを送ってあげてね🌙\n"
+                "あなたと同じように救われるかもしれないから✨\n"
+                "👉 https://lin.ee/OH0EbHf"
             )
             time.sleep(1.5)
             line_push_api(user_id,
-                "💖 推しとの相性もやってみない？\n"
-                "下のメニューからタップしてね✨"
+                "🌙 3日後、好きな人の気持ちに変化がくるよ。\n"
+                "またここに来てね✨"
             )
-            time.sleep(1.5)
-            line_push_api(user_id, "🔮 今日の運勢も気になったら下のメニューから「今日の運勢」を見てみてね✨")
     except Exception as e:
         print(f"❌ [片思い분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -940,9 +916,9 @@ def process_line(user_id, message):
                     "8桁で入力してください。\n"
                     "例）19930616")
         user_sessions[key] = {**session, 'step': 'WAITING_PARTNER'}
-        return ("推しのお名前と生年月日を教えてください✨\n"
+        return ("推しの名前と生年月日を教えてね✨\n"
                 "例）カズハ 20010122\n"
-                "お名前なしで生年月日だけでもOKです🌙")
+                "名前なしで生年月日だけでもOKだよ🌙")
 
     # 鑑定予約 (따옴표/특수문자 포함 입력도 인식)
     if re.search(r'鑑定予約', message):
@@ -1083,9 +1059,9 @@ def process_line(user_id, message):
                     return "❌ 正しい生年月日を入力してください。\n例）19930616"
                 user_sessions[key] = {**session, 'step': 'WAITING_KATAOMOI_PARTNER',
                                       'year': year, 'month': month, 'day': day}
-                return ("好きな人のお名前と生年月日を教えてください🌸\n"
+                return ("好きな人の名前と生年月日を教えてね🌸\n"
                         "例）タクミ 20000315\n"
-                        "お名前なしで生年月日だけでもOKです🌙")
+                        "名前なしで生年月日だけでもOKだよ🌙")
             except Exception:
                 return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
         return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
@@ -1121,8 +1097,8 @@ def process_line(user_id, message):
 
     if step == 'KATAOMOI_RETURN':
         if '①' in message or 'ミニ鑑定' in message:
-            mini_code = 'MINI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-            user_sessions[key] = {**session, 'mini_code': mini_code, 'mini_type': 'kataomoi'}
+            mini_code = 'KATAOMOI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            user_sessions[key] = {**session, 'kataomoi_code': mini_code}
             def _send_kataomoi_mini_payment():
                 line_push_api(user_id, "好きって気持ち、誰にも言えないまま\nここに来てくれたんだね🌙\nその勇気、ちゃんと届いてるよ。\n今日はこっそりおまけしとくね✨")
                 line_push_api(user_id, build_kataomoi_payment_ticket_card(
@@ -1178,9 +1154,9 @@ def process_line(user_id, message):
                     return "❌ 正しい生年月日を入力してください。\n例）19930616"
                 user_sessions[key] = {**session, 'step': 'WAITING_FUKUEN_PARTNER',
                                       'year': year, 'month': month, 'day': day}
-                return ("相手のお名前と生年月日を教えてください💫\n"
+                return ("相手の名前と生年月日を教えてね💫\n"
                         "例）ユウタ 19950315\n"
-                        "お名前なしで生年月日だけでもOKです🌙")
+                        "名前なしで生年月日だけでもOKだよ🌙")
             except Exception:
                 return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
         return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
@@ -1225,9 +1201,9 @@ def process_line(user_id, message):
                 if not (1920 <= year <= 2010) or not (1 <= month <= 12) or not (1 <= day <= 31):
                     return "❌ 正しい生年月日を入力してください。\n例）19930616"
                 user_sessions[key] = {**session, 'step': 'WAITING_PARTNER', 'year': year, 'month': month, 'day': day}
-                return ("推しのお名前と生年月日を教えてください✨\n"
+                return ("推しの名前と生年月日を教えてね✨\n"
                         "例）カズハ 20010122\n"
-                        "お名前なしで生年月日だけでもOKです🌙")
+                        "名前なしで生年月日だけでもOKだよ🌙")
             except Exception:
                 return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
         return "ごめんね、うまく読み取れなかった🌙 8桁の数字で教えてね✨\n例）19930616"
@@ -1245,9 +1221,9 @@ def process_line(user_id, message):
                     return "❌ 正しい生年月日を入力してください。\n例）カズハ 20010122"
                 if 'year' not in session:
                     user_sessions[key] = {}
-                    return ("まず「運勢を見る」と入力して、\n"
-                            "生年月日を教えてください。🌿\n"
-                            "その後、推し相性をお楽しみいただけます。")
+                    return ("まず「運勢を見る」と入力してね。\n"
+                            "生年月日を教えてね🌿\n"
+                            "その後、推し相性を楽しんでね✨")
                 # 名前: 数字8桁を除いた残り
                 partner_name = re.sub(r'\d{8}', '', message).strip() or None
                 user_sessions[key] = {**session,
@@ -1266,8 +1242,8 @@ def process_line(user_id, message):
 
     if step == 'FUKUEN_RETURN':
         if '①' in message or 'ミニ鑑定' in message:
-            mini_code = 'MINI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-            user_sessions[key] = {**session, 'mini_code': mini_code, 'mini_type': 'fukuen'}
+            mini_code = 'FUKUEN-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            user_sessions[key] = {**session, 'fukuen_code': mini_code}
             def _send_fukuen_mini_payment():
                 line_push_api(user_id, "あの人のこと、まだ気になって来てくれたんだね🌙\nひとりで抱えてるその気持ち、\nちゃんと受け止めてるよ。\nだから今日はちょっとだけ、おまけしとくね✨")
                 line_push_api(user_id, build_fukuen_payment_ticket_card(
@@ -1289,8 +1265,8 @@ def process_line(user_id, message):
 
     if step == 'KYOUMEI_RETURN':
         if '①' in message or 'ミニ鑑定' in message:
-            mini_code = 'MINI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-            user_sessions[key] = {**session, 'mini_code': mini_code, 'mini_type': 'kyoumei'}
+            mini_code = 'KYOUMEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            user_sessions[key] = {**session, 'kyoumei_code': mini_code}
             def _send_kyoumei_mini_payment():
                 line_push_api(user_id, "また推しのこと気になって来てくれたんだね🌙\nその推し愛に応えたいから\n今日は特別に少しだけお安くしておくね✨")
                 line_push_api(user_id, build_payment_ticket_card(
