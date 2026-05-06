@@ -853,7 +853,7 @@ def process_line(user_id, message):
             }
             return build_quick_reply_message(
                 "おかえり🌸\n好きな人の気持ち、前回から変わってるよ。",
-                ["① 今日の気持ちチェック（ミニ鑑定）", "② もう一度フル処方せん"]
+                ["① 今日の気持ちチェック", "② はじめから全部見る"]
             )
         user_sessions[key] = {**session, 'step': 'KATAOMOI_EMO_Q1'}
         return build_quick_reply_message(
@@ -885,7 +885,7 @@ def process_line(user_id, message):
             }
             return build_quick_reply_message(
                 "おかえり🌙\nあの人の気持ち、前回から変わってるよ。",
-                ["① 今日のあの人の気持ち（ミニ鑑定）", "② もう一度フル処方せん"]
+                ["① 今日のあの人の気持ち", "② はじめから全部見る"]
             )
         # 신규 유저 — 기존 플로우
         user_sessions[key] = {**session, 'step': 'FUKUEN_EMO_Q1'}
@@ -930,7 +930,7 @@ def process_line(user_id, message):
             }
             return build_quick_reply_message(
                 "おかえり🌙\n推しとの相性、前回から変わってるよ。",
-                ["① 今日の推しとの相性（ミニ鑑定）", "② もう一度フル処方せん"]
+                ["① 今日の推しとの相性", "② はじめから全部見る"]
             )
         # 신규 유저 — 기존 플로우
         if 'year' not in session:
@@ -1130,7 +1130,7 @@ def process_line(user_id, message):
                 ))
                 line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{mini_code}")
             threading.Thread(target=_send_kataomoi_mini_payment, daemon=True).start()
-            return "🌸 ミニ鑑定の準備をするね。\n少し待っててね✨"
+            return "🌸 準備するね。\n少し待っててね✨"
         if '②' in message or 'フル処方せん' in message:
             user_sessions[key] = {**session, 'step': 'KATAOMOI_EMO_Q1'}
             return build_quick_reply_message(
@@ -1139,7 +1139,7 @@ def process_line(user_id, message):
             )
         return build_quick_reply_message(
             "おかえり🌸\n好きな人の気持ち、前回から変わってるよ。",
-            ["① 今日の気持ちチェック（ミニ鑑定）", "② もう一度フル処方せん"]
+            ["① 今日の気持ちチェック", "② はじめから全部見る"]
         )
 
     if step == 'FUKUEN_EMO_Q1':
@@ -1275,7 +1275,7 @@ def process_line(user_id, message):
                 ))
                 line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{mini_code}")
             threading.Thread(target=_send_fukuen_mini_payment, daemon=True).start()
-            return "🌙 ミニ鑑定の準備をするね。\n少し待っててね✨"
+            return "🌙 準備するね。\n少し待っててね✨"
         if '②' in message or 'フル処方せん' in message:
             user_sessions[key] = {**session, 'step': 'FUKUEN_EMO_Q1'}
             return build_quick_reply_message(
@@ -1284,7 +1284,7 @@ def process_line(user_id, message):
             )
         return build_quick_reply_message(
             "おかえり🌙\nあの人の気持ち、前回から変わってるよ。",
-            ["① 今日のあの人の気持ち（ミニ鑑定）", "② もう一度フル処方せん"]
+            ["① 今日のあの人の気持ち", "② はじめから全部見る"]
         )
 
     if step == 'KYOUMEI_RETURN':
@@ -1301,7 +1301,7 @@ def process_line(user_id, message):
                 ))
                 line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{mini_code}")
             threading.Thread(target=_send_kyoumei_mini_payment, daemon=True).start()
-            return "🌙 ミニ鑑定の準備をするね。\n少し待っててね✨"
+            return "🌙 準備するね。\n少し待っててね✨"
         if '②' in message or 'フル処方せん' in message:
             user_sessions[key] = {**session, 'step': 'WAITING_COMPAT_SELF'}
             return ("推し相性をチェックします。🌙\n"
@@ -1310,7 +1310,7 @@ def process_line(user_id, message):
                     "例）19930616")
         return build_quick_reply_message(
             "おかえり🌙\n推しとの相性、前回から変わってるよ。",
-            ["① 今日の推しとの相性（ミニ鑑定）", "② もう一度フル処方せん"]
+            ["① 今日の推しとの相性", "② はじめから全部見る"]
         )
 
     if step == 'booking':
