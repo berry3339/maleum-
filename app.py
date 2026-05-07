@@ -26,6 +26,17 @@ CATEGORY_LABELS = {
 
 MINI_PRICE = 390
 
+def convert_jp_hour_to_iztro(hour: int) -> int:
+    """일본시간(UTC+9) → iztro-py용 UTC+8 시간 변환"""
+    adjusted = hour - 1
+    return adjusted if adjusted >= 0 else 23
+
+def hour_to_time_index(hour: int) -> int:
+    """UTC+8 hour → iztro-py time_index(0~12) 변환
+    0=早子時(00~01) / 1=丑(01~03) / ... / 12=晚子時(23~00)
+    """
+    return (hour + 1) // 2
+
 def generate_payment_code():
     return 'MARU-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
 
@@ -370,8 +381,65 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             line_push_api(user_id, "🌙 恋の悩みがあったら「恋占い」って送ってみてね\n片思いも復縁も、気持ちに寄り添うよ✨")
             time.sleep(1.5)
             line_push_api(user_id, "💖 推しとの相性もやってみない？\n下のメニューから「推しとの相性」をタップしてね✨")
+            time.sleep(1.5)
+            _upsell_key = f'line_{user_id}'
+            _upsell_session = user_sessions.get(_upsell_key, {})
+            user_sessions[_upsell_key] = {**_upsell_session, 'step': 'WAITING_ZIWEI_CONFIRM'}
+            line_push_api(user_id, build_quick_reply_message(
+                "🌙 もっと深く知りたい？\n"
+                "生まれた時間がわかる方だけの特別メニュー✨\n"
+                "あなたの人生のCCTVを覗いてみない？",
+                ["やってみる", "今はいい"]
+            ))
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
+        line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
+
+def ziwei_analysis(user_id, year, month, day, birth_hour, gender, category=None):
+    """紫微斗数 VIP 분석 → push API — background thread에서 실행"""
+    try:
+        from iztro_py import by_solar as iztro_by_solar
+
+        utc8_hour  = convert_jp_hour_to_iztro(birth_hour)
+        time_index = hour_to_time_index(utc8_hour)
+        solar_date = f"{year}-{month:02d}-{day:02d}"
+
+        chart = iztro_by_solar(solar_date, time_index, gender, language="ja-JP")
+
+        ai     = MalgeumLineAI()
+        result = ai.get_ziwei(chart, category=category)
+
+        def _extract(text, start_markers, end_markers):
+            s = len(text)
+            for m in start_markers:
+                idx = text.find(m)
+                if idx != -1:
+                    s = min(s, idx)
+            e = len(text)
+            for m in end_markers:
+                idx = text.find(m, s + 1)
+                if idx != -1:
+                    e = min(e, idx)
+            return text[s:e].strip()
+
+        msg1 = _extract(result, ["【CCTV起動】"],  ["【深層解読】"])
+        msg2 = _extract(result, ["【深層解読】"],  ["【開運処方】"])
+        msg3 = _extract(result, ["【開運処方】"],  ["【ラッキー情報】"])
+        msg4 = _extract(result, ["【ラッキー情報】"], [])
+
+        for msg in [msg1, msg2, msg3, msg4]:
+            if msg:
+                line_push_api(user_id, msg)
+                time.sleep(1.5)
+
+        time.sleep(1.5)
+        line_push_api(user_id,
+            "💎 もっと深く知りたい？\n"
+            "「マルムに相談」って送ってみてね🌙\n"
+            "1対1で魂のレベルから一緒に考えるよ✨"
+        )
+    except Exception as e:
+        print(f"❌ [紫微斗数오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
 
 def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='preview', partner_name=None):
@@ -766,6 +834,26 @@ def process_line(user_id, message):
             return "まず「あの人」から始めてください🌿"
         return "コードが正しくありません。🌿"
 
+    # ZIWEI- コード グローバル認識 (紫微斗数VIP決済)
+    if message.strip().startswith('ZIWEI-'):
+        session = user_sessions.get(key, {})
+        stored_code = session.get('ziwei_code', '')
+        if stored_code and message.strip() == stored_code:
+            if 'year' in session and session.get('ziwei_birth_hour') is not None:
+                user_sessions[key] = {k: v for k, v in session.items() if k != 'ziwei_code'}
+                threading.Thread(
+                    target=ziwei_analysis,
+                    args=(user_id, session['year'], session['month'], session['day'],
+                          session['ziwei_birth_hour'], session['ziwei_gender'],
+                          session.get('ziwei_category')),
+                    daemon=True
+                ).start()
+                return ("🌀 決済を確認しました。\n"
+                        "あなたの人生のCCTVを起動するよ🌙\n"
+                        "少し待っててね✨")
+            return "まず「今日の運勢」から始めてください🌿"
+        return "コードが正しくありません。🌿"
+
     # 処方箋を開く / レポートを開く
     if message in ('処方箋を開く', 'レポートを開く'):
         session = user_sessions.get(key, {})
@@ -1022,6 +1110,99 @@ def process_line(user_id, message):
                     "このカードを保存して、\n"
                     "今日のお守りにしてください🌿")
         return "コードが正しくありません。もう一度お試しください。🌿"
+
+    # ─── 紫微斗数 VIP フロー ───────────────────────────────
+    if step == 'WAITING_ZIWEI_CONFIRM':
+        if 'やってみる' in message:
+            user_sessions[key] = {**session, 'step': 'WAITING_ZIWEI_HOUR'}
+            return ("生まれた時間を教えてね🌙\n"
+                    "例）0730\n"
+                    "わからなかったら「不明」って送ってね")
+        else:
+            user_sessions[key] = {k: v for k, v in session.items() if k != 'step'}
+            return "またいつでも来てね🌙"
+
+    if step == 'WAITING_ZIWEI_HOUR':
+        normalized = message.translate(str.maketrans('０１２３４５６７８９', '0123456789'))
+        if message.strip() == '不明':
+            user_sessions[key] = {k: v for k, v in session.items() if k != 'step'}
+            return ("ごめんね、この占いは生まれた時間が必要なの🌙\n"
+                    "母子手帳を確認してみてね✨")
+        digits = ''.join(filter(str.isdigit, normalized))
+        if len(digits) in (3, 4):
+            hhmm = digits.zfill(4)
+            birth_hour = int(hhmm[:2])
+            if 0 <= birth_hour <= 23:
+                user_sessions[key] = {**session, 'step': 'WAITING_ZIWEI_GENDER', 'ziwei_birth_hour': birth_hour}
+                return build_quick_reply_message(
+                    "性別を教えてね🌙",
+                    ["女の子", "男の子"]
+                )
+        return "時間は4桁で教えてね✨\n例）0730"
+
+    if step == 'WAITING_ZIWEI_GENDER':
+        if '女' in message:
+            ziwei_gender = '女'
+        elif '男' in message:
+            ziwei_gender = '男'
+        else:
+            return build_quick_reply_message("性別を教えてね🌙", ["女の子", "男の子"])
+        user_sessions[key] = {**session, 'step': 'WAITING_ZIWEI_CATEGORY', 'ziwei_gender': ziwei_gender}
+        return build_quick_reply_message(
+            "今いちばん気になるのはどれ？🌙",
+            ["💰 お金", "💕 恋愛", "💼 仕事", "🌿 健康"]
+        )
+
+    if step == 'WAITING_ZIWEI_CATEGORY':
+        ziwei_category = message.strip()
+        year_z = session.get('year')
+        if not year_z:
+            user_sessions[key] = {}
+            return "ごめんね、もう一度「今日の運勢」から始めてね🌿"
+        ziwei_code = 'ZIWEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+        user_sessions[key] = {**session, 'step': 'WAITING_ZIWEI_CODE',
+                               'ziwei_category': ziwei_category, 'ziwei_code': ziwei_code}
+        def _send_ziwei_payment():
+            line_push_api(user_id,
+                "✨ 準備できたよ🌙\n"
+                "あなたの星の配置から\n"
+                "人生のCCTVを覗いていくよ💫"
+            )
+            line_push_api(user_id, build_payment_ticket_card(
+                2980,
+                "https://www.paypal.com/ncp/payment/ZIWEI_PAYMENT_URL&locale.x=ja_JP",  # TODO: 실제 결제 URL로 변경
+                ziwei_code,
+                "人生のCCTV完全解読",
+                items=[
+                    "🌙 命宮（本質の星）解読",
+                    "🌙 今の大運・流年の流れ",
+                    f"🌙 {ziwei_category} 深層解読",
+                    "🌙 マルム式 開運処方",
+                    "🌙 ラッキー情報",
+                ]
+            ))
+            line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{ziwei_code}")
+        threading.Thread(target=_send_ziwei_payment, daemon=True).start()
+        return "🌙 少し待っててね✨"
+
+    if step == 'WAITING_ZIWEI_CODE':
+        stored_code = session.get('ziwei_code', '')
+        if message.strip() == stored_code:
+            new_session = {k: v for k, v in session.items() if k != 'ziwei_code'}
+            new_session['step'] = 'done'
+            user_sessions[key] = new_session
+            threading.Thread(
+                target=ziwei_analysis,
+                args=(user_id, session['year'], session['month'], session['day'],
+                      session['ziwei_birth_hour'], session['ziwei_gender'],
+                      session.get('ziwei_category')),
+                daemon=True
+            ).start()
+            return ("🌀 決済を確認しました。\n"
+                    "あなたの人生のCCTVを起動するよ🌙\n"
+                    "少し待っててね✨")
+        return "コードが正しくありません。🌿"
+    # ─────────────────────────────────────────────────────────
 
     if step == 'KATAOMOI_EMO_Q1':
         emo_q1 = message

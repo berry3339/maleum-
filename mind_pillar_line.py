@@ -2163,3 +2163,105 @@ OK例: あの人はだんまりしてるだけ  NG例: あの人の沈黙には�
             system=system_prompt
         )
         return response.content[0].text
+
+    def get_ziwei(self, chart, category=None):
+        """紫微斗数 VIP 분석 — 4섹션 출력"""
+        d = chart.to_iztro_dict()
+
+        # 핵심 정보 추출
+        soul_star  = d.get('soul', '')
+        body_star  = d.get('body', '')
+        five_class = d.get('fiveElementsClass', '')
+        gender     = d.get('gender', '')
+        solar_date = d.get('solarDate', '')
+        time_range = d.get('timeRange', '')
+
+        # 12궁 요약
+        palace_lines = []
+        for p in d.get('palaces', []):
+            majors = [s['name'] for s in p.get('majorStars', [])]
+            body_mark = '【身宮】' if p.get('isBodyPalace') else ''
+            soul_mark = '【命宮】' if p.get('isOriginalPalace') else ''
+            palace_lines.append(
+                f"{p['name']}{soul_mark}{body_mark}: {', '.join(majors) if majors else '（なし）'}"
+            )
+        palaces_text = '\n'.join(palace_lines)
+
+        # 카테고리 → 집중 분석 궁
+        category_map = {
+            '💰 お金': ('財帛宮', '金運・財運・豊かさ'),
+            '💕 恋愛': ('夫妻宮', '恋愛・パートナーシップ・縁'),
+            '💼 仕事': ('官禄宮', '仕事・使命・キャリア'),
+            '🌿 健康': ('疾厄宮', '心身の健康・エネルギー'),
+        }
+        if category and category in category_map:
+            focus_palace, focus_theme = category_map[category]
+            focus_info = next(
+                (p for p in d.get('palaces', []) if focus_palace in p.get('name', '')),
+                None
+            )
+            focus_stars = [s['name'] for s in focus_info.get('majorStars', [])] if focus_info else []
+            focus_minor = [s['name'] for s in focus_info.get('minorStars', [])] if focus_info else []
+            focus_detail = (
+                f"重点分析宮: {focus_palace}\n"
+                f"テーマ: {focus_theme}\n"
+                f"主星: {', '.join(focus_stars) if focus_stars else 'なし'}\n"
+                f"副星: {', '.join(focus_minor) if focus_minor else 'なし'}"
+            )
+        else:
+            focus_palace = '命宮'
+            focus_theme  = '人生全体・魂の使命'
+            focus_detail = f"重点分析宮: 命宮（総合）\nテーマ: {focus_theme}"
+
+        system_prompt = """あなたはマルムという占い師AIで、紫微斗数の専門家。
+10〜30代の日本人女性向けに、友達みたいなカジュアルなタメ口で話す。
+絵文字を自然に使いながら、深くて的確な鑑定を提供する。
+
+【絶対ルール】
+- マークダウン（**太字**、*イタリック*）一切禁止
+- セクション区切りは【】のみ使用
+- タメ口・友達体で書くこと
+- 具体的で生々しい表現を使うこと（抽象的NG）
+- 各セクションは改行で読みやすく
+
+【出力形式】必ず以下の4セクションを順番通りに出力:
+
+【CCTV起動】
+〜命宮・魂のコアを暴露するセクション〜
+（あなたの魂の設計図、命宮の主星の本質、隠れた才能・性格の核心）
+
+【深層解読】
+〜重点テーマの深層分析〜
+（選ばれたカテゴリーの宮を徹底解読）
+
+【開運処方】
+〜今すぐできる具体的なアクション〜
+（星の配置に基づいた実践的アドバイス3つ）
+
+【ラッキー情報】
+〜あなただけのラッキー情報〜
+（ラッキーカラー、ラッキーアイテム、今月の開運ポイント）"""
+
+        user_message = f"""生年月日: {solar_date}
+生まれた時間帯: {time_range}
+性別: {gender}
+五行局: {five_class}
+命宮主星（魂）: {soul_star}
+身宮主星（体）: {body_star}
+
+【12宮の配置】
+{palaces_text}
+
+【重点分析リクエスト】
+{focus_detail}
+
+上記の命盤でマルムスタイルの紫微斗数鑑定を書いてください。
+必ず【CCTV起動】→【深層解読】→【開運処方】→【ラッキー情報】の順で。"""
+
+        response = self.client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1500,
+            messages=[{"role": "user", "content": user_message}],
+            system=system_prompt
+        )
+        return response.content[0].text
