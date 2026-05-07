@@ -474,7 +474,11 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{kyoumei_code}")
         else:
             import re as _re_score
-            _score_match = _re_score.search(r'(\d+)\s*%', result.replace('*','').replace('#',''))
+            _clean_result = result.replace('*','').replace('#','')
+            # シンクロ率の数値を優先取得（エネルギーバー等を拾わないよう）
+            _score_match = _re_score.search(r'シンクロ率[：:]\s*(\d+)%', _clean_result)
+            if not _score_match:
+                _score_match = _re_score.search(r'(\d+)\s*%', _clean_result)
             _score = int(_score_match.group(1)) if _score_match else 0
             save_kyoumei_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day}, partner_name, score=_score)
             # カード1: ケミ+役割

@@ -1735,8 +1735,7 @@ LINEではマークダウンが表示されないため。
 全体で15行以内。長い説明は絶対禁止。
 1項目1行。それ以上書くな。
 
-最後に必ず以下のカードをそのまま出力すること（XX%のみ五行つながりから算出して埋めること）:
-相性度算出ルール: 相生88〜98% / 比和82〜90% / 相剋80〜88%（80%以上必須）
+最後に必ず以下のカードをそのまま出力すること（XX%の部分は必ず提供された計算済みスコアをそのまま使うこと。自分で計算しないこと）:
 ┏━━━━━━━━━━━━━━━━━━━┓
    💘 推しとのシンクロ率：XX%🌙
 ┗━━━━━━━━━━━━━━━━━━━┛
@@ -1751,6 +1750,18 @@ LINEではマークダウンが表示されないため。
 🌙 明日は二人の相性度がどう変わるかな？
 朝7時に新しい運命の処方箋が届くよ。
 忘れずにチェックしてね✨"""
+
+            # Python で点数を確定計算（85〜99%保証）
+            if '相生' in relation:
+                _base_score = 93
+            elif '比和' in relation:
+                _base_score = 88
+            else:  # 相剋
+                _base_score = 85
+            _dp1 = saju1.get('day_pillar', 'AA')
+            _dp2 = saju2.get('day_pillar', 'AA')
+            _var = (ord(_dp1[-1]) + ord(_dp2[-1])) % 10 - 3  # -3〜+6
+            score = max(85, min(99, _base_score + _var))
 
             user_message = f"""今日の日付: {today}
 
@@ -1768,6 +1779,8 @@ LINEではマークダウンが表示されないため。
 
 二人の五行つながり: {relation}
 
+計算済み相性スコア: {score}%（XX%の部分にそのまま使うこと）
+
 上記の構成で全궁합 분석を書いてください。"""
 
             max_tokens = 1200
@@ -1778,7 +1791,15 @@ LINEではマークダウンが表示されないため。
             messages=[{"role": "user", "content": user_message}],
             system=system_prompt
         )
-        return response.content[0].text
+        result_text = response.content[0].text
+        if mode == 'full':
+            import re as _re_score_fix
+            result_text = _re_score_fix.sub(
+                r'(シンクロ率[：:]\s*)\d+(%)',
+                lambda m: m.group(1) + str(score) + m.group(2),
+                result_text
+            )
+        return result_text
 
     def get_fukuen(self, saju1: dict, saju2: dict, partner_name: str = None, mode: str = 'preview') -> str:
         today = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y年%m月%d日')
