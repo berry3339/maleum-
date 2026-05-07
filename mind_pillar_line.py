@@ -309,9 +309,15 @@ def build_kyoumei_card(result, partner_name=None):
     """궁합 full 결과 텍스트에서 공명도 % 와 코멘트를 추출해 Flex 버블 생성"""
     import re
     clean_result = result.replace('*', '').replace('#', '')
-    pct_match = re.search(r'(\d+)\s*%', clean_result)
-    pct = (pct_match.group(1) + '%') if pct_match else '—%'
-    print(f"[DEBUG] 공명도 파싱 결과: {pct}")
+    # シンクロ率の数値を優先取得
+    pct_match = re.search(r'シンクロ率[：:：]\s*(\d+)\s*%', clean_result)
+    if pct_match:
+        pct = pct_match.group(1) + '%'
+        print(f"[DEBUG][kyoumei_card] シンクロ率パターンで取得: {pct}")
+    else:
+        pct_match = re.search(r'(\d+)\s*%', clean_result)
+        pct = (pct_match.group(1) + '%') if pct_match else '—%'
+        print(f"[DEBUG][kyoumei_card] フォールバック取得: {pct} (シンクロ率パターン見つからず)")
     comment_match = re.search(r'「([^」\n]+)」', result)
     comment = f'「{comment_match.group(1)}」' if comment_match else '二つの魂が響き合う'
     subtitle = f"{partner_name}との相性度" if partner_name else "推しとの相性度"
@@ -1794,11 +1800,26 @@ LINEではマークダウンが表示されないため。
         result_text = response.content[0].text
         if mode == 'full':
             import re as _re_score_fix
+            print(f"[DEBUG][KYOUMEI] Python計算スコア: {score}%")
+            # AI出力にシンクロ率が含まれているか確認
+            _sync_match = _re_score_fix.search(r'シンクロ率[：:：]\s*(\d+)\s*%', result_text)
+            if _sync_match:
+                print(f"[DEBUG][KYOUMEI] AI出力のシンクロ率: {_sync_match.group(1)}% → {score}%に置換")
+            else:
+                print(f"[DEBUG][KYOUMEI] 警告: シンクロ率パターンがAI出力に見つからない")
+                print(f"[DEBUG][KYOUMEI] AI出力(最初の300文字): {repr(result_text[:300])}")
+            # 全角・半角コロン両対応、スペースあり/なし対応で強制置換
             result_text = _re_score_fix.sub(
-                r'(シンクロ率[：:]\s*)\d+(%)',
+                r'(シンクロ率[：:：]\s*)\d+(\s*%)',
                 lambda m: m.group(1) + str(score) + m.group(2),
                 result_text
             )
+            # 置換後確認
+            _after_match = _re_score_fix.search(r'シンクロ率[：:：]\s*(\d+)\s*%', result_text)
+            if _after_match:
+                print(f"[DEBUG][KYOUMEI] 置換後スコア: {_after_match.group(1)}%")
+            else:
+                print(f"[DEBUG][KYOUMEI] 置換後もシンクロ率パターンなし")
         return result_text
 
     def get_fukuen(self, saju1: dict, saju2: dict, partner_name: str = None, mode: str = 'preview') -> str:
