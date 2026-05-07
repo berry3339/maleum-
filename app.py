@@ -904,8 +904,10 @@ def process_line(user_id, message):
         kataomoi_paid_date = user_data.get('kataomoi_paid_date')
         today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
         if kataomoi_paid_date and user_data.get('year'):
-            if kataomoi_paid_date == today_str:
-                return "今日はもう占ったよ🌸\n明日また来てね✨"
+            # TODO: 테스트 완료 후 1일 제한 다시 활성화
+            if False: pass
+            # if kataomoi_paid_date == today_str:
+            #     return "今日はもう占ったよ🌸\n明日また来てね✨"
             user_sessions[key] = {
                 **session,
                 'step': 'KATAOMOI_RETURN',
@@ -934,8 +936,10 @@ def process_line(user_id, message):
         fukuen_paid_date = user_data.get('fukuen_paid_date')
         today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
         if fukuen_paid_date and user_data.get('year'):
-            if fukuen_paid_date == today_str:
-                return "今日はもう占ったよ🌙\n明日また来てね✨"
+            # TODO: 테스트 완료 후 1일 제한 다시 활성화
+            if False: pass
+            # if fukuen_paid_date == today_str:
+            #     return "今日はもう占ったよ🌙\n明日また来てね✨"
             # 재방문 유저 — 저장된 데이터로 session 채움
             user_sessions[key] = {
                 **session,
@@ -979,8 +983,10 @@ def process_line(user_id, message):
         kyoumei_paid_date = user_data.get('kyoumei_paid_date')
         today_str = datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d')
         if kyoumei_paid_date and user_data.get('year'):
-            if kyoumei_paid_date == today_str:
-                return "今日はもう占ったよ🌙\n明日また来てね✨"
+            # TODO: 테스트 완료 후 1일 제한 다시 활성화
+            if False: pass
+            # if kyoumei_paid_date == today_str:
+            #     return "今日はもう占ったよ🌙\n明日また来てね✨"
             # 재방문 유저
             user_sessions[key] = {
                 **session,
