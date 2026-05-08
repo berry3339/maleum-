@@ -851,6 +851,7 @@ def process_line(user_id, message):
     if message.strip().startswith('ZIWEI-'):
         session = user_sessions.get(key, {})
         stored_code = session.get('ziwei_code', '')
+        print(f"[ZIWEI] received={message.strip()!r} stored={stored_code!r} step={session.get('step')} has_year={'year' in session} has_hour={session.get('ziwei_birth_hour')}")
         if stored_code and message.strip() == stored_code:
             if 'year' in session and session.get('ziwei_birth_hour') is not None:
                 user_sessions[key] = {k: v for k, v in session.items() if k != 'ziwei_code'}
@@ -864,8 +865,8 @@ def process_line(user_id, message):
                 return ("🌀 決済を確認しました。\n"
                         "あなたの人生のCCTVを起動するよ🌙\n"
                         "少し待っててね✨")
-            return "まず「今日の運勢」から始めてください🌿"
-        return "コードが正しくありません。🌿"
+            return f"🔍 DBG: year={session.get('year')} hour={session.get('ziwei_birth_hour')} step={session.get('step')}"
+        return f"コードが正しくありません。🌿\n🔍 DBG: stored={'EMPTY' if not stored_code else stored_code[:8]} step={session.get('step')} keys={list(session.keys())}"
 
     # 処方箋を開く / レポートを開く
     if message in ('処方箋を開く', 'レポートを開く'):
