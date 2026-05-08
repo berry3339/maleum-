@@ -399,26 +399,21 @@ def ziwei_analysis(user_id, year, month, day, birth_hour, gender, category=None)
     """紫微斗数 VIP 분석 → push API — background thread에서 실행"""
     try:
         print(f"[ZIWEI DEBUG] 시작: y={year} m={month} d={day} h={birth_hour} g={gender} cat={category}")
-        line_push_api(user_id, f"\U0001f50d デバッグ①: 開始 y={year} m={month} d={day} h={birth_hour} g={gender}")
 
         from iztro_py import by_solar as iztro_by_solar
         print("[ZIWEI DEBUG] iztro_py import 성공")
-        line_push_api(user_id, "\U0001f50d デバッグ②: iztro-pyインポート成功")
 
         utc8_hour  = convert_jp_hour_to_iztro(birth_hour)
         time_index = hour_to_time_index(utc8_hour)
         solar_date = f"{year}-{month:02d}-{day:02d}"
         print(f"[ZIWEI DEBUG] solar={solar_date} idx={time_index}")
-        line_push_api(user_id, f"\U0001f50d デバッグ③: solar={solar_date} idx={time_index}")
 
         chart = iztro_by_solar(solar_date, time_index, gender, language="ja-JP")
         print("[ZIWEI DEBUG] by_solar 성공")
-        line_push_api(user_id, "\U0001f50d デバッグ④: 命盤計算成功")
 
         ai     = MalgeumLineAI()
         result = ai.get_ziwei(chart, category=category)
         print(f"[ZIWEI DEBUG] get_ziwei 성공 len={len(result)}")
-        line_push_api(user_id, "\U0001f50d デバッグ⑤: AI解析成功")
 
         def _extract(text, start_markers, end_markers):
             s = len(text)
@@ -725,6 +720,11 @@ def line():
 
 def process_line(user_id, message):
     key = f'line_{user_id}'
+    FALLBACK_MSG = ("マルムへようこそ🌙\n\n"
+                    "下のメニューからえらんでね✨\n\n"
+                    "💖 推しとの相性\n"
+                    "🌙 恋占い（片思い・復縁）\n"
+                    "🔮 今日の運勢")
 
     # MARU- コード グローバル認識 (セッション状態に関係なく即実行)
     if message.strip().startswith('MARU-'):
@@ -858,15 +858,15 @@ def process_line(user_id, message):
                 threading.Thread(
                     target=ziwei_analysis,
                     args=(user_id, session['year'], session['month'], session['day'],
-                          session['ziwei_birth_hour'], session['ziwei_gender'],
+                          session['ziwei_birth_hour'], session.get('ziwei_gender', '女'),
                           session.get('ziwei_category')),
                     daemon=True
                 ).start()
                 return ("🌀 決済を確認しました。\n"
                         "あなたの人生のCCTVを起動するよ🌙\n"
                         "少し待っててね✨")
-            return f"🔍 DBG: year={session.get('year')} hour={session.get('ziwei_birth_hour')} step={session.get('step')}"
-        return f"コードが正しくありません。🌿\n🔍 DBG: stored={'EMPTY' if not stored_code else stored_code[:8]} step={session.get('step')} keys={list(session.keys())}"
+            return "ごめんね、もう一度「今日の運勢」から始めてね🌿"
+        return "ごめんね、セッションが切れちゃったよ🌙\nもう一度「今日の運勢」から始めてね✨"
 
     # 処方箋を開く / レポートを開く
     if message in ('処方箋を開く', 'レポートを開く'):
@@ -893,11 +893,7 @@ def process_line(user_id, message):
     # マルム → 처음으로 리셋
     if message == 'マルム':
         user_sessions[key] = {}
-        return ("マルムへようこそ🌿\n\n"
-                "韓国式四柱推命で、\n"
-                "あなたの今日の流れを読み解きます。\n\n"
-                "「今日の運勢」\n"
-                "入力してください🌸")
+        return FALLBACK_MSG
 
     # 恋占い → 片思い/復縁 선택 Quick Reply
     if '恋占い' in message:
@@ -1496,14 +1492,8 @@ def process_line(user_id, message):
                 "最初に戻りたい方は「マルム」とご入力ください。🌿")
 
     if step == 'done':
-        return ("ご決済後は「レポートを開く」とご入力ください。✅\n"
-                "最初に戻りたい方は「マルム」とご入力ください。🌿")
+        return FALLBACK_MSG
 
-    FALLBACK_MSG = ("マルムへようこそ🌙\n\n"
-                    "下のメニューからえらんでね✨\n\n"
-                    "💖 推しとの相性\n"
-                    "🌙 恋占い（片思い・復縁）\n"
-                    "🔮 今日の運勢")
     if not step:
         return FALLBACK_MSG
     return FALLBACK_MSG
