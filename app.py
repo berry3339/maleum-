@@ -729,11 +729,8 @@ def process_line(user_id, message):
                     daemon=True
                 ).start()
                 return ("🌀 決済を確認しました。\n\n"
-                        "🔮 お客様の大切な一日に\n"
-                        "完璧な答えをお届けするため、\n"
-                        "誠心誠意、分析を深めております。\n\n"
-                        "精緻な結果を導き出すため、\n"
-                        "今しばらくお待ちくださいませ🌿")
+                        "🔮 あなただけの結果を読み解いてるよ🌙\n"
+                        "少し待っててね✨")
             return "まず生年月日を入力してください🌿"
         return "コードが正しくありません。もう一度お試しください。🌿"
 
@@ -1174,7 +1171,7 @@ def process_line(user_id, message):
             )
             line_push_api(user_id, build_payment_ticket_card(
                 2980,
-                "https://www.paypal.com/ncp/payment/ZIWEI_PAYMENT_URL&locale.x=ja_JP",  # TODO: 실제 결제 URL로 변경
+                "https://www.paypal.com/ncp/payment/HYU9V5C9KRU7S&locale.x=ja_JP",
                 ziwei_code,
                 "人生のCCTV完全解読",
                 items=[
