@@ -398,16 +398,27 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
 def ziwei_analysis(user_id, year, month, day, birth_hour, gender, category=None):
     """紫微斗数 VIP 분석 → push API — background thread에서 실행"""
     try:
+        print(f"[ZIWEI DEBUG] 시작: y={year} m={month} d={day} h={birth_hour} g={gender} cat={category}")
+        line_push_api(user_id, f"\U0001f50d デバッグ①: 開始 y={year} m={month} d={day} h={birth_hour} g={gender}")
+
         from iztro_py import by_solar as iztro_by_solar
+        print("[ZIWEI DEBUG] iztro_py import 성공")
+        line_push_api(user_id, "\U0001f50d デバッグ②: iztro-pyインポート成功")
 
         utc8_hour  = convert_jp_hour_to_iztro(birth_hour)
         time_index = hour_to_time_index(utc8_hour)
         solar_date = f"{year}-{month:02d}-{day:02d}"
+        print(f"[ZIWEI DEBUG] solar={solar_date} idx={time_index}")
+        line_push_api(user_id, f"\U0001f50d デバッグ③: solar={solar_date} idx={time_index}")
 
         chart = iztro_by_solar(solar_date, time_index, gender, language="ja-JP")
+        print("[ZIWEI DEBUG] by_solar 성공")
+        line_push_api(user_id, "\U0001f50d デバッグ④: 命盤計算成功")
 
         ai     = MalgeumLineAI()
         result = ai.get_ziwei(chart, category=category)
+        print(f"[ZIWEI DEBUG] get_ziwei 성공 len={len(result)}")
+        line_push_api(user_id, "\U0001f50d デバッグ⑤: AI解析成功")
 
         def _extract(text, start_markers, end_markers):
             s = len(text)
@@ -434,14 +445,15 @@ def ziwei_analysis(user_id, year, month, day, birth_hour, gender, category=None)
 
         time.sleep(1.5)
         line_push_api(user_id,
-            "💎 もっと深く知りたい？\n"
-            "「マルムに相談」って送ってみてね🌙\n"
-            "1対1で魂のレベルから一緒に考えるよ✨"
+            "\U0001f48e もっと深く知りたい？\n"
+            "「マルムに相談」って送ってみてね\U0001f319\n"
+            "1対1で魂のレベルから一緒に考えるよ\u2728"
         )
     except Exception as e:
-        print(f"❌ [紫微斗数오류] {e}")
-        line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
-
+        import traceback
+        tb = traceback.format_exc()
+        print(f"\u274c [紫微斗数오류] {type(e).__name__}: {e}\n{tb}")
+        line_push_api(user_id, f"\u274c デバッグエラー: {type(e).__name__}: {str(e)}")
 def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='preview', partner_name=None):
     """궁합 분석 → push API — background thread에서 실행"""
     try:
