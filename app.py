@@ -9,7 +9,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
 from mind_pillar import PrecisionManse, MindPillarAI
-from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_kyoumei_lucky_card, build_kyoumei_preview_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card, build_fukuen_payment_ticket_card, build_mystery_kataomoi_card, build_kataomoi_omamori_card, build_kataomoi_payment_ticket_card, build_oshi_ranking_card
+from mind_pillar_line import PrecisionManse as LineManse, MalgeumLineAI, split_message, send_long_message, build_prescription_cards, build_kyoumei_card, build_kyoumei_chemistry_card, build_kyoumei_mission_card, build_kyoumei_lucky_card, build_kyoumei_preview_card, build_mystery_kyoumei_card, build_mystery_fukuen_card, build_fukuen_omamori_card, build_payment_ticket_card, build_fukuen_payment_ticket_card, build_mystery_kataomoi_card, build_kataomoi_omamori_card, build_kataomoi_payment_ticket_card, build_oshi_ranking_card, build_ziwei_summary_card
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
@@ -383,19 +383,10 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                     line_push_api(user_id, msg)
                     time.sleep(1.5)
 
-            line_push_api(user_id, "🌙 恋の悩みがあったら「恋占い」って送ってみてね\n片思いも復縁も、気持ちに寄り添うよ✨")
             time.sleep(1.5)
-            line_push_api(user_id, "💖 推しとの相性もやってみない？\n下のメニューから「推しとの相性」をタップしてね✨")
+            line_push_api(user_id, "恋の悩みや推しとの相性も気になったら下のメニューからえらんでね🌙")
             time.sleep(1.5)
-            _upsell_key = f'line_{user_id}'
-            _upsell_session = user_sessions.get(_upsell_key, {})
-            user_sessions[_upsell_key] = {**_upsell_session, 'step': 'WAITING_ZIWEI_CONFIRM'}
-            line_push_api(user_id, build_quick_reply_message(
-                "🌙 もっと深く知りたい？\n"
-                "生まれた時間がわかる方だけの特別メニュー✨\n"
-                "あなたの人生のCCTVを覗いてみない？",
-                ["やってみる", "今はいい"]
-            ))
+            line_push_api(user_id, "💎 もっと深く知りたいときは「マルムに相談」って送ってみてね✨")
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -416,9 +407,9 @@ def ziwei_analysis(user_id, year, month, day, birth_hour, gender, category=None)
         chart = iztro_by_solar(solar_date, time_index, gender, language="ja-JP")
         print("[ZIWEI DEBUG] by_solar 성공")
 
-        ai     = MalgeumLineAI()
-        result = ai.get_ziwei(chart, category=category)
-        print(f"[ZIWEI DEBUG] get_ziwei 성공 len={len(result)}")
+        ai = MalgeumLineAI()
+        summary, result = ai.get_ziwei(chart, category=category)
+        print(f"[ZIWEI DEBUG] get_ziwei 성공 summary_keys={list(summary.keys())} text_len={len(result)}")
 
         def _extract(text, start_markers, end_markers):
             s = len(text)
@@ -433,21 +424,27 @@ def ziwei_analysis(user_id, year, month, day, birth_hour, gender, category=None)
                     e = min(e, idx)
             return text[s:e].strip()
 
-        msg1 = _extract(result, ["【CCTV起動】"],  ["【深層解読】"])
-        msg2 = _extract(result, ["【深層解読】"],  ["【開運処方】"])
-        msg3 = _extract(result, ["【開運処方】"],  ["【ラッキー情報】"])
-        msg4 = _extract(result, ["【ラッキー情報】"], [])
+        # [1차] Flex 카드 — 핵심 요약
+        if summary:
+            line_push_api(user_id, build_ziwei_summary_card(summary))
+            time.sleep(1.5)
 
-        for msg in [msg1, msg2, msg3, msg4]:
-            if msg:
-                line_push_api(user_id, msg)
-                time.sleep(1.5)
+        # [2차] 텍스트 — CCTV起動 + 深層解読
+        msg_detail = _extract(result, ["【CCTV起動】"], ["【開運処方】"])
+        if msg_detail:
+            line_push_api(user_id, msg_detail)
+            time.sleep(1.5)
 
-        time.sleep(1.5)
+        # [3차] 텍스트 — 開運処方 + ラッキー情報
+        msg_lucky = _extract(result, ["【開運処方】"], [])
+        if msg_lucky:
+            line_push_api(user_id, msg_lucky)
+            time.sleep(1.5)
+
         line_push_api(user_id,
-            "\U0001f48e もっと深く知りたい？\n"
-            "「マルムに相談」って送ってみてね\U0001f319\n"
-            "1対1で魂のレベルから一緒に考えるよ\u2728"
+            "💎 もっと深く知りたいときは\n"
+            "「マルムに相談」って送ってみてね🌙\n"
+            "1対1で魂のレベルから一緒に考えるよ✨"
         )
     except Exception as e:
         import traceback

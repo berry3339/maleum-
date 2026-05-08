@@ -904,6 +904,46 @@ def build_payment_ticket_card(price, payment_url, code, title="うんめいの�
     }
 
 
+def build_ziwei_summary_card(summary):
+    """紫微斗数 VIP 핵심 요약 Flex 카드"""
+    items = [
+        ("💫 魂のタイプ",       summary.get("soul_type",    "—")),
+        ("⚔️ 隠れた武器",       summary.get("weapon",       "—")),
+        ("❤️ 運命の恋パターン",  summary.get("love_pattern", "—")),
+        ("⚠️ 今年の注意",       summary.get("caution",      "—")),
+        ("🎯 開運アクション",    summary.get("lucky_action", "—")),
+    ]
+    rows = []
+    for label, val in items:
+        rows.append({
+            "type": "box", "layout": "vertical", "margin": "md",
+            "contents": [
+                {"type": "text", "text": label, "size": "xxs",
+                 "color": "#FFD700", "weight": "bold"},
+                {"type": "text", "text": val, "size": "xs",
+                 "color": "#FFFFFF", "wrap": True, "margin": "xs"},
+            ]
+        })
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#0d0d1a", "paddingAll": "20px",
+            "contents": [
+                {"type": "text", "text": "🔮 あなたの運命のCCTV",
+                 "size": "md", "color": "#FFD700",
+                 "align": "center", "weight": "bold"},
+                {"type": "separator", "margin": "lg", "color": "#FFD70050"},
+                *rows,
+                {"type": "separator", "margin": "lg", "color": "#FFD70030"},
+                {"type": "text", "text": "マルム | プレミアムCCTV鑑定",
+                 "size": "xxs", "color": "#888888",
+                 "align": "center", "margin": "md"},
+            ]
+        }
+    }
+
+
 try:
     import anthropic
 except ImportError:
@@ -2265,12 +2305,15 @@ OK例: あの人はだんまりしてるだけ  NG例: あの人の沈黙には�
 - タメ口・友達体で書くこと
 - 具体的で生々しい表現を使うこと（抽象的NG）
 - 各セクションは改行で読みやすく
+- 紫微斗数の専門用語（命宮、空宮、鈴星、天機、巨門、凶星など）をそのまま使わないこと。20代の友達が理解できるたとえに完全に置き換えること。カッコ書きで専門用語を併記するのも禁止。完全に日常語のみで説明すること。（例: ✕命宮に天機がある → ○魂のベースに「天才的なひらめき力」がセットされてる）
 
-【出力形式】必ず以下の4セクションを順番通りに出力:
+【出力形式】まず最初に以下のJSON行を1行で出力し、その後4セクションを出力すること:
+
+SUMMARY_JSON:{"soul_type":"[魂のタイプを1行で]","weapon":"[隠れた武器を1行で]","love_pattern":"[恋パターンを1行で]","caution":"[今年の注意を1行で]","lucky_action":"[開運アクションを1行で]"}
 
 【CCTV起動】
-〜命宮・魂のコアを暴露するセクション〜
-（あなたの魂の設計図、命宮の主星の本質、隠れた才能・性格の核心）
+〜魂のコアを暴露するセクション〜
+（魂の設計図、主星の本質、隠れた才能・性格の核心）
 
 【深層解読】
 〜重点テーマの深層分析〜
@@ -2302,8 +2345,20 @@ OK例: あの人はだんまりしてるだけ  NG例: あの人の沈黙には�
 
         response = self.client.messages.create(
             model="claude-sonnet-4-5",
-            max_tokens=1500,
+            max_tokens=1800,
             messages=[{"role": "user", "content": user_message}],
             system=system_prompt
         )
-        return response.content[0].text
+        raw = response.content[0].text
+        import json as _json, re as _re_json
+        _m = _re_json.search(r'SUMMARY_JSON:(\{.+?\})', raw)
+        if _m:
+            try:
+                summary = _json.loads(_m.group(1))
+            except Exception:
+                summary = {}
+            text = raw[_m.end():].strip()
+        else:
+            summary = {}
+            text = raw
+        return summary, text
