@@ -262,7 +262,12 @@ def line_push_api(user_id, payload):
             json={'to': user_id, 'messages': [_build_line_message(payload)]},
             timeout=30
         )
-        print(f"📤 [LINE push] status={resp.status_code}")
+        if resp.status_code == 429:
+            print(f"❌ [LINE push] 429 쿼터초과 — 월간 push 한도 소진. LINE플랜 업그레이드 필요")
+        elif resp.status_code != 200:
+            print(f"❌ [LINE push] status={resp.status_code} body={resp.text[:200]}")
+        else:
+            print(f"📤 [LINE push] status=200")
     except Exception as e:
         print(f"❌ [LINE push 실패] {e}")
 
