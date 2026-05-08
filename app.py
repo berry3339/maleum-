@@ -766,7 +766,7 @@ def process_line(user_id, message):
                           session.get('partner_name')),
                     daemon=True
                 ).start()
-                return "🌀 決済を確認しました。\n推しとの運命の処方箋の封を切ります..."
+                return "🔑 決済を確認したよ。\nあなたと推しの運命の扉が、今ひらかれていく…🌙\n少し待っててね✨"
             return "まず「推し相性」から始めてください🌿"
         return "コードが正しくありません。🌿"
 
@@ -881,18 +881,24 @@ def process_line(user_id, message):
             return "🔑 決済コードを入力してください。"
         return "まず生年月日を入力してください🌿"
 
-    # 相性を開く / 相性を見る (유료 전체 궁합, 포함되면 작동)
+    # 相性を開く / 相性を見る → 결제 카드 재발송 (직접 full 호출 차단)
     if '相性を開く' in message or '相性を見る' in message:
         session = user_sessions.get(key, {})
         partner = session.get('partner_birth')
         if 'year' in session and partner:
-            threading.Thread(
-                target=compatibility_analysis,
-                args=(user_id, session['year'], session['month'], session['day'],
-                      partner['year'], partner['month'], partner['day'], 'full'),
-                daemon=True
-            ).start()
-            return "🌀 決済を確認しました。\n相性レポートの封を切ります..."
+            kyoumei_code = session.get('kyoumei_code') or \
+                'KYOUMEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            user_sessions[key] = {**session, 'kyoumei_code': kyoumei_code}
+            def _resend_kyoumei_payment():
+                line_push_api(user_id, build_payment_ticket_card(
+                    590,
+                    "https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP",
+                    kyoumei_code,
+                    "推しとの運命の処方箋"
+                ))
+                line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{kyoumei_code}")
+            threading.Thread(target=_resend_kyoumei_payment, daemon=True).start()
+            return "💖 推しとの運命の処方箋を受け取るよ🌙\n決済が完了したらコードを送ってね✨\n少し待っててね…"
         return "まず「推し相性」から始めてください🌿"
 
     # マルム → 처음으로 리셋
