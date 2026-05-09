@@ -369,6 +369,10 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                     "🌙 辛口アドバイス",
                 ]
             ))
+            line_push_api(user_id, build_quick_reply_message(
+                "決済が完了したら下のボタンを押してね🌙",
+                ["💳 決済完了しました"]
+            ))
         else:  # prescription
             # score 계산 (short mode와 동일한 로직)
             _GEN = {'木':'火','火':'土','土':'金','金':'水','水':'木'}
@@ -523,6 +527,10 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
                 kyoumei_code,
                 "推しとの運命の処方箋"
             ))
+            line_push_api(user_id, build_quick_reply_message(
+                "決済が完了したら下のボタンを押してね🌙",
+                ["💳 決済完了しました"]
+            ))
         else:
             import re as _re_score
             _clean_result = result.replace('*','').replace('#','')
@@ -589,6 +597,10 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             line_push_api(user_id, build_fukuen_payment_ticket_card(
                 890,
                 f"https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2?locale.x=ja_JP"
+            ))
+            line_push_api(user_id, build_quick_reply_message(
+                "決済が完了したら下のボタンを押してね🌙",
+                ["💳 決済完了しました"]
             ))
         else:
             save_fukuen_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day})
@@ -668,6 +680,10 @@ def kataomoi_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='p
             line_push_api(user_id, build_kataomoi_payment_ticket_card(
                 890,
                 f"https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y?locale.x=ja_JP"
+            ))
+            line_push_api(user_id, build_quick_reply_message(
+                "決済が完了したら下のボタンを押してね🌙",
+                ["💳 決済完了しました"]
             ))
         else:
             save_kataomoi_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day})
@@ -769,6 +785,15 @@ def process_line(user_id, message):
                     "💖 推しとの相性\n"
                     "🌙 恋占い（片思い・復縁）\n"
                     "🔮 今日の運勢")
+
+    # 💳 決済完了しました → セッション内のコードで自動処理
+    if message.strip() == '💳 決済完了しました':
+        session = user_sessions.get(key, {})
+        for _ck in ('ziwei_code', 'payment_code', 'kyoumei_code', 'fukuen_code', 'kataomoi_code'):
+            _code = session.get(_ck)
+            if _code:
+                return process_line(user_id, _code)
+        return "決済コードが見つからないよ🌙\nもう一度最初から始めてね✨"
 
     # MARU- コード グローバル認識 (セッション状態に関係なく即実行)
     if message.strip().startswith('MARU-'):
@@ -948,6 +973,10 @@ def process_line(user_id, message):
                     f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E?locale.x=ja_JP",
                     kyoumei_code,
                     "推しとの運命の処方箋"
+                ))
+                line_push_api(user_id, build_quick_reply_message(
+                    "決済が完了したら下のボタンを押してね🌙",
+                    ["💳 決済完了しました"]
                 ))
             threading.Thread(target=_resend_kyoumei_payment, daemon=True).start()
             return "💖 推しとの運命の処方箋を受け取るよ🌙\n決済が完了したらコードを送ってね✨\n少し待っててね…"
@@ -1263,6 +1292,10 @@ def process_line(user_id, message):
                     "🌙 ラッキー情報",
                 ]
             ))
+            line_push_api(user_id, build_quick_reply_message(
+                "決済が完了したら下のボタンを押してね🌙",
+                ["💳 決済完了しました"]
+            ))
         threading.Thread(target=_send_ziwei_payment, daemon=True).start()
         return "🌙 少し待っててね✨"
 
@@ -1367,6 +1400,10 @@ def process_line(user_id, message):
                 line_push_api(user_id, "好きって気持ち、誰にも言えないまま\nここに来てくれたんだね🌙\nその勇気、ちゃんと届いてるよ。\n今日はこっそりおまけしとくね✨")
                 line_push_api(user_id, build_kataomoi_payment_ticket_card(
                     MINI_PRICE, f"https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y?locale.x=ja_JP"
+                ))
+                line_push_api(user_id, build_quick_reply_message(
+                    "決済が完了したら下のボタンを押してね🌙",
+                    ["💳 決済完了しました"]
                 ))
             threading.Thread(target=_send_kataomoi_mini_payment, daemon=True).start()
             return "🌸 準備するね。\n少し待っててね✨"
@@ -1515,6 +1552,10 @@ def process_line(user_id, message):
                 line_push_api(user_id, build_fukuen_payment_ticket_card(
                     MINI_PRICE, f"https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2?locale.x=ja_JP"
                 ))
+                line_push_api(user_id, build_quick_reply_message(
+                    "決済が完了したら下のボタンを押してね🌙",
+                    ["💳 決済完了しました"]
+                ))
             threading.Thread(target=_send_fukuen_mini_payment, daemon=True).start()
             return "🌙 準備するね。\n少し待っててね✨"
         if '②' in message or 'フル処方せん' in message:
@@ -1542,6 +1583,10 @@ def process_line(user_id, message):
                     f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E?locale.x=ja_JP",
                     mini_code,
                     "今日の推し活ガイド"
+                ))
+                line_push_api(user_id, build_quick_reply_message(
+                    "決済が完了したら下のボタンを押してね🌙",
+                    ["💳 決済完了しました"]
                 ))
             threading.Thread(target=_send_kyoumei_mini_payment, daemon=True).start()
             return "🌙 準備するね。\n少し待っててね✨"
