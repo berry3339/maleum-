@@ -532,15 +532,8 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
                 print(f"⚠️ [相性カード生成エラー] {e}")
             time.sleep(1.5)
             line_push_api(user_id,
-                "この結果、推し友にも教えてあげない？🌙\n"
-                "スクショしてストーリーに載せてみてね✨\n"
-                "みんなの相性度も気になるでしょ💖"
-            )
-            time.sleep(1.5)
-            line_push_api(user_id,
-                "他の推しでも占ってみない？🌙\n"
-                "何人か占うと推しランキングができるよ✨\n"
-                "「推しとの相性」ってもう一度送ってみてね💖"
+                "この結果、推し友にも教えてあげてね🌙\n"
+                "他の推しでも気になったら「推しとの相性」ってもう一度送ってみてね💖"
             )
     except Exception as e:
         print(f"❌ [궁합분석오류] {e}")
@@ -777,7 +770,9 @@ def process_line(user_id, message):
         if (stored_code and message.strip() == stored_code) or message.strip() == 'KYOUMEI-TEST':
             partner = session.get('partner_birth')
             if 'year' in session and partner:
-                user_sessions[key] = {k: v for k, v in session.items() if k != 'kyoumei_code'}
+                _new = {k: v for k, v in session.items() if k != 'kyoumei_code'}
+                _new['step'] = 'done'
+                user_sessions[key] = _new
                 threading.Thread(
                     target=compatibility_analysis,
                     args=(user_id, session['year'], session['month'], session['day'],
@@ -840,7 +835,9 @@ def process_line(user_id, message):
         if (stored_code and message.strip() == stored_code) or message.strip() == 'KATAOMOI-TEST':
             partner = session.get('kataomoi_partner_birth')
             if 'year' in session and partner:
-                user_sessions[key] = {k: v for k, v in session.items() if k != 'kataomoi_code'}
+                _new = {k: v for k, v in session.items() if k != 'kataomoi_code'}
+                _new['step'] = 'done'
+                user_sessions[key] = _new
                 threading.Thread(
                     target=kataomoi_analysis,
                     args=(user_id, session['year'], session['month'], session['day'],
@@ -859,7 +856,9 @@ def process_line(user_id, message):
         if (stored_code and message.strip() == stored_code) or message.strip() == 'FUKUEN-TEST':
             partner = session.get('fukuen_partner_birth')
             if 'year' in session and partner:
-                user_sessions[key] = {k: v for k, v in session.items() if k != 'fukuen_code'}
+                _new = {k: v for k, v in session.items() if k != 'fukuen_code'}
+                _new['step'] = 'done'
+                user_sessions[key] = _new
                 threading.Thread(
                     target=fukuen_analysis,
                     args=(user_id, session['year'], session['month'], session['day'],
@@ -880,7 +879,9 @@ def process_line(user_id, message):
         if (stored_code and message.strip() == stored_code) or _is_ziwei_test:
             _birth_hour = session.get('ziwei_birth_hour')
             if ('year' in session and _birth_hour is not None) or _is_ziwei_test:
-                user_sessions[key] = {k: v for k, v in session.items() if k != 'ziwei_code'}
+                _new = {k: v for k, v in session.items() if k != 'ziwei_code'}
+                _new['step'] = 'done'
+                user_sessions[key] = _new
                 threading.Thread(
                     target=ziwei_analysis,
                     args=(user_id, session.get('year', 1995), session.get('month', 1), session.get('day', 1),
