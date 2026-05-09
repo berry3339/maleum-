@@ -348,7 +348,6 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
                     "🌙 辛口アドバイス",
                 ]
             ))
-            line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{payment_code}")
         else:  # prescription
             # score 계산 (short mode와 동일한 로직)
             _GEN = {'木':'火','火':'土','土':'金','金':'水','水':'木'}
@@ -406,6 +405,7 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             line_push_api(user_id, "恋の悩みや推しとの相性も気になったら下のメニューからえらんでね🌙")
             time.sleep(1.5)
             line_push_api(user_id, "💎 もっと深く知りたいときは「マルムに相談」って送ってみてね✨")
+            user_sessions[f'line_{user_id}']['step'] = 'done'
     except Exception as e:
         print(f"❌ [深層解読오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -465,6 +465,7 @@ def ziwei_analysis(user_id, year, month, day, birth_hour, gender, category=None)
             "「マルムに相談」って送ってみてね🌙\n"
             "1対1で魂のレベルから一緒に考えるよ✨"
         )
+        user_sessions[f'line_{user_id}']['step'] = 'done'
     except Exception as e:
         import traceback
         tb = traceback.format_exc()
@@ -499,8 +500,6 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
                 kyoumei_code,
                 "推しとの運命の処方箋"
             ))
-            # ⑤コードテキスト
-            line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{kyoumei_code}")
         else:
             import re as _re_score
             _clean_result = result.replace('*','').replace('#','')
@@ -535,6 +534,7 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
                 "この結果、推し友にも教えてあげてね🌙\n"
                 "他の推しでも気になったら「推しとの相性」ってもう一度送ってみてね💖"
             )
+            user_sessions[f'line_{user_id}']['step'] = 'done'
     except Exception as e:
         print(f"❌ [궁합분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -565,7 +565,6 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
                 890,
                 f"https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP&custom={user_id}_FUKUEN"
             ))
-            line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{fukuen_code}")
         else:
             save_fukuen_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day})
             # 유료 리포트를 섹션 헤더 기준으로 4개 메시지로 분할 전송
@@ -612,6 +611,7 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
                 "🌙 3日後、あの人の気持ちに変化がくるよ。\n"
                 "またここに来てね✨"
             )
+            user_sessions[f'line_{user_id}']['step'] = 'done'
     except Exception as e:
         print(f"❌ [재회분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -642,7 +642,6 @@ def kataomoi_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='p
                 890,
                 f"https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y&locale.x=ja_JP&custom={user_id}_KATAOMOI"
             ))
-            line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{kataomoi_code}")
         else:
             save_kataomoi_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day})
             def _extract(text, start_markers, end_markers):
@@ -679,6 +678,7 @@ def kataomoi_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='p
                 "🌙 3日後、好きな人の気持ちに変化がくるよ。\n"
                 "またここに来てね✨"
             )
+            user_sessions[f'line_{user_id}']['step'] = 'done'
     except Exception as e:
         print(f"❌ [片思い분석오류] {e}")
         line_push_api(user_id, "❌ エラーが発生しました。もう一度お試しください。")
@@ -919,7 +919,6 @@ def process_line(user_id, message):
                     kyoumei_code,
                     "推しとの運命の処方箋"
                 ))
-                line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{kyoumei_code}")
             threading.Thread(target=_resend_kyoumei_payment, daemon=True).start()
             return "💖 推しとの運命の処方箋を受け取るよ🌙\n決済が完了したらコードを送ってね✨\n少し待っててね…"
         return "まず「推し相性」から始めてください🌿"
@@ -1232,7 +1231,6 @@ def process_line(user_id, message):
                     "🌙 ラッキー情報",
                 ]
             ))
-            line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{ziwei_code}")
         threading.Thread(target=_send_ziwei_payment, daemon=True).start()
         return "🌙 少し待っててね✨"
 
@@ -1335,7 +1333,6 @@ def process_line(user_id, message):
                 line_push_api(user_id, build_kataomoi_payment_ticket_card(
                     MINI_PRICE, "https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y&locale.x=ja_JP"
                 ))
-                line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{mini_code}")
             threading.Thread(target=_send_kataomoi_mini_payment, daemon=True).start()
             return "🌸 準備するね。\n少し待っててね✨"
         if '②' in message or 'フル処方せん' in message:
@@ -1480,7 +1477,6 @@ def process_line(user_id, message):
                 line_push_api(user_id, build_fukuen_payment_ticket_card(
                     MINI_PRICE, "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP"
                 ))
-                line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{mini_code}")
             threading.Thread(target=_send_fukuen_mini_payment, daemon=True).start()
             return "🌙 準備するね。\n少し待っててね✨"
         if '②' in message or 'フル処方せん' in message:
@@ -1506,7 +1502,6 @@ def process_line(user_id, message):
                     mini_code,
                     "今日の推し活ガイド"
                 ))
-                line_push_api(user_id, f"🔑 決済後にこのコードを送ってね：\n{mini_code}")
             threading.Thread(target=_send_kyoumei_mini_payment, daemon=True).start()
             return "🌙 準備するね。\n少し待っててね✨"
         if '②' in message or 'フル処方せん' in message:
