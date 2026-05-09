@@ -359,7 +359,7 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             line_push_api(user_id, result)
             line_push_api(user_id, build_payment_ticket_card(
                 1000,
-                f"https://www.paypal.com/ncp/payment/G7K49PXY32R2C&locale.x=ja_JP&custom={user_id}_MARU_{_maru_token}",
+                f"https://www.paypal.com/ncp/payment/G7K49PXY32R2C?locale.x=ja_JP&custom={user_id}_MARU_{_maru_token}",
                 payment_code,
                 "今日の運気処方箋",
                 items=[
@@ -519,7 +519,7 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             # ④決済チケットカード
             line_push_api(user_id, build_payment_ticket_card(
                 590,
-                f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP&custom={user_id}_KYOUMEI_{_kyoumei_token}",
+                f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E?locale.x=ja_JP&custom={user_id}_KYOUMEI_{_kyoumei_token}",
                 kyoumei_code,
                 "推しとの運命の処方箋"
             ))
@@ -588,7 +588,7 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             line_push_api(user_id, build_mystery_fukuen_card())
             line_push_api(user_id, build_fukuen_payment_ticket_card(
                 890,
-                f"https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP&custom={user_id}_FUKUEN_{_fukuen_token}"
+                f"https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2?locale.x=ja_JP&custom={user_id}_FUKUEN_{_fukuen_token}"
             ))
         else:
             save_fukuen_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day})
@@ -667,7 +667,7 @@ def kataomoi_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='p
             line_push_api(user_id, build_mystery_kataomoi_card())
             line_push_api(user_id, build_kataomoi_payment_ticket_card(
                 890,
-                f"https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y&locale.x=ja_JP&custom={user_id}_KATAOMOI_{_kataomoi_token}"
+                f"https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y?locale.x=ja_JP&custom={user_id}_KATAOMOI_{_kataomoi_token}"
             ))
         else:
             save_kataomoi_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day})
@@ -945,7 +945,7 @@ def process_line(user_id, message):
             def _resend_kyoumei_payment():
                 line_push_api(user_id, build_payment_ticket_card(
                     590,
-                    f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP&custom={user_id}_KYOUMEI_{_resend_kyoumei_token}",
+                    f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E?locale.x=ja_JP&custom={user_id}_KYOUMEI_{_resend_kyoumei_token}",
                     kyoumei_code,
                     "推しとの運命の処方箋"
                 ))
@@ -1092,7 +1092,7 @@ def process_line(user_id, message):
         user_sessions[key] = {**session, 'step': 'booking'}
         return ("ご予約はこちらから承ります。\n"
                 "🔒 1対1 LINE鑑定（30分 ¥5,000）\n"
-                "→ https://www.paypal.com/ncp/payment/4FXDK6WHXU45W&locale.x=ja_JP\n\n"
+                "→ https://www.paypal.com/ncp/payment/4FXDK6WHXU45W?locale.x=ja_JP\n\n"
                 "ご希望の日時を教えてください。\n"
                 "例）4月25日 20時\n"
                 "最初に戻りたい方は「マルム」とご入力ください。🌿")
@@ -1252,7 +1252,7 @@ def process_line(user_id, message):
             )
             line_push_api(user_id, build_payment_ticket_card(
                 2980,
-                f"https://www.paypal.com/ncp/payment/HYU9V5C9KRU7S&locale.x=ja_JP&custom={user_id}_ZIWEI_{_ziwei_token}",
+                f"https://www.paypal.com/ncp/payment/HYU9V5C9KRU7S?locale.x=ja_JP&custom={user_id}_ZIWEI_{_ziwei_token}",
                 ziwei_code,
                 "人生のCCTV完全解読",
                 items=[
@@ -1366,7 +1366,7 @@ def process_line(user_id, message):
             def _send_kataomoi_mini_payment():
                 line_push_api(user_id, "好きって気持ち、誰にも言えないまま\nここに来てくれたんだね🌙\nその勇気、ちゃんと届いてるよ。\n今日はこっそりおまけしとくね✨")
                 line_push_api(user_id, build_kataomoi_payment_ticket_card(
-                    MINI_PRICE, f"https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y&locale.x=ja_JP&custom={user_id}_KATAOMOI_{_kata_mini_token}"
+                    MINI_PRICE, f"https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y?locale.x=ja_JP&custom={user_id}_KATAOMOI_{_kata_mini_token}"
                 ))
             threading.Thread(target=_send_kataomoi_mini_payment, daemon=True).start()
             return "🌸 準備するね。\n少し待っててね✨"
@@ -1513,7 +1513,7 @@ def process_line(user_id, message):
             def _send_fukuen_mini_payment():
                 line_push_api(user_id, "あの人のこと、まだ気になって来てくれたんだね🌙\nひとりで抱えてるその気持ち、\nちゃんと受け止めてるよ。\nだから今日はちょっとだけ、おまけしとくね✨")
                 line_push_api(user_id, build_fukuen_payment_ticket_card(
-                    MINI_PRICE, f"https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP&custom={user_id}_FUKUEN_{_fukuen_mini_token}"
+                    MINI_PRICE, f"https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2?locale.x=ja_JP&custom={user_id}_FUKUEN_{_fukuen_mini_token}"
                 ))
             threading.Thread(target=_send_fukuen_mini_payment, daemon=True).start()
             return "🌙 準備するね。\n少し待っててね✨"
@@ -1539,7 +1539,7 @@ def process_line(user_id, message):
                 line_push_api(user_id, "また推しのこと気になって来てくれたんだね🌙\nその推し愛に応えたいから\n今日は特別に少しだけお安くしておくね✨")
                 line_push_api(user_id, build_payment_ticket_card(
                     MINI_PRICE,
-                    f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP&custom={user_id}_KYOUMEI_{_kyoumei_mini_token}",
+                    f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E?locale.x=ja_JP&custom={user_id}_KYOUMEI_{_kyoumei_mini_token}",
                     mini_code,
                     "今日の推し活ガイド"
                 ))
