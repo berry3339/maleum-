@@ -5,6 +5,7 @@ import random
 import string
 import time
 import threading
+import secrets
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Flask, request, jsonify
@@ -42,6 +43,24 @@ def generate_payment_code():
 
 USERS_FILE = '/data/users.json'
 IPN_PENDING_FILE = '/data/ipn_pending.json'
+TOKENS_FILE = '/data/payment_tokens.json'
+
+def load_payment_tokens():
+    try:
+        with open(TOKENS_FILE, 'r') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_payment_tokens(data):
+    os.makedirs(os.path.dirname(TOKENS_FILE), exist_ok=True)
+    with open(TOKENS_FILE, 'w') as f:
+        json.dump(data, f)
+
+def register_payment_token(token, user_id, service, code):
+    tokens = load_payment_tokens()
+    tokens[token] = {'user_id': user_id, 'service': service, 'code': code}
+    save_payment_tokens(tokens)
 
 def load_ipn_pending():
     try:
@@ -331,14 +350,16 @@ def deep_analysis(user_id, year, month, day, mode='preview', birth_time='不明'
             score = max(50, min(95, _base + _var))
 
             payment_code = generate_payment_code()
+            _maru_token = secrets.token_hex(16)
             register_ipn_pending(user_id, 'MARU', payment_code)
+            register_payment_token(_maru_token, user_id, 'MARU', payment_code)
             key = f'line_{user_id}'
             session = user_sessions.get(key, {})
             user_sessions[key] = {**session, 'payment_code': payment_code}
             line_push_api(user_id, result)
             line_push_api(user_id, build_payment_ticket_card(
                 1000,
-                f"https://www.paypal.com/ncp/payment/G7K49PXY32R2C&locale.x=ja_JP&custom={user_id}_MARU",
+                f"https://www.paypal.com/ncp/payment/G7K49PXY32R2C&locale.x=ja_JP&custom={user_id}_MARU_{_maru_token}",
                 payment_code,
                 "今日の運気処方箋",
                 items=[
@@ -480,7 +501,9 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
         result = ai.get_compatibility(saju1, saju2, mode=mode)
         if mode == 'preview':
             kyoumei_code = 'KYOUMEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            _kyoumei_token = secrets.token_hex(16)
             register_ipn_pending(user_id, 'KYOUMEI', kyoumei_code)
+            register_payment_token(_kyoumei_token, user_id, 'KYOUMEI', kyoumei_code)
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'kyoumei_code': kyoumei_code}
             # ①ミステリーカード
@@ -496,7 +519,7 @@ def compatibility_analysis(user_id, year, month, day, p_year, p_month, p_day, mo
             # ④決済チケットカード
             line_push_api(user_id, build_payment_ticket_card(
                 590,
-                f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP&custom={user_id}_KYOUMEI",
+                f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP&custom={user_id}_KYOUMEI_{_kyoumei_token}",
                 kyoumei_code,
                 "推しとの運命の処方箋"
             ))
@@ -548,7 +571,9 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
         result = ai.get_fukuen(saju1, saju2, partner_name=partner_name, mode=mode)
         if mode == 'preview':
             fukuen_code = 'FUKUEN-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            _fukuen_token = secrets.token_hex(16)
             register_ipn_pending(user_id, 'FUKUEN', fukuen_code)
+            register_payment_token(_fukuen_token, user_id, 'FUKUEN', fukuen_code)
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'fukuen_code': fukuen_code}
             line_push_api(user_id, result)
@@ -563,7 +588,7 @@ def fukuen_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='pre
             line_push_api(user_id, build_mystery_fukuen_card())
             line_push_api(user_id, build_fukuen_payment_ticket_card(
                 890,
-                f"https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP&custom={user_id}_FUKUEN"
+                f"https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP&custom={user_id}_FUKUEN_{_fukuen_token}"
             ))
         else:
             save_fukuen_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day})
@@ -626,7 +651,9 @@ def kataomoi_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='p
         result = ai.get_kataomoi(saju1, saju2, partner_name=partner_name, mode=mode)
         if mode == 'preview':
             kataomoi_code = 'KATAOMOI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            _kataomoi_token = secrets.token_hex(16)
             register_ipn_pending(user_id, 'KATAOMOI', kataomoi_code)
+            register_payment_token(_kataomoi_token, user_id, 'KATAOMOI', kataomoi_code)
             s_key = f'line_{user_id}'
             user_sessions[s_key] = {**user_sessions.get(s_key, {}), 'kataomoi_code': kataomoi_code}
             line_push_api(user_id, result)
@@ -640,7 +667,7 @@ def kataomoi_analysis(user_id, year, month, day, p_year, p_month, p_day, mode='p
             line_push_api(user_id, build_mystery_kataomoi_card())
             line_push_api(user_id, build_kataomoi_payment_ticket_card(
                 890,
-                f"https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y&locale.x=ja_JP&custom={user_id}_KATAOMOI"
+                f"https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y&locale.x=ja_JP&custom={user_id}_KATAOMOI_{_kataomoi_token}"
             ))
         else:
             save_kataomoi_paid(user_id, year, month, day, {'year': p_year, 'month': p_month, 'day': p_day})
@@ -911,11 +938,14 @@ def process_line(user_id, message):
         if 'year' in session and partner:
             kyoumei_code = session.get('kyoumei_code') or \
                 'KYOUMEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            _resend_kyoumei_token = secrets.token_hex(16)
+            register_ipn_pending(user_id, 'KYOUMEI', kyoumei_code)
+            register_payment_token(_resend_kyoumei_token, user_id, 'KYOUMEI', kyoumei_code)
             user_sessions[key] = {**session, 'kyoumei_code': kyoumei_code}
             def _resend_kyoumei_payment():
                 line_push_api(user_id, build_payment_ticket_card(
                     590,
-                    f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP&custom={user_id}_KYOUMEI",
+                    f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP&custom={user_id}_KYOUMEI_{_resend_kyoumei_token}",
                     kyoumei_code,
                     "推しとの運命の処方箋"
                 ))
@@ -1209,7 +1239,9 @@ def process_line(user_id, message):
             user_sessions[key] = {}
             return "ごめんね、もう一度「今日の運勢」から始めてね🌿"
         ziwei_code = 'ZIWEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+        _ziwei_token = secrets.token_hex(16)
         register_ipn_pending(user_id, 'ZIWEI', ziwei_code)
+        register_payment_token(_ziwei_token, user_id, 'ZIWEI', ziwei_code)
         user_sessions[key] = {**session, 'step': 'WAITING_ZIWEI_CODE',
                                'ziwei_category': ziwei_category, 'ziwei_code': ziwei_code}
         def _send_ziwei_payment():
@@ -1220,7 +1252,7 @@ def process_line(user_id, message):
             )
             line_push_api(user_id, build_payment_ticket_card(
                 2980,
-                f"https://www.paypal.com/ncp/payment/HYU9V5C9KRU7S&locale.x=ja_JP&custom={user_id}_ZIWEI",
+                f"https://www.paypal.com/ncp/payment/HYU9V5C9KRU7S&locale.x=ja_JP&custom={user_id}_ZIWEI_{_ziwei_token}",
                 ziwei_code,
                 "人生のCCTV完全解読",
                 items=[
@@ -1327,11 +1359,14 @@ def process_line(user_id, message):
     if step == 'KATAOMOI_RETURN':
         if '①' in message or 'ミニ鑑定' in message:
             mini_code = 'KATAOMOI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            _kata_mini_token = secrets.token_hex(16)
+            register_ipn_pending(user_id, 'KATAOMOI', mini_code)
+            register_payment_token(_kata_mini_token, user_id, 'KATAOMOI', mini_code)
             user_sessions[key] = {**session, 'kataomoi_code': mini_code}
             def _send_kataomoi_mini_payment():
                 line_push_api(user_id, "好きって気持ち、誰にも言えないまま\nここに来てくれたんだね🌙\nその勇気、ちゃんと届いてるよ。\n今日はこっそりおまけしとくね✨")
                 line_push_api(user_id, build_kataomoi_payment_ticket_card(
-                    MINI_PRICE, "https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y&locale.x=ja_JP"
+                    MINI_PRICE, f"https://www.paypal.com/ncp/payment/XUJ9U53N5TA4Y&locale.x=ja_JP&custom={user_id}_KATAOMOI_{_kata_mini_token}"
                 ))
             threading.Thread(target=_send_kataomoi_mini_payment, daemon=True).start()
             return "🌸 準備するね。\n少し待っててね✨"
@@ -1471,11 +1506,14 @@ def process_line(user_id, message):
     if step == 'FUKUEN_RETURN':
         if '①' in message or 'ミニ鑑定' in message:
             mini_code = 'FUKUEN-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            _fukuen_mini_token = secrets.token_hex(16)
+            register_ipn_pending(user_id, 'FUKUEN', mini_code)
+            register_payment_token(_fukuen_mini_token, user_id, 'FUKUEN', mini_code)
             user_sessions[key] = {**session, 'fukuen_code': mini_code}
             def _send_fukuen_mini_payment():
                 line_push_api(user_id, "あの人のこと、まだ気になって来てくれたんだね🌙\nひとりで抱えてるその気持ち、\nちゃんと受け止めてるよ。\nだから今日はちょっとだけ、おまけしとくね✨")
                 line_push_api(user_id, build_fukuen_payment_ticket_card(
-                    MINI_PRICE, "https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP"
+                    MINI_PRICE, f"https://www.paypal.com/ncp/payment/R2LWTQ2NYKEX2&locale.x=ja_JP&custom={user_id}_FUKUEN_{_fukuen_mini_token}"
                 ))
             threading.Thread(target=_send_fukuen_mini_payment, daemon=True).start()
             return "🌙 準備するね。\n少し待っててね✨"
@@ -1493,12 +1531,15 @@ def process_line(user_id, message):
     if step == 'KYOUMEI_RETURN':
         if '①' in message or 'ミニ鑑定' in message:
             mini_code = 'KYOUMEI-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            _kyoumei_mini_token = secrets.token_hex(16)
+            register_ipn_pending(user_id, 'KYOUMEI', mini_code)
+            register_payment_token(_kyoumei_mini_token, user_id, 'KYOUMEI', mini_code)
             user_sessions[key] = {**session, 'kyoumei_code': mini_code}
             def _send_kyoumei_mini_payment():
                 line_push_api(user_id, "また推しのこと気になって来てくれたんだね🌙\nその推し愛に応えたいから\n今日は特別に少しだけお安くしておくね✨")
                 line_push_api(user_id, build_payment_ticket_card(
                     MINI_PRICE,
-                    "https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP",
+                    f"https://www.paypal.com/ncp/payment/DP7F3FT8NDW9E&locale.x=ja_JP&custom={user_id}_KYOUMEI_{_kyoumei_mini_token}",
                     mini_code,
                     "今日の推し活ガイド"
                 ))
@@ -1564,12 +1605,13 @@ def paypal_ipn():
     if payment_status != 'Completed':
         return 'OK', 200
 
-    if '_' not in custom:
+    parts = custom.split('_')
+    if len(parts) < 2:
         return 'OK', 200
 
-    last_idx = custom.rfind('_')
-    user_id = custom[:last_idx]
-    service_type = custom[last_idx + 1:]
+    user_id = parts[0]
+    service_type = parts[1]
+    # parts[2] = token (if present) — for dedup with /payment/success
 
     pending = load_ipn_pending()
     code = pending.get(f'{user_id}_{service_type}')
@@ -1583,6 +1625,54 @@ def paypal_ipn():
     save_ipn_pending(pending)
     print(f"[IPN] code sent to {user_id}: {code}")
     return 'OK', 200
+
+# ============================================================================
+# PayPal 결제 성공 리다이렉트
+# ============================================================================
+@app.route('/payment/success', methods=['GET'])
+def payment_success():
+    """PayPal Auto Return URL → 토큰 검증 → LINE 코드 발송"""
+    # PayPal은 custom 값을 'cm' 파라미터로 돌려줌
+    cm = request.args.get('cm', '')
+    parts = cm.split('_')
+    token = parts[2] if len(parts) >= 3 else ''
+
+    _ok_html = """<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>決済完了</title>
+<style>body{text-align:center;padding:40px 20px;font-family:sans-serif;background:#0d0d1a;color:#fff}
+h2{color:#FFD700}p{color:#ccc;line-height:1.8}</style></head>
+<body>
+<h2>✅ 決済が完了しました！</h2>
+<p>LINEに接続コードを送りました！<br>
+このページを閉じて、LINEを確認してください。</p>
+</body></html>"""
+
+    if not token:
+        return _ok_html, 200
+
+    tokens = load_payment_tokens()
+    entry = tokens.get(token)
+    if not entry:
+        # 既に使用済み or IPN が先に処理済み
+        return _ok_html, 200
+
+    uid  = entry['user_id']
+    code = entry['code']
+    print(f"[SUCCESS] token={token[:8]}... uid={uid[:12]} code={code}")
+
+    # LINE にコード送信
+    line_push_api(uid,
+        f"🎉 決済が完了したよ！\n"
+        f"以下のコードをこのトーク画面に送ってね：\n\n{code}"
+    )
+
+    # 1回限り — トークン削除
+    del tokens[token]
+    save_payment_tokens(tokens)
+
+    return _ok_html, 200
 
 # ============================================================================
 # 서버 실행
