@@ -185,6 +185,174 @@ scheduler.start()
 def health():
     return jsonify({'status': 'ok'})
 
+
+# ============================================================================
+# KOMOJU 심사용 정적 페이지 (소개 / 특정상거래법 표기 / 이용약관)
+# ============================================================================
+
+ABOUT_HTML = """<!DOCTYPE html>
+<html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>マルム（Marumu）｜占いを題材としたエンタメコンテンツ</title>
+<style>
+:root{--navy:#1a2744;--navy2:#22325a;--gold:#C9A96E;--ink:#2a2f3a;--line:#e3e6ec;--paper:#fbfbfc;}
+*{box-sizing:border-box;}
+body{margin:0;color:var(--ink);background:var(--paper);font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;line-height:1.85;}
+.hero{background:linear-gradient(160deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;text-align:center;padding:74px 24px 64px;}
+.hero .mark{font-size:13px;letter-spacing:.5em;color:var(--gold);margin:0 0 18px;}
+.hero h1{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:30px;font-weight:600;margin:0 0 16px;letter-spacing:.06em;}
+.hero p{font-size:15px;color:#c5cbd8;max-width:520px;margin:0 auto;}
+.rule{width:46px;height:2px;background:var(--gold);margin:24px auto 0;}
+.wrap{max-width:720px;margin:0 auto;padding:56px 24px 80px;}
+section{margin-bottom:52px;}
+h2{font-size:13px;letter-spacing:.28em;color:var(--gold);font-weight:700;margin:0 0 18px;text-transform:uppercase;}
+.lead{font-size:15.5px;color:var(--ink);}
+.steps{counter-reset:s;padding:0;margin:0;list-style:none;}
+.steps li{position:relative;padding:14px 0 14px 52px;border-bottom:1px solid var(--line);font-size:14.5px;}
+.steps li:before{counter-increment:s;content:counter(s);position:absolute;left:0;top:12px;width:32px;height:32px;border-radius:50%;background:var(--navy);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;}
+.card .name{font-weight:600;color:var(--navy);font-size:15px;margin:0 0 4px;}
+.card .price{color:var(--gold);font-weight:700;font-size:15px;}
+.card .desc{font-size:13px;color:#666c78;margin:6px 0 0;}
+.disc{font-size:12.5px;color:#7a8090;background:#f5f6f8;border-radius:10px;padding:16px 18px;}
+footer{border-top:1px solid var(--line);text-align:center;padding:28px 24px;font-size:12.5px;color:#7a8090;}
+footer a{color:var(--navy);margin:0 10px;text-decoration:none;}
+@media(max-width:560px){.cards{grid-template-columns:1fr;}.hero h1{font-size:25px;}}
+</style></head><body>
+<div class="hero">
+<p class="mark">MARUMU</p>
+<h1>マルム</h1>
+<p>占いを題材とした、エンタテインメントのためのデジタルコンテンツ。LINEで気軽に、あなたのための鑑定をお届けします。</p>
+<div class="rule"></div>
+</div>
+<div class="wrap">
+<section>
+<h2>サービスについて</h2>
+<p class="lead">マルムは、四柱推命などの占いを題材としたエンタテインメント・コンテンツ提供サービスです。LINE公式アカウント上でご購入いただくと、鑑定結果をテキストおよび画像コンテンツとして即時にお届けします。あくまで娯楽としてお楽しみいただくものであり、結果を保証したり、特定の行動を促すものではありません。</p>
+</section>
+<section>
+<h2>ご利用の流れ</h2>
+<ol class="steps">
+<li>LINEでマルム公式アカウントを友だち追加します。</li>
+<li>ご希望のコンテンツを選び、購入手続きに進みます。</li>
+<li>購入画面に表示される金額をご確認のうえ、決済します。</li>
+<li>決済完了後、鑑定結果のコンテンツをLINE上で即時に受け取れます。</li>
+</ol>
+</section>
+<section>
+<h2>コンテンツと価格</h2>
+<div class="cards">
+<div class="card"><p class="name">推し相性鑑定</p><p class="price">590円（税込）</p><p class="desc">気になる相手との相性を占いの観点から読み解くコンテンツ。</p></div>
+<div class="card"><p class="name">恋愛・復縁鑑定</p><p class="price">890円（税込）</p><p class="desc">恋愛や関係の流れを題材にした鑑定コンテンツ。</p></div>
+<div class="card"><p class="name">デイリー鑑定</p><p class="price">1,000円（税込）</p><p class="desc">その日の運勢を題材にしたコンテンツ。</p></div>
+<div class="card"><p class="name">プレミアム鑑定</p><p class="price">2,980円（税込）</p><p class="desc">より詳しい内容を題材としたプレミアムコンテンツ。</p></div>
+</div>
+</section>
+<section>
+<h2>ご注意</h2>
+<p class="disc">本サービスで提供する鑑定結果は、エンタテインメントを目的としたコンテンツです。将来や結果を保証するものではなく、不安をあおって購入を促すものでもありません。ご自身の判断の参考として、娯楽の範囲でお楽しみください。価格・決済方法・提供時期・返品条件等の詳細は、「特定商取引法に基づく表記」をご確認ください。</p>
+</section>
+</div>
+<footer>
+<a href="/tokushoho">特定商取引法に基づく表記</a>
+<a href="/terms">利用規約</a>
+</footer>
+</body></html>"""
+
+
+TOKUSHOHO_HTML = """<!DOCTYPE html>
+<html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>特定商取引法に基づく表記 | マルム（Marumu）</title>
+<style>
+:root{--navy:#1a2744;--gold:#C9A96E;--ink:#2a2f3a;--line:#e3e6ec;--bg:#fbfbfc;}
+*{box-sizing:border-box;}
+body{margin:0;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;color:var(--ink);background:var(--bg);line-height:1.8;font-size:15px;}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px 80px;}
+header{background:var(--navy);color:#fff;padding:38px 20px 30px;text-align:center;}
+header .brand{font-size:13px;letter-spacing:.35em;color:var(--gold);margin:0 0 10px;}
+header h1{font-size:21px;font-weight:600;margin:0;letter-spacing:.04em;}
+.intro{font-size:13.5px;color:#5c6270;margin:30px 0 22px;}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);}
+th,td{text-align:left;vertical-align:top;padding:15px 18px;border-bottom:1px solid var(--line);font-size:14px;}
+th{width:38%;background:#f5f6f8;font-weight:600;color:var(--navy);white-space:nowrap;}
+td small{color:#7a8090;font-size:12.5px;display:block;margin-top:4px;}
+a{color:var(--navy);}
+@media(max-width:560px){th,td{display:block;width:100%;}th{border-bottom:none;}}
+</style></head><body>
+<header><p class="brand">MARUMU</p><h1>特定商取引法に基づく表記</h1></header>
+<div class="wrap">
+<p class="intro">本サービスは、占いを題材としたエンタテインメント目的のデジタルコンテンツを提供するものです。以下、特定商取引法に基づき必要事項を表示します。</p>
+<table>
+<tr><th>販売業者</th><td>マルム（Marumu）</td></tr>
+<tr><th>運営責任者</th><td>金 民基（KIM MINKI）</td></tr>
+<tr><th>所在地</th><td>大韓民国 釜山広域市 沙上区 白楊大路372-22, 102棟803号（注礼洞, 盤都ボラメモストタウン）<br><small>372-22 Baegyang-daero, Sasang-gu, Busan, Republic of Korea</small></td></tr>
+<tr><th>電話番号</th><td>+82-10-3097-3899<br><small>受付時間：平日 10:00–18:00（日本時間）</small></td></tr>
+<tr><th>メールアドレス</th><td>saintmichel02@gmail.com</td></tr>
+<tr><th>販売価格</th><td>各コンテンツの購入画面に表示する価格（590円〜2,980円・税込）<br><small>価格は商品ごとに購入前の画面に表示します。</small></td></tr>
+<tr><th>商品代金以外の必要料金</th><td>なし（通信にかかる費用はお客様のご負担となります）</td></tr>
+<tr><th>支払方法</th><td>クレジットカード、その他購入画面に表示する決済方法</td></tr>
+<tr><th>支払時期</th><td>各決済方法の規定に従い、購入手続き完了時にお支払いが確定します。</td></tr>
+<tr><th>商品の引渡時期</th><td>決済完了後、LINE上で即時にコンテンツ（鑑定結果のテキスト・画像）を提供します。<br><small>システム上の事情により遅延が生じた場合は、速やかに提供いたします。</small></td></tr>
+<tr><th>返品・キャンセルについて</th><td>デジタルコンテンツという商品の性質上、提供後のお客様のご都合による返品・キャンセル・返金はお受けできません。<br><small>ただし、コンテンツが提供されない、システム不具合により正常に閲覧できない等の場合は、再提供または返金にて対応いたします。</small></td></tr>
+<tr><th>動作環境</th><td>LINEアプリが利用可能なスマートフォン等の環境が必要です。</td></tr>
+<tr><th>サービスの性質に関する表示</th><td>本サービスはエンタテインメントを目的としたものであり、結果を保証したり、特定の行動を強制するものではありません。</td></tr>
+</table>
+</div>
+</body></html>"""
+
+
+TERMS_HTML = """<!DOCTYPE html>
+<html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>利用規約 | マルム（Marumu）</title>
+<style>
+:root{--navy:#1a2744;--gold:#C9A96E;--ink:#2a2f3a;--line:#e3e6ec;--bg:#fbfbfc;}
+*{box-sizing:border-box;}
+body{margin:0;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;color:var(--ink);background:var(--bg);line-height:1.9;font-size:14.5px;}
+header{background:var(--navy);color:#fff;text-align:center;padding:38px 20px 30px;}
+header .brand{font-size:13px;letter-spacing:.35em;color:var(--gold);margin:0 0 10px;}
+header h1{font-size:21px;font-weight:600;margin:0;letter-spacing:.04em;}
+.wrap{max-width:740px;margin:0 auto;padding:40px 22px 80px;}
+.intro{font-size:13.5px;color:#5c6270;margin:0 0 30px;}
+article{margin-bottom:26px;}
+h2{font-size:15px;color:var(--navy);font-weight:600;margin:0 0 8px;border-left:3px solid var(--gold);padding-left:10px;}
+ol{margin:6px 0 0;padding-left:1.3em;}
+li{margin-bottom:5px;}
+.meta{margin-top:40px;font-size:12.5px;color:#7a8090;border-top:1px solid var(--line);padding-top:16px;}
+a{color:var(--navy);}
+</style></head><body>
+<header><p class="brand">MARUMU</p><h1>利用規約</h1></header>
+<div class="wrap">
+<p class="intro">本利用規約（以下「本規約」）は、マルム（以下「当サービス」）の提供条件およびご利用にあたっての権利義務関係を定めるものです。ご利用の前に必ずお読みください。</p>
+<article><h2>第1条（適用）</h2><ol><li>本規約は、当サービスの利用に関する一切に適用されます。</li><li>ユーザーは、当サービスを利用した時点で本規約に同意したものとみなします。</li></ol></article>
+<article><h2>第2条（サービスの内容）</h2><ol><li>当サービスは、占いを題材としたエンタテインメント目的のデジタルコンテンツを、LINE上で提供するものです。</li><li>提供されるコンテンツは娯楽を目的としたものであり、内容の的中・成果・将来の結果を保証するものではありません。</li><li>当サービスは、ユーザーに特定の判断や行動を強制するものではありません。最終的な判断はユーザー自身の責任において行ってください。</li></ol></article>
+<article><h2>第3条（料金および支払い）</h2><ol><li>ユーザーは、各コンテンツの購入画面に表示された料金を、当サービスが定める方法により支払うものとします。</li><li>料金は購入手続きの完了をもって確定します。</li></ol></article>
+<article><h2>第4条（コンテンツの提供）</h2><ol><li>コンテンツは、決済完了後、LINE上で即時に提供されます。</li><li>システム上の事情により提供が遅延した場合、当サービスは速やかに提供するよう努めます。</li></ol></article>
+<article><h2>第5条（返品・キャンセル）</h2><ol><li>デジタルコンテンツの性質上、提供後のお客様のご都合による返品・キャンセル・返金はお受けできません。</li><li>前項にかかわらず、コンテンツが提供されない、またはシステム不具合により正常に閲覧できない場合は、再提供または返金にて対応します。</li></ol></article>
+<article><h2>第6条（禁止事項）</h2><ol><li>法令または公序良俗に違反する行為。</li><li>当サービスの運営を妨害する行為。</li><li>提供されたコンテンツを無断で複製・転載・再配布する行為。</li><li>その他、当サービスが不適切と判断する行為。</li></ol></article>
+<article><h2>第7条（免責事項）</h2><ol><li>当サービスは、コンテンツがエンタテインメントであることに鑑み、その内容に基づいてユーザーが行った判断・行動の結果について責任を負いません。</li><li>当サービスは、通信環境やLINEの仕様変更等、当サービスの合理的な支配を超える事由による不具合について責任を負いません。</li></ol></article>
+<article><h2>第8条（規約の変更）</h2><ol><li>当サービスは、必要と判断した場合、本規約を変更できるものとします。変更後の規約は、当サービス上に表示した時点から効力を生じます。</li></ol></article>
+<article><h2>第9条（準拠法・お問い合わせ）</h2><ol><li>本規約の解釈にあたっては、別段の定めがない限り、日本の消費者保護に関する関連法令を尊重します。</li><li>当サービスに関するお問い合わせは、「特定商取引法に基づく表記」記載の連絡先までお願いいたします。</li></ol></article>
+<p class="meta">制定日：2026年6月11日　／　事業者：マルム（Marumu）　<a href="/tokushoho">特定商取引法に基づく表記はこちら</a></p>
+</div>
+</body></html>"""
+
+
+@app.route('/about', methods=['GET'])
+def about_page():
+    return ABOUT_HTML
+
+@app.route('/tokushoho', methods=['GET'])
+def tokushoho_page():
+    return TOKUSHOHO_HTML
+
+@app.route('/terms', methods=['GET'])
+def terms_page():
+    return TERMS_HTML
+
+
 # ============================================================================
 # 카카오톡 챗봇
 # ============================================================================
